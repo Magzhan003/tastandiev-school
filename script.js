@@ -1,18 +1,22 @@
+/* ========================= Navigation ========================= */
 const toggle=document.querySelector('.menu-toggle');
 const nav=document.querySelector('.nav');
 if(toggle){toggle.addEventListener('click',()=>{const open=nav.classList.toggle('open');toggle.setAttribute('aria-expanded',open?'true':'false');});}
 document.querySelectorAll('.nav a').forEach(link=>link.addEventListener('click',()=>{nav?.classList.remove('open');toggle?.setAttribute('aria-expanded','false');}));
 
+/* ========================= News modal ========================= */
 const modal=document.querySelector('#news-modal');
 const modalTitle=document.querySelector('#modal-title');
 const modalText=document.querySelector('#modal-text');
 function closeModal(){modal?.classList.remove('show');modal?.setAttribute('aria-hidden','true');}
 function openNews(title,text){if(!modal)return; modalTitle.textContent=title;modalText.textContent=text;modal.classList.add('show');modal.setAttribute('aria-hidden','false');}
-document.querySelectorAll('.read-more').forEach(btn=>btn.addEventListener('click',()=>openNews(btn.dataset.title,btn.dataset.text)));
+function bindReadMore(btn){btn.addEventListener('click',()=>openNews(btn.dataset.title,btn.dataset.text));}
+document.querySelectorAll('.read-more').forEach(bindReadMore);
 document.querySelector('.modal-close')?.addEventListener('click',closeModal);
 modal?.addEventListener('click',e=>{if(e.target===modal)closeModal();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();}});
 
+/* ========================= Class / test picker ========================= */
 const testLinks={4:'',5:'',6:'',7:'',8:'',9:'',10:'',11:''};
 const testMessage=document.querySelector('#test-message'); const testLink=document.querySelector('#test-link');
 document.querySelectorAll('.class-btn').forEach(btn=>btn.addEventListener('click',()=>{
@@ -23,52 +27,237 @@ document.querySelectorAll('.class-btn').forEach(btn=>btn.addEventListener('click
 }));
 testLink?.addEventListener('click',e=>{if(testLink.classList.contains('disabled')){e.preventDefault();testMessage.textContent='Қазір тест сілтемелері әлі қосылған жоқ. Google Forms дайын болғаннан кейін осы жерге енгізіледі.';}});
 
-// ===== Shared cloud admin: Supabase =====
+/* ========================= Scroll-reveal animation ========================= */
+(function(){
+ const items=document.querySelectorAll('.reveal');
+ if(!items.length)return;
+ if(!('IntersectionObserver' in window)){items.forEach(el=>el.classList.add('visible'));return;}
+ const io=new IntersectionObserver((entries)=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('visible');io.unobserve(entry.target);}});},{threshold:0.12,rootMargin:'0px 0px -40px 0px'});
+ items.forEach(el=>io.observe(el));
+})();
+
+/* ========================= Toasts ========================= */
+function toast(message,type='success'){
+ const box=document.getElementById('toast-container'); if(!box){alert(message);return;}
+ const el=document.createElement('div'); el.className=`toast ${type}`; el.textContent=message; box.appendChild(el);
+ setTimeout(()=>{el.classList.add('hide'); setTimeout(()=>el.remove(),250);},3200);
+}
+
+/* ========================= Shared cloud admin: Supabase ========================= */
 (async function(){
  const configured=window.SUPABASE_URL && window.SUPABASE_ANON_KEY && !window.SUPABASE_URL.includes('PASTE_') && window.SUPABASE_ANON_KEY.length>20;
  const brand=document.getElementById('admin-secret'), overlay=document.getElementById('admin-overlay');
  if(!brand||!overlay)return;
+
+ // Logo/"11" must be tapped 5 times quickly to reveal the admin panel.
  let taps=0,timer=null;
- brand.addEventListener('click',e=>{taps++;clearTimeout(timer);timer=setTimeout(()=>taps=0,1400);if(taps>=5){e.preventDefault();taps=0;overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.getElementById('admin-password')?.focus();}});
+ brand.addEventListener('click',e=>{
+   taps++;clearTimeout(timer);timer=setTimeout(()=>taps=0,1400);
+   if(taps>=5){e.preventDefault();taps=0;overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.getElementById('admin-password')?.focus();}
+ });
  const close=()=>{overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');};
- document.getElementById('admin-close')?.addEventListener('click',close); overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
+ document.getElementById('admin-close')?.addEventListener('click',close);
+ overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('open'))close();});
+
  if(!configured){
-   // Keep the page functional while the cloud project is not configured.
    const msg=document.querySelector('.admin-hint'); if(msg)msg.textContent='Общее облачное хранилище ещё не подключено. После настройки Supabase новости и документы будут видны всем посетителям.';
    return;
  }
+
  const {createClient}=window.supabase; const sb=createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY);
  const login=document.getElementById('admin-login'), content=document.getElementById('admin-content'), password=document.getElementById('admin-password');
- const showContent=()=>{login.hidden=true;content.hidden=false;renderAdmin();};
- document.getElementById('admin-login-btn').onclick=async()=>{
+ const loginBtn=document.getElementById('admin-login-btn');
+
+ const showContent=()=>{login.hidden=true;content.hidden=false;refreshAdminLists();};
+
+ loginBtn.onclick=async()=>{
+   setBusy(loginBtn,true,'Кіру');
    const {error}=await sb.auth.signInWithPassword({email:window.ADMIN_EMAIL,password:password.value});
-   if(error){alert('Құпиясөз дұрыс емес немесе әкімші аккаунты әлі жасалмаған.');return;} showContent();
+   setBusy(loginBtn,false,'Кіру');
+   if(error){toast('Құпиясөз дұрыс емес немесе әкімші аккаунты әлі жасалмаған.','error');return;}
+   showContent();
  };
- password.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('admin-login-btn').click();});
+ password.addEventListener('keydown',e=>{if(e.key==='Enter')loginBtn.click();});
  document.getElementById('a-logout').onclick=async()=>{await sb.auth.signOut();content.hidden=true;login.hidden=false;password.value='';close();};
- document.getElementById('a-news-add').onclick=async()=>{
-   const title=document.getElementById('a-news-title').value.trim(), body=document.getElementById('a-news-text').value.trim(), date=document.getElementById('a-news-date').value||new Date().toISOString().slice(0,10);
-   if(!title||!body){alert('Тақырып пен мәтінді толтырыңыз.');return;}
-   const {error}=await sb.from('news').insert({title,content:body,published_date:date}); if(error){alert('Жаңалықты сақтау кезінде қате шықты.');return;}
-   document.getElementById('a-news-title').value='';document.getElementById('a-news-text').value='';await loadPublic();alert('Жаңалық жарияланды!');
+
+ function setBusy(btn,busy,idleLabel){ if(!btn)return; btn.disabled=busy; btn.textContent=busy?'Жүктелуде...':idleLabel; }
+ function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+
+ /* ---------- News: add / edit / delete ---------- */
+ let editingNewsId=null;
+ const newsForm=document.getElementById('a-news-form');
+ const newsTitleI=document.getElementById('a-news-title'), newsDateI=document.getElementById('a-news-date'), newsTextI=document.getElementById('a-news-text');
+ const newsAddBtn=document.getElementById('a-news-add'), newsCancelBtn=document.getElementById('a-news-cancel'), newsFormTitle=document.getElementById('a-news-form-title');
+
+ function startEditNews(item){
+   editingNewsId=item.id; newsForm.classList.add('editing');
+   newsFormTitle.textContent='✏️ Жаңалықты өңдеу';
+   newsAddBtn.textContent='Өзгерісті сақтау';
+   newsTitleI.value=item.title||''; newsTextI.value=item.content||''; newsDateI.value=item.published_date||'';
+   newsForm.scrollIntoView({behavior:'smooth',block:'center'});
+ }
+ function stopEditNews(){
+   editingNewsId=null; newsForm.classList.remove('editing');
+   newsFormTitle.textContent='📰 Жаңалық қосу'; newsAddBtn.textContent='Жаңалықты жариялау';
+   newsTitleI.value='';newsTextI.value='';newsDateI.value='';
+ }
+ newsCancelBtn.onclick=stopEditNews;
+
+ newsAddBtn.onclick=async()=>{
+   const title=newsTitleI.value.trim(), body=newsTextI.value.trim(), date=newsDateI.value||new Date().toISOString().slice(0,10);
+   if(!title||!body){toast('Тақырып пен мәтінді толтырыңыз.','error');return;}
+   setBusy(newsAddBtn,true,editingNewsId?'Өзгерісті сақтау':'Жаңалықты жариялау');
+   let error;
+   if(editingNewsId){
+     ({error}=await sb.from('news').update({title,content:body,published_date:date}).eq('id',editingNewsId));
+   } else {
+     ({error}=await sb.from('news').insert({title,content:body,published_date:date}));
+   }
+   setBusy(newsAddBtn,false,editingNewsId?'Өзгерісті сақтау':'Жаңалықты жариялау');
+   if(error){toast('Жаңалықты сақтау кезінде қате шықты.','error');return;}
+   const wasEditing=!!editingNewsId; stopEditNews();
+   await loadPublic(); await refreshAdminLists();
+   toast(wasEditing?'Жаңалық жаңартылды!':'Жаңалық жарияланды!');
  };
- document.getElementById('a-doc-add').onclick=async()=>{
-   const title=document.getElementById('a-doc-title').value.trim(), file=document.getElementById('a-doc-file').files[0];
-   if(!title||!file){alert('Құжат атауы мен файлды таңдаңыз.');return;}
-   if(file.size>50*1024*1024){alert('Файл 50 МБ-тан аспауы керек.');return;}
-   const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_'); const path=`${Date.now()}_${safe}`;
-   let r=await sb.storage.from('documents').upload(path,file,{upsert:false}); if(r.error){alert('Файлды жүктеу кезінде қате шықты.');return;}
-   const {error}=await sb.from('documents').insert({title,file_name:file.name,storage_path:path,file_url:sb.storage.from('documents').getPublicUrl(path).data.publicUrl});
-   if(error){await sb.storage.from('documents').remove([path]);alert('Құжат мәліметін сақтау кезінде қате шықты.');return;}
-   document.getElementById('a-doc-title').value='';document.getElementById('a-doc-file').value='';await loadPublic();alert('Құжат жарияланды!');
+
+ async function deleteNews(id){
+   if(!confirm('Бұл жаңалықты өшіруге сенімдісіз бе?'))return;
+   const {error}=await sb.from('news').delete().eq('id',id);
+   if(error){toast('Жаңалықты өшіру кезінде қате шықты.','error');return;}
+   if(editingNewsId===id)stopEditNews();
+   await loadPublic(); await refreshAdminLists();
+   toast('Жаңалық өшірілді.');
+ }
+
+ /* ---------- Documents: add / edit / delete ---------- */
+ let editingDoc=null; // {id, storage_path}
+ const docForm=document.getElementById('a-doc-form');
+ const docTitleI=document.getElementById('a-doc-title'), docFileI=document.getElementById('a-doc-file'), docFileHint=document.getElementById('a-doc-file-hint');
+ const docAddBtn=document.getElementById('a-doc-add'), docCancelBtn=document.getElementById('a-doc-cancel'), docFormTitle=document.getElementById('a-doc-form-title');
+
+ function startEditDoc(item){
+   editingDoc={id:item.id,storage_path:item.storage_path}; docForm.classList.add('editing');
+   docFormTitle.textContent='✏️ Құжатты өңдеу';
+   docAddBtn.textContent='Өзгерісті сақтау';
+   docTitleI.value=item.title||''; docFileI.value=''; docFileHint.hidden=false;
+   docForm.scrollIntoView({behavior:'smooth',block:'center'});
+ }
+ function stopEditDoc(){
+   editingDoc=null; docForm.classList.remove('editing');
+   docFormTitle.textContent='📄 Құжат қосу'; docAddBtn.textContent='Құжатты қосу';
+   docTitleI.value='';docFileI.value='';docFileHint.hidden=true;
+ }
+ docCancelBtn.onclick=stopEditDoc;
+
+ docAddBtn.onclick=async()=>{
+   const title=docTitleI.value.trim(), file=docFileI.files[0];
+   if(!title){toast('Құжат атауын енгізіңіз.','error');return;}
+   if(!editingDoc && !file){toast('Файлды таңдаңыз.','error');return;}
+   if(file && file.size>50*1024*1024){toast('Файл 50 МБ-тан аспауы керек.','error');return;}
+
+   setBusy(docAddBtn,true,editingDoc?'Өзгерісті сақтау':'Құжатты қосу');
+   try{
+     if(editingDoc){
+       const updates={title};
+       if(file){
+         const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_'); const path=`${Date.now()}_${safe}`;
+         const up=await sb.storage.from('documents').upload(path,file,{upsert:false});
+         if(up.error)throw new Error('upload');
+         updates.file_name=file.name; updates.storage_path=path;
+         updates.file_url=sb.storage.from('documents').getPublicUrl(path).data.publicUrl;
+         if(editingDoc.storage_path)await sb.storage.from('documents').remove([editingDoc.storage_path]);
+       }
+       const {error}=await sb.from('documents').update(updates).eq('id',editingDoc.id);
+       if(error)throw new Error('update');
+       stopEditDoc();
+       await loadPublic(); await refreshAdminLists();
+       toast('Құжат жаңартылды!');
+     } else {
+       const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_'); const path=`${Date.now()}_${safe}`;
+       const up=await sb.storage.from('documents').upload(path,file,{upsert:false});
+       if(up.error)throw new Error('upload');
+       const {error}=await sb.from('documents').insert({title,file_name:file.name,storage_path:path,file_url:sb.storage.from('documents').getPublicUrl(path).data.publicUrl});
+       if(error){await sb.storage.from('documents').remove([path]);throw new Error('insert');}
+       stopEditDoc();
+       await loadPublic(); await refreshAdminLists();
+       toast('Құжат жарияланды!');
+     }
+   }catch(err){
+     toast('Құжатты сақтау кезінде қате шықты.','error');
+   } finally {
+     setBusy(docAddBtn,false,editingDoc?'Өзгерісті сақтау':'Құжатты қосу');
+   }
  };
+
+ async function deleteDoc(id,storagePath){
+   if(!confirm('Бұл құжатты өшіруге сенімдісіз бе?'))return;
+   const {error}=await sb.from('documents').delete().eq('id',id);
+   if(error){toast('Құжатты өшіру кезінде қате шықты.','error');return;}
+   if(storagePath)await sb.storage.from('documents').remove([storagePath]);
+   if(editingDoc?.id===id)stopEditDoc();
+   await loadPublic(); await refreshAdminLists();
+   toast('Құжат өшірілді.');
+ }
+
+ /* ---------- Public (visitor-facing) lists ---------- */
  async function loadPublic(){
    const n=await sb.from('news').select('*').order('published_date',{ascending:false}).order('created_at',{ascending:false});
    const d=await sb.from('documents').select('*').order('created_at',{ascending:false});
-   const list=document.getElementById('news-list'); if(n.data?.length){n.data.forEach(x=>{const el=document.createElement('article');el.className='news-card';el.innerHTML=`<div class="news-image">ЖАҢАЛЫҚ</div><div class="news-body"><span class="date">${escapeHtml(x.published_date)}</span><h3>${escapeHtml(x.title)}</h3><p>${escapeHtml(x.content)}</p><button class="read-more">Оқу →</button></div>`;el.querySelector('button').onclick=()=>openNews(x.title,x.content);list.prepend(el);});}
-   const dl=document.getElementById('documents-list'); if(d.data?.length){d.data.forEach(x=>{const url=x.file_url || (x.storage_path ? sb.storage.from('documents').getPublicUrl(x.storage_path).data.publicUrl : '#');const el=document.createElement('a');el.className='doc-card';el.href=url;el.target='_blank';el.rel='noopener';el.innerHTML=`<span>📄</span><h3>${escapeHtml(x.title)}</h3><p>${escapeHtml(x.file_name)}</p><span class="status">Ашу / жүктеу</span>`;dl.prepend(el);});}
+
+   const list=document.getElementById('news-list');
+   if(n.data){
+     list.querySelectorAll('[data-cloud-item]').forEach(el=>el.remove());
+     n.data.forEach(x=>{
+       const el=document.createElement('article');
+       el.className='news-card card-in'; el.setAttribute('data-cloud-item','');
+       el.innerHTML=`<div class="news-image">ЖАҢАЛЫҚ</div><div class="news-body"><span class="date">${escapeHtml(x.published_date||'')}</span><h3>${escapeHtml(x.title)}</h3><p>${escapeHtml(x.content)}</p><button class="read-more" data-title="${escapeHtml(x.title)}" data-text="${escapeHtml(x.content)}">Оқу →</button></div>`;
+       bindReadMore(el.querySelector('.read-more'));
+       list.prepend(el);
+     });
+   }
+
+   const dl=document.getElementById('documents-list');
+   if(d.data){
+     dl.querySelectorAll('[data-cloud-item]').forEach(el=>el.remove());
+     d.data.forEach(x=>{
+       const url=x.file_url || (x.storage_path ? sb.storage.from('documents').getPublicUrl(x.storage_path).data.publicUrl : '#');
+       const el=document.createElement('a');
+       el.className='doc-card card-in'; el.setAttribute('data-cloud-item',''); el.href=url; el.target='_blank'; el.rel='noopener';
+       el.innerHTML=`<span>📄</span><h3>${escapeHtml(x.title)}</h3><p>${escapeHtml(x.file_name||'')}</p><span class="status">Ашу / жүктеу</span>`;
+       dl.prepend(el);
+     });
+   }
  }
- function renderAdmin(){document.querySelector('.admin-hint')?.classList.add('cloud-ready');}
- function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+
+ /* ---------- Admin-facing lists (with edit / delete buttons) ---------- */
+ async function refreshAdminLists(){
+   const newsBox=document.getElementById('a-news-admin-list');
+   const docBox=document.getElementById('a-doc-admin-list');
+   if(!newsBox||!docBox)return;
+
+   const n=await sb.from('news').select('*').order('published_date',{ascending:false}).order('created_at',{ascending:false});
+   newsBox.innerHTML='';
+   if(!n.data || !n.data.length){ newsBox.innerHTML='<p class="admin-empty">Әзірге жаңалық жоқ.</p>'; }
+   else n.data.forEach(item=>{
+     const row=document.createElement('div'); row.className='admin-list-item';
+     row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.published_date||'')}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
+     row.querySelector('.icon-btn:not(.danger)').onclick=()=>startEditNews(item);
+     row.querySelector('.icon-btn.danger').onclick=()=>deleteNews(item.id);
+     newsBox.appendChild(row);
+   });
+
+   const d=await sb.from('documents').select('*').order('created_at',{ascending:false});
+   docBox.innerHTML='';
+   if(!d.data || !d.data.length){ docBox.innerHTML='<p class="admin-empty">Әзірге құжат жоқ.</p>'; }
+   else d.data.forEach(item=>{
+     const row=document.createElement('div'); row.className='admin-list-item';
+     row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.file_name||'')}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
+     row.querySelector('.icon-btn:not(.danger)').onclick=()=>startEditDoc(item);
+     row.querySelector('.icon-btn.danger').onclick=()=>deleteDoc(item.id,item.storage_path);
+     docBox.appendChild(row);
+   });
+ }
+
  await loadPublic();
 })();
