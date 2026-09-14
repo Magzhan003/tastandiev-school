@@ -1,0 +1,12 @@
+SUPABASE SETUP
+
+1) The website config is already filled with your Project URL, Publishable key, and admin email.
+2) In Supabase -> SQL Editor, run supabase-migration.sql once.
+3) Your admin password is the password you set for the Supabase Auth user. It is NOT stored in this website.
+4) Upload the website files to the GitHub repository root.
+5) After GitHub Pages updates, tap the school logo/11 five times quickly to open Admin.
+6) Sign in with the configured admin email and your Supabase Auth password.
+
+SECURITY
+- The Publishable key may be public in the frontend when RLS is configured.
+- NEVER put a Supabase Secret key in GitHub or this file.
