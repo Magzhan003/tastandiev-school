@@ -13,6 +13,7 @@ function openNews(title,text){if(!modal)return; modalTitle.textContent=title;mod
 function bindReadMore(btn){btn.addEventListener('click',()=>openNews(btn.dataset.title,btn.dataset.text));}
 document.querySelectorAll('.read-more').forEach(bindReadMore);
 document.querySelector('.modal-close')?.addEventListener('click',closeModal);
+document.getElementById('modal-back')?.addEventListener('click',closeModal);
 modal?.addEventListener('click',e=>{if(e.target===modal)closeModal();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();}});
 
@@ -130,6 +131,52 @@ function toast(message,type='success'){
    toast('Жаңалық өшірілді.');
  }
 
+ /* ---------- Achievements: add / edit / delete ---------- */
+ let editingAchId=null;
+ const achForm=document.getElementById('a-ach-form');
+ const achIconI=document.getElementById('a-ach-icon'), achTitleI=document.getElementById('a-ach-title'), achTextI=document.getElementById('a-ach-text');
+ const achAddBtn=document.getElementById('a-ach-add'), achCancelBtn=document.getElementById('a-ach-cancel'), achFormTitle=document.getElementById('a-ach-form-title');
+
+ function startEditAch(item){
+   editingAchId=item.id; achForm.classList.add('editing');
+   achFormTitle.textContent='✏️ Жетістікті өңдеу';
+   achAddBtn.textContent='Өзгерісті сақтау';
+   achIconI.value=item.icon||''; achTitleI.value=item.title||''; achTextI.value=item.description||'';
+   achForm.scrollIntoView({behavior:'smooth',block:'center'});
+ }
+ function stopEditAch(){
+   editingAchId=null; achForm.classList.remove('editing');
+   achFormTitle.textContent='🏆 Жетістік қосу'; achAddBtn.textContent='Жетістікті жариялау';
+   achIconI.value='';achTitleI.value='';achTextI.value='';
+ }
+ achCancelBtn.onclick=stopEditAch;
+
+ achAddBtn.onclick=async()=>{
+   const icon=achIconI.value.trim()||'🏆', title=achTitleI.value.trim(), description=achTextI.value.trim();
+   if(!title||!description){toast('Тақырып пен сипаттаманы толтырыңыз.','error');return;}
+   setBusy(achAddBtn,true,editingAchId?'Өзгерісті сақтау':'Жетістікті жариялау');
+   let error;
+   if(editingAchId){
+     ({error}=await sb.from('achievements').update({icon,title,description}).eq('id',editingAchId));
+   } else {
+     ({error}=await sb.from('achievements').insert({icon,title,description}));
+   }
+   setBusy(achAddBtn,false,editingAchId?'Өзгерісті сақтау':'Жетістікті жариялау');
+   if(error){toast('Жетістікті сақтау кезінде қате шықты.','error');return;}
+   const wasEditing=!!editingAchId; stopEditAch();
+   await loadPublic(); await refreshAdminLists();
+   toast(wasEditing?'Жетістік жаңартылды!':'Жетістік жарияланды!');
+ };
+
+ async function deleteAch(id){
+   if(!confirm('Бұл жетістікті өшіруге сенімдісіз бе?'))return;
+   const {error}=await sb.from('achievements').delete().eq('id',id);
+   if(error){toast('Жетістікті өшіру кезінде қате шықты.','error');return;}
+   if(editingAchId===id)stopEditAch();
+   await loadPublic(); await refreshAdminLists();
+   toast('Жетістік өшірілді.');
+ }
+
  /* ---------- Documents: add / edit / delete ---------- */
  let editingDoc=null; // {id, storage_path}
  const docForm=document.getElementById('a-doc-form');
@@ -201,8 +248,14 @@ function toast(message,type='success'){
  }
 
  /* ---------- Public (visitor-facing) lists ---------- */
+ function toggleEmpty(container,emptyId,hasItems){
+   const empty=document.getElementById(emptyId);
+   if(empty)empty.style.display=hasItems?'none':'';
+ }
+
  async function loadPublic(){
    const n=await sb.from('news').select('*').order('published_date',{ascending:false}).order('created_at',{ascending:false});
+   const a=await sb.from('achievements').select('*').order('created_at',{ascending:false});
    const d=await sb.from('documents').select('*').order('created_at',{ascending:false});
 
    const list=document.getElementById('news-list');
@@ -213,8 +266,21 @@ function toast(message,type='success'){
        el.className='news-card card-in'; el.setAttribute('data-cloud-item','');
        el.innerHTML=`<div class="news-image">ЖАҢАЛЫҚ</div><div class="news-body"><span class="date">${escapeHtml(x.published_date||'')}</span><h3>${escapeHtml(x.title)}</h3><p>${escapeHtml(x.content)}</p><button class="read-more" data-title="${escapeHtml(x.title)}" data-text="${escapeHtml(x.content)}">Оқу →</button></div>`;
        bindReadMore(el.querySelector('.read-more'));
-       list.prepend(el);
+       list.appendChild(el);
      });
+     toggleEmpty(list,'news-empty',n.data.length>0);
+   }
+
+   const al=document.getElementById('achievements-list');
+   if(a.data){
+     al.querySelectorAll('[data-cloud-item]').forEach(el=>el.remove());
+     a.data.forEach(x=>{
+       const el=document.createElement('div');
+       el.className='card-in'; el.setAttribute('data-cloud-item','');
+       el.innerHTML=`<b>${escapeHtml(x.icon||'🏆')}</b><h3>${escapeHtml(x.title)}</h3><p>${escapeHtml(x.description)}</p>`;
+       al.appendChild(el);
+     });
+     toggleEmpty(al,'achievements-empty',a.data.length>0);
    }
 
    const dl=document.getElementById('documents-list');
@@ -225,16 +291,18 @@ function toast(message,type='success'){
        const el=document.createElement('a');
        el.className='doc-card card-in'; el.setAttribute('data-cloud-item',''); el.href=url; el.target='_blank'; el.rel='noopener';
        el.innerHTML=`<span>📄</span><h3>${escapeHtml(x.title)}</h3><p>${escapeHtml(x.file_name||'')}</p><span class="status">Ашу / жүктеу</span>`;
-       dl.prepend(el);
+       dl.appendChild(el);
      });
+     toggleEmpty(dl,'documents-empty-msg',d.data.length>0);
    }
  }
 
  /* ---------- Admin-facing lists (with edit / delete buttons) ---------- */
  async function refreshAdminLists(){
    const newsBox=document.getElementById('a-news-admin-list');
+   const achBox=document.getElementById('a-ach-admin-list');
    const docBox=document.getElementById('a-doc-admin-list');
-   if(!newsBox||!docBox)return;
+   if(!newsBox||!achBox||!docBox)return;
 
    const n=await sb.from('news').select('*').order('published_date',{ascending:false}).order('created_at',{ascending:false});
    newsBox.innerHTML='';
@@ -245,6 +313,17 @@ function toast(message,type='success'){
      row.querySelector('.icon-btn:not(.danger)').onclick=()=>startEditNews(item);
      row.querySelector('.icon-btn.danger').onclick=()=>deleteNews(item.id);
      newsBox.appendChild(row);
+   });
+
+   const a=await sb.from('achievements').select('*').order('created_at',{ascending:false});
+   achBox.innerHTML='';
+   if(!a.data || !a.data.length){ achBox.innerHTML='<p class="admin-empty">Әзірге жетістік жоқ.</p>'; }
+   else a.data.forEach(item=>{
+     const row=document.createElement('div'); row.className='admin-list-item';
+     row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(item.icon||'🏆')} ${escapeHtml(item.title)}</strong><small>${escapeHtml((item.description||'').slice(0,60))}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
+     row.querySelector('.icon-btn:not(.danger)').onclick=()=>startEditAch(item);
+     row.querySelector('.icon-btn.danger').onclick=()=>deleteAch(item.id);
+     achBox.appendChild(row);
    });
 
    const d=await sb.from('documents').select('*').order('created_at',{ascending:false});

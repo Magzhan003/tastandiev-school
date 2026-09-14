@@ -32,6 +32,7 @@
 .icon-btn:active{transform:translateY(0) scale(.93)}
 .icon-btn.danger:hover{background:#fff0f0;border-color:#e5484d}
 .admin-empty{color:#98a2b3;font-size:13px;padding:6px 0 2px}
+#news-list .admin-empty,#achievements-list .admin-empty,#documents-list .admin-empty{grid-column:1/-1;text-align:center;padding:40px 10px;border:1px dashed #d9e0ea;border-radius:16px;background:#fff}
 .cancel-edit{display:none}
 .admin-form.editing .cancel-edit{display:inline-flex}
 
