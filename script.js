@@ -177,6 +177,93 @@ function toast(message,type='success'){
    toast('Жетістік өшірілді.');
  }
 
+ /* ---------- KITAPVERSE: Library books (add / edit / delete) ---------- */
+ let editingBookId=null;
+ const bookForm=document.getElementById('a-book-form');
+ const bookIconI=document.getElementById('a-book-icon'), bookTitleI=document.getElementById('a-book-title'), bookAuthorI=document.getElementById('a-book-author'), bookTextI=document.getElementById('a-book-text');
+ const bookAddBtn=document.getElementById('a-book-add'), bookCancelBtn=document.getElementById('a-book-cancel'), bookFormTitle=document.getElementById('a-book-form-title');
+
+ function startEditBook(item){
+   editingBookId=item.id; bookForm.classList.add('editing');
+   bookFormTitle.textContent='✏️ Кітапты өңдеу';
+   bookAddBtn.textContent='Өзгерісті сақтау';
+   bookIconI.value=item.icon||''; bookTitleI.value=item.title||''; bookAuthorI.value=item.author||''; bookTextI.value=item.description||'';
+   bookForm.scrollIntoView({behavior:'smooth',block:'center'});
+ }
+ function stopEditBook(){
+   editingBookId=null; bookForm.classList.remove('editing');
+   bookFormTitle.textContent='📖 Кітапханаға кітап қосу'; bookAddBtn.textContent='Кітапты қосу';
+   bookIconI.value='';bookTitleI.value='';bookAuthorI.value='';bookTextI.value='';
+ }
+ bookCancelBtn.onclick=stopEditBook;
+
+ bookAddBtn.onclick=async()=>{
+   const icon=bookIconI.value.trim()||'📕', title=bookTitleI.value.trim(), author=bookAuthorI.value.trim(), description=bookTextI.value.trim();
+   if(!title){toast('Кітап атауын енгізіңіз.','error');return;}
+   setBusy(bookAddBtn,true,editingBookId?'Өзгерісті сақтау':'Кітапты қосу');
+   let error;
+   if(editingBookId){
+     ({error}=await sb.from('library_books').update({icon,title,author,description}).eq('id',editingBookId));
+   } else {
+     ({error}=await sb.from('library_books').insert({icon,title,author,description}));
+   }
+   setBusy(bookAddBtn,false,editingBookId?'Өзгерісті сақтау':'Кітапты қосу');
+   if(error){toast('Кітапты сақтау кезінде қате шықты.','error');return;}
+   const wasEditing=!!editingBookId; stopEditBook();
+   await refreshAdminLists();
+   toast(wasEditing?'Кітап жаңартылды!':'Кітап қосылды!');
+ };
+
+ async function deleteBook(id){
+   if(!confirm('Бұл кітапты өшіруге сенімдісіз бе?'))return;
+   const {error}=await sb.from('library_books').delete().eq('id',id);
+   if(error){toast('Кітапты өшіру кезінде қате шықты.','error');return;}
+   if(editingBookId===id)stopEditBook();
+   await refreshAdminLists();
+   toast('Кітап өшірілді.');
+ }
+
+ /* ---------- KITAPVERSE: Class XP (add points / edit total / delete) ---------- */
+ const xpClassI=document.getElementById('a-xp-class'), xpAmountI=document.getElementById('a-xp-amount'), xpAddBtn=document.getElementById('a-xp-add');
+
+ xpAddBtn.onclick=async()=>{
+   const className=xpClassI.value.trim(), amount=parseInt(xpAmountI.value,10);
+   if(!className){toast('Сынып атын енгізіңіз (мысалы 7А).','error');return;}
+   if(!Number.isFinite(amount)||amount===0){toast('XP мөлшерін дұрыс енгізіңіз.','error');return;}
+   setBusy(xpAddBtn,true,'+ XP қосу');
+   const existing=await sb.from('class_xp').select('*').eq('class_name',className).maybeSingle();
+   let error;
+   if(existing.data){
+     ({error}=await sb.from('class_xp').update({xp:existing.data.xp+amount,updated_at:new Date().toISOString()}).eq('id',existing.data.id));
+   } else {
+     ({error}=await sb.from('class_xp').insert({class_name:className,xp:amount}));
+   }
+   setBusy(xpAddBtn,false,'+ XP қосу');
+   if(error){toast('XP сақтау кезінде қате шықты.','error');return;}
+   xpClassI.value='';
+   await refreshAdminLists();
+   toast(`${className} сыныбына ${amount>0?'+':''}${amount} XP қосылды!`);
+ };
+
+ async function editXpTotal(item){
+   const val=prompt(`${item.class_name} сыныбы үшін жаңа жалпы XP мөлшерін енгізіңіз:`,item.xp);
+   if(val===null)return;
+   const num=parseInt(val,10);
+   if(!Number.isFinite(num)){toast('Дұрыс сан енгізіңіз.','error');return;}
+   const {error}=await sb.from('class_xp').update({xp:num,updated_at:new Date().toISOString()}).eq('id',item.id);
+   if(error){toast('XP сақтау кезінде қате шықты.','error');return;}
+   await refreshAdminLists();
+   toast('XP жаңартылды!');
+ }
+
+ async function deleteXp(id){
+   if(!confirm('Бұл сыныпты рейтингтен өшіруге сенімдісіз бе?'))return;
+   const {error}=await sb.from('class_xp').delete().eq('id',id);
+   if(error){toast('Өшіру кезінде қате шықты.','error');return;}
+   await refreshAdminLists();
+   toast('Сынып рейтингтен өшірілді.');
+ }
+
  /* ---------- Documents: add / edit / delete ---------- */
  let editingDoc=null; // {id, storage_path}
  const docForm=document.getElementById('a-doc-form');
@@ -336,6 +423,34 @@ function toast(message,type='success'){
      row.querySelector('.icon-btn.danger').onclick=()=>deleteDoc(item.id,item.storage_path);
      docBox.appendChild(row);
    });
+
+   const bookBox=document.getElementById('a-book-admin-list');
+   if(bookBox){
+     const b=await sb.from('library_books').select('*').order('created_at',{ascending:false});
+     bookBox.innerHTML='';
+     if(!b.data || !b.data.length){ bookBox.innerHTML='<p class="admin-empty">Әзірге кітап жоқ.</p>'; }
+     else b.data.forEach(item=>{
+       const row=document.createElement('div'); row.className='admin-list-item';
+       row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(item.icon||'📕')} ${escapeHtml(item.title)}</strong><small>${escapeHtml(item.author||'')}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
+       row.querySelector('.icon-btn:not(.danger)').onclick=()=>startEditBook(item);
+       row.querySelector('.icon-btn.danger').onclick=()=>deleteBook(item.id);
+       bookBox.appendChild(row);
+     });
+   }
+
+   const xpBox=document.getElementById('a-xp-admin-list');
+   if(xpBox){
+     const x=await sb.from('class_xp').select('*').order('xp',{ascending:false});
+     xpBox.innerHTML='';
+     if(!x.data || !x.data.length){ xpBox.innerHTML='<p class="admin-empty">Әзірге рейтингте сынып жоқ.</p>'; }
+     else x.data.forEach(item=>{
+       const row=document.createElement('div'); row.className='admin-list-item';
+       row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(item.class_name)}</strong><small>${item.xp} XP</small></div><div class="ali-actions"><button class="icon-btn" title="Мәнін өзгерту" aria-label="Мәнін өзгерту">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
+       row.querySelector('.icon-btn:not(.danger)').onclick=()=>editXpTotal(item);
+       row.querySelector('.icon-btn.danger').onclick=()=>deleteXp(item.id);
+       xpBox.appendChild(row);
+     });
+   }
  }
 
  await loadPublic();
