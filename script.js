@@ -70,7 +70,7 @@ function toast(message,type='success'){
  const login=document.getElementById('admin-login'), content=document.getElementById('admin-content'), password=document.getElementById('admin-password');
  const loginBtn=document.getElementById('admin-login-btn');
 
- const showContent=()=>{login.hidden=true;content.hidden=false;refreshAdminLists();};
+ const showContent=()=>{login.hidden=true;content.hidden=false;refreshAdminLists();loadQuestLink();};
 
  loginBtn.onclick=async()=>{
    setBusy(loginBtn,true,'Кіру');
@@ -86,46 +86,72 @@ function toast(message,type='success'){
  function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
 
  /* ---------- News: add / edit / delete ---------- */
- let editingNewsId=null;
+ let editingNewsId=null, editingNewsPhotoPath=null;
  const newsForm=document.getElementById('a-news-form');
  const newsTitleI=document.getElementById('a-news-title'), newsDateI=document.getElementById('a-news-date'), newsTextI=document.getElementById('a-news-text');
+ const newsPhotoI=document.getElementById('a-news-photo'), newsPhotoHint=document.getElementById('a-news-photo-hint'), newsPhotoPreview=document.getElementById('a-news-photo-preview');
  const newsAddBtn=document.getElementById('a-news-add'), newsCancelBtn=document.getElementById('a-news-cancel'), newsFormTitle=document.getElementById('a-news-form-title');
 
+ newsPhotoI?.addEventListener('change',()=>{
+   const file=newsPhotoI.files[0];
+   if(!file){newsPhotoPreview.hidden=true;return;}
+   newsPhotoPreview.src=URL.createObjectURL(file); newsPhotoPreview.hidden=false;
+ });
+
  function startEditNews(item){
-   editingNewsId=item.id; newsForm.classList.add('editing');
+   editingNewsId=item.id; editingNewsPhotoPath=item.photo_path||null; newsForm.classList.add('editing');
    newsFormTitle.textContent='✏️ Жаңалықты өңдеу';
    newsAddBtn.textContent='Өзгерісті сақтау';
    newsTitleI.value=item.title||''; newsTextI.value=item.content||''; newsDateI.value=item.published_date||'';
+   newsPhotoI.value=''; newsPhotoHint.hidden=false;
+   if(item.photo_url){newsPhotoPreview.src=item.photo_url; newsPhotoPreview.hidden=false;} else {newsPhotoPreview.hidden=true;}
    newsForm.scrollIntoView({behavior:'smooth',block:'center'});
  }
  function stopEditNews(){
-   editingNewsId=null; newsForm.classList.remove('editing');
+   editingNewsId=null; editingNewsPhotoPath=null; newsForm.classList.remove('editing');
    newsFormTitle.textContent='📰 Жаңалық қосу'; newsAddBtn.textContent='Жаңалықты жариялау';
-   newsTitleI.value='';newsTextI.value='';newsDateI.value='';
+   newsTitleI.value='';newsTextI.value='';newsDateI.value=''; newsPhotoI.value=''; newsPhotoHint.hidden=true; newsPhotoPreview.hidden=true;
  }
  newsCancelBtn.onclick=stopEditNews;
 
  newsAddBtn.onclick=async()=>{
    const title=newsTitleI.value.trim(), body=newsTextI.value.trim(), date=newsDateI.value||new Date().toISOString().slice(0,10);
+   const file=newsPhotoI.files[0];
    if(!title||!body){toast('Тақырып пен мәтінді толтырыңыз.','error');return;}
+   if(file && file.size>10*1024*1024){toast('Фото 10 МБ-тан аспауы керек.','error');return;}
    setBusy(newsAddBtn,true,editingNewsId?'Өзгерісті сақтау':'Жаңалықты жариялау');
-   let error;
-   if(editingNewsId){
-     ({error}=await sb.from('news').update({title,content:body,published_date:date}).eq('id',editingNewsId));
-   } else {
-     ({error}=await sb.from('news').insert({title,content:body,published_date:date}));
+   try{
+     const payload={title,content:body,published_date:date};
+     if(file){
+       const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_'); const path=`news/${Date.now()}_${safe}`;
+       const up=await sb.storage.from('documents').upload(path,file,{upsert:false});
+       if(up.error)throw new Error('upload');
+       payload.photo_path=path;
+       payload.photo_url=sb.storage.from('documents').getPublicUrl(path).data.publicUrl;
+       if(editingNewsId && editingNewsPhotoPath)await sb.storage.from('documents').remove([editingNewsPhotoPath]);
+     }
+     let error;
+     if(editingNewsId){
+       ({error}=await sb.from('news').update(payload).eq('id',editingNewsId));
+     } else {
+       ({error}=await sb.from('news').insert(payload));
+     }
+     if(error)throw error;
+     const wasEditing=!!editingNewsId; stopEditNews();
+     await loadPublic(); await refreshAdminLists();
+     toast(wasEditing?'Жаңалық жаңартылды!':'Жаңалық жарияланды!');
+   }catch(err){
+     toast('Жаңалықты сақтау кезінде қате шықты.','error');
+   } finally {
+     setBusy(newsAddBtn,false,editingNewsId?'Өзгерісті сақтау':'Жаңалықты жариялау');
    }
-   setBusy(newsAddBtn,false,editingNewsId?'Өзгерісті сақтау':'Жаңалықты жариялау');
-   if(error){toast('Жаңалықты сақтау кезінде қате шықты.','error');return;}
-   const wasEditing=!!editingNewsId; stopEditNews();
-   await loadPublic(); await refreshAdminLists();
-   toast(wasEditing?'Жаңалық жаңартылды!':'Жаңалық жарияланды!');
  };
 
- async function deleteNews(id){
+ async function deleteNews(id,photoPath){
    if(!confirm('Бұл жаңалықты өшіруге сенімдісіз бе?'))return;
    const {error}=await sb.from('news').delete().eq('id',id);
    if(error){toast('Жаңалықты өшіру кезінде қате шықты.','error');return;}
+   if(photoPath)await sb.storage.from('documents').remove([photoPath]);
    if(editingNewsId===id)stopEditNews();
    await loadPublic(); await refreshAdminLists();
    toast('Жаңалық өшірілді.');
@@ -178,50 +204,72 @@ function toast(message,type='success'){
  }
 
  /* ---------- KITAPVERSE: Library books (add / edit / delete) ---------- */
- let editingBookId=null;
+ let editingBookId=null, editingBookPdfPath=null;
  const bookForm=document.getElementById('a-book-form');
- const bookIconI=document.getElementById('a-book-icon'), bookTitleI=document.getElementById('a-book-title'), bookAuthorI=document.getElementById('a-book-author'), bookTextI=document.getElementById('a-book-text');
+ const bookIconI=document.getElementById('a-book-icon'), bookTitleI=document.getElementById('a-book-title'), bookAuthorI=document.getElementById('a-book-author'), bookTextI=document.getElementById('a-book-text'), bookGradeI=document.getElementById('a-book-grade');
+ const bookPdfI=document.getElementById('a-book-pdf'), bookPdfHint=document.getElementById('a-book-pdf-hint');
  const bookAddBtn=document.getElementById('a-book-add'), bookCancelBtn=document.getElementById('a-book-cancel'), bookFormTitle=document.getElementById('a-book-form-title');
 
  function startEditBook(item){
-   editingBookId=item.id; bookForm.classList.add('editing');
+   editingBookId=item.id; editingBookPdfPath=item.pdf_path||null; bookForm.classList.add('editing');
    bookFormTitle.textContent='✏️ Кітапты өңдеу';
    bookAddBtn.textContent='Өзгерісті сақтау';
-   bookIconI.value=item.icon||''; bookTitleI.value=item.title||''; bookAuthorI.value=item.author||''; bookTextI.value=item.description||'';
+   bookIconI.value=item.icon||''; bookTitleI.value=item.title||''; bookAuthorI.value=item.author||''; bookTextI.value=item.description||''; bookGradeI.value=item.grade||'';
+   bookPdfI.value=''; bookPdfHint.hidden=false;
    bookForm.scrollIntoView({behavior:'smooth',block:'center'});
  }
  function stopEditBook(){
-   editingBookId=null; bookForm.classList.remove('editing');
+   editingBookId=null; editingBookPdfPath=null; bookForm.classList.remove('editing');
    bookFormTitle.textContent='📖 Кітапханаға кітап қосу'; bookAddBtn.textContent='Кітапты қосу';
-   bookIconI.value='';bookTitleI.value='';bookAuthorI.value='';bookTextI.value='';
+   bookIconI.value='';bookTitleI.value='';bookAuthorI.value='';bookTextI.value='';bookGradeI.value=''; bookPdfI.value=''; bookPdfHint.hidden=true;
  }
  bookCancelBtn.onclick=stopEditBook;
 
  bookAddBtn.onclick=async()=>{
-   const icon=bookIconI.value.trim()||'📕', title=bookTitleI.value.trim(), author=bookAuthorI.value.trim(), description=bookTextI.value.trim();
+   const icon=bookIconI.value.trim()||'📕', title=bookTitleI.value.trim(), author=bookAuthorI.value.trim(), description=bookTextI.value.trim(), grade=bookGradeI.value?parseInt(bookGradeI.value,10):null;
+   const file=bookPdfI.files[0];
    if(!title){toast('Кітап атауын енгізіңіз.','error');return;}
+   if(!grade){toast('Сыныпты таңдаңыз (6–10).','error');return;}
+   if(!editingBookId && !file){toast('PDF файлын таңдаңыз.','error');return;}
+   if(file && file.size>50*1024*1024){toast('PDF 50 МБ-тан аспауы керек.','error');return;}
    setBusy(bookAddBtn,true,editingBookId?'Өзгерісті сақтау':'Кітапты қосу');
-   let error;
-   if(editingBookId){
-     ({error}=await sb.from('library_books').update({icon,title,author,description}).eq('id',editingBookId));
-   } else {
-     ({error}=await sb.from('library_books').insert({icon,title,author,description}));
+   try{
+     const payload={icon,title,author,description,grade};
+     if(file){
+       const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_'); const path=`library/${Date.now()}_${safe}`;
+       const up=await sb.storage.from('documents').upload(path,file,{upsert:false});
+       if(up.error)throw new Error('upload');
+       payload.pdf_path=path;
+       payload.pdf_url=sb.storage.from('documents').getPublicUrl(path).data.publicUrl;
+       if(editingBookId && editingBookPdfPath)await sb.storage.from('documents').remove([editingBookPdfPath]);
+     }
+     let error;
+     if(editingBookId){
+       ({error}=await sb.from('library_books').update(payload).eq('id',editingBookId));
+     } else {
+       ({error}=await sb.from('library_books').insert(payload));
+     }
+     if(error)throw error;
+     const wasEditing=!!editingBookId; stopEditBook();
+     await refreshAdminLists();
+     toast(wasEditing?'Кітап жаңартылды!':'Кітап қосылды!');
+   }catch(err){
+     toast('Кітапты сақтау кезінде қате шықты.','error');
+   } finally {
+     setBusy(bookAddBtn,false,editingBookId?'Өзгерісті сақтау':'Кітапты қосу');
    }
-   setBusy(bookAddBtn,false,editingBookId?'Өзгерісті сақтау':'Кітапты қосу');
-   if(error){toast('Кітапты сақтау кезінде қате шықты.','error');return;}
-   const wasEditing=!!editingBookId; stopEditBook();
-   await refreshAdminLists();
-   toast(wasEditing?'Кітап жаңартылды!':'Кітап қосылды!');
  };
 
- async function deleteBook(id){
+ async function deleteBook(id,pdfPath){
    if(!confirm('Бұл кітапты өшіруге сенімдісіз бе?'))return;
    const {error}=await sb.from('library_books').delete().eq('id',id);
    if(error){toast('Кітапты өшіру кезінде қате шықты.','error');return;}
+   if(pdfPath)await sb.storage.from('documents').remove([pdfPath]);
    if(editingBookId===id)stopEditBook();
    await refreshAdminLists();
    toast('Кітап өшірілді.');
  }
+
 
  /* ---------- KITAPVERSE: Class XP (add points / edit total / delete) ---------- */
  const xpClassI=document.getElementById('a-xp-class'), xpAmountI=document.getElementById('a-xp-amount'), xpAddBtn=document.getElementById('a-xp-add');
@@ -262,6 +310,115 @@ function toast(message,type='success'){
    if(error){toast('Өшіру кезінде қате шықты.','error');return;}
    await refreshAdminLists();
    toast('Сынып рейтингтен өшірілді.');
+ }
+
+ /* ---------- KITAPVERSE: Quest Google Forms link ---------- */
+ const questLinkI=document.getElementById('a-quest-link'), questSaveBtn=document.getElementById('a-quest-save');
+
+ async function loadQuestLink(){
+   const {data}=await sb.from('kv_settings').select('*').eq('key','quest_link').maybeSingle();
+   if(data && questLinkI)questLinkI.value=data.value||'';
+ }
+
+ questSaveBtn.onclick=async()=>{
+   const link=questLinkI.value.trim();
+   setBusy(questSaveBtn,true,'Сілтемені сақтау');
+   const {error}=await sb.from('kv_settings').upsert({key:'quest_link',value:link});
+   setBusy(questSaveBtn,false,'Сілтемені сақтау');
+   if(error){toast('Сілтемені сақтау кезінде қате шықты.','error');return;}
+   toast('Сілтеме сақталды!');
+ };
+
+ /* ---------- KITAPVERSE: Quiz questions (Викторина) ---------- */
+ let editingQuizId=null;
+ const quizForm=document.getElementById('a-quiz-form');
+ const quizQI=document.getElementById('a-quiz-q'), quizAI=document.getElementById('a-quiz-a'), quizBI=document.getElementById('a-quiz-b'), quizCI=document.getElementById('a-quiz-c'), quizDI=document.getElementById('a-quiz-d'), quizCorrectI=document.getElementById('a-quiz-correct');
+ const quizAddBtn=document.getElementById('a-quiz-add'), quizCancelBtn=document.getElementById('a-quiz-cancel'), quizFormTitle=document.getElementById('a-quiz-form-title');
+
+ function startEditQuiz(item){
+   editingQuizId=item.id; quizForm.classList.add('editing');
+   quizFormTitle.textContent='✏️ Сұрақты өңдеу';
+   quizAddBtn.textContent='Өзгерісті сақтау';
+   quizQI.value=item.question||''; quizAI.value=item.option_a||''; quizBI.value=item.option_b||''; quizCI.value=item.option_c||''; quizDI.value=item.option_d||''; quizCorrectI.value=item.correct_option||'a';
+   quizForm.scrollIntoView({behavior:'smooth',block:'center'});
+ }
+ function stopEditQuiz(){
+   editingQuizId=null; quizForm.classList.remove('editing');
+   quizFormTitle.textContent='🧠 Викторина сұрағын қосу'; quizAddBtn.textContent='Сұрақты қосу';
+   quizQI.value='';quizAI.value='';quizBI.value='';quizCI.value='';quizDI.value='';quizCorrectI.value='a';
+ }
+ quizCancelBtn.onclick=stopEditQuiz;
+
+ quizAddBtn.onclick=async()=>{
+   const question=quizQI.value.trim(), option_a=quizAI.value.trim(), option_b=quizBI.value.trim(), option_c=quizCI.value.trim(), option_d=quizDI.value.trim(), correct_option=quizCorrectI.value;
+   if(!question||!option_a||!option_b||!option_c||!option_d){toast('Сұрақ пен барлық 4 нұсқаны толтырыңыз.','error');return;}
+   setBusy(quizAddBtn,true,editingQuizId?'Өзгерісті сақтау':'Сұрақты қосу');
+   let error;
+   if(editingQuizId){
+     ({error}=await sb.from('quiz_questions').update({question,option_a,option_b,option_c,option_d,correct_option}).eq('id',editingQuizId));
+   } else {
+     ({error}=await sb.from('quiz_questions').insert({question,option_a,option_b,option_c,option_d,correct_option}));
+   }
+   setBusy(quizAddBtn,false,editingQuizId?'Өзгерісті сақтау':'Сұрақты қосу');
+   if(error){toast('Сұрақты сақтау кезінде қате шықты.','error');return;}
+   const wasEditing=!!editingQuizId; stopEditQuiz();
+   await refreshAdminLists();
+   toast(wasEditing?'Сұрақ жаңартылды!':'Сұрақ қосылды!');
+ };
+
+ async function deleteQuiz(id){
+   if(!confirm('Бұл сұрақты өшіруге сенімдісіз бе?'))return;
+   const {error}=await sb.from('quiz_questions').delete().eq('id',id);
+   if(error){toast('Өшіру кезінде қате шықты.','error');return;}
+   if(editingQuizId===id)stopEditQuiz();
+   await refreshAdminLists();
+   toast('Сұрақ өшірілді.');
+ }
+
+ /* ---------- KITAPVERSE: Rewards (Марапаттау) ---------- */
+ let editingRewardId=null;
+ const rewardForm=document.getElementById('a-reward-form');
+ const rewardPosI=document.getElementById('a-reward-position'), rewardIconI=document.getElementById('a-reward-icon'), rewardTitleI=document.getElementById('a-reward-title');
+ const rewardAddBtn=document.getElementById('a-reward-add'), rewardCancelBtn=document.getElementById('a-reward-cancel'), rewardFormTitle=document.getElementById('a-reward-form-title');
+
+ function startEditReward(item){
+   editingRewardId=item.id; rewardForm.classList.add('editing');
+   rewardFormTitle.textContent='✏️ Марапатты өңдеу';
+   rewardAddBtn.textContent='Өзгерісті сақтау';
+   rewardPosI.value=item.position||''; rewardIconI.value=item.icon||''; rewardTitleI.value=item.title||'';
+   rewardForm.scrollIntoView({behavior:'smooth',block:'center'});
+ }
+ function stopEditReward(){
+   editingRewardId=null; rewardForm.classList.remove('editing');
+   rewardFormTitle.textContent='🏅 Марапат қосу'; rewardAddBtn.textContent='Марапатты қосу';
+   rewardPosI.value='';rewardIconI.value='';rewardTitleI.value='';
+ }
+ rewardCancelBtn.onclick=stopEditReward;
+
+ rewardAddBtn.onclick=async()=>{
+   const position=rewardPosI.value.trim(), icon=rewardIconI.value.trim()||'🏆', title=rewardTitleI.value.trim();
+   if(!position||!title){toast('Орын мен сыйлық сипаттамасын толтырыңыз.','error');return;}
+   setBusy(rewardAddBtn,true,editingRewardId?'Өзгерісті сақтау':'Марапатты қосу');
+   let error;
+   if(editingRewardId){
+     ({error}=await sb.from('rewards').update({position,icon,title}).eq('id',editingRewardId));
+   } else {
+     ({error}=await sb.from('rewards').insert({position,icon,title}));
+   }
+   setBusy(rewardAddBtn,false,editingRewardId?'Өзгерісті сақтау':'Марапатты қосу');
+   if(error){toast('Сақтау кезінде қате шықты.','error');return;}
+   const wasEditing=!!editingRewardId; stopEditReward();
+   await refreshAdminLists();
+   toast(wasEditing?'Марапат жаңартылды!':'Марапат қосылды!');
+ };
+
+ async function deleteReward(id){
+   if(!confirm('Бұл марапатты өшіруге сенімдісіз бе?'))return;
+   const {error}=await sb.from('rewards').delete().eq('id',id);
+   if(error){toast('Өшіру кезінде қате шықты.','error');return;}
+   if(editingRewardId===id)stopEditReward();
+   await refreshAdminLists();
+   toast('Марапат өшірілді.');
  }
 
  /* ---------- Documents: add / edit / delete ---------- */
@@ -351,7 +508,7 @@ function toast(message,type='success'){
      n.data.forEach(x=>{
        const el=document.createElement('article');
        el.className='news-card card-in'; el.setAttribute('data-cloud-item','');
-       el.innerHTML=`<div class="news-image">ЖАҢАЛЫҚ</div><div class="news-body"><span class="date">${escapeHtml(x.published_date||'')}</span><h3>${escapeHtml(x.title)}</h3><p>${escapeHtml(x.content)}</p><button class="read-more" data-title="${escapeHtml(x.title)}" data-text="${escapeHtml(x.content)}">Оқу →</button></div>`;
+       el.innerHTML=`<div class="news-image">${x.photo_url?`<img src="${x.photo_url}" alt="">`:'ЖАҢАЛЫҚ'}</div><div class="news-body"><span class="date">${escapeHtml(x.published_date||'')}</span><h3>${escapeHtml(x.title)}</h3><p>${escapeHtml(x.content)}</p><button class="read-more" data-title="${escapeHtml(x.title)}" data-text="${escapeHtml(x.content)}">Оқу →</button></div>`;
        bindReadMore(el.querySelector('.read-more'));
        list.appendChild(el);
      });
@@ -398,7 +555,7 @@ function toast(message,type='success'){
      const row=document.createElement('div'); row.className='admin-list-item';
      row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.published_date||'')}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
      row.querySelector('.icon-btn:not(.danger)').onclick=()=>startEditNews(item);
-     row.querySelector('.icon-btn.danger').onclick=()=>deleteNews(item.id);
+     row.querySelector('.icon-btn.danger').onclick=()=>deleteNews(item.id,item.photo_path);
      newsBox.appendChild(row);
    });
 
@@ -426,14 +583,14 @@ function toast(message,type='success'){
 
    const bookBox=document.getElementById('a-book-admin-list');
    if(bookBox){
-     const b=await sb.from('library_books').select('*').order('created_at',{ascending:false});
+     const b=await sb.from('library_books').select('*').order('grade',{ascending:true}).order('created_at',{ascending:false});
      bookBox.innerHTML='';
      if(!b.data || !b.data.length){ bookBox.innerHTML='<p class="admin-empty">Әзірге кітап жоқ.</p>'; }
      else b.data.forEach(item=>{
        const row=document.createElement('div'); row.className='admin-list-item';
-       row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(item.icon||'📕')} ${escapeHtml(item.title)}</strong><small>${escapeHtml(item.author||'')}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
+       row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(item.icon||'📕')} ${escapeHtml(item.title)}</strong><small>${item.grade?item.grade+' сынып · ':''}${escapeHtml(item.author||'')}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
        row.querySelector('.icon-btn:not(.danger)').onclick=()=>startEditBook(item);
-       row.querySelector('.icon-btn.danger').onclick=()=>deleteBook(item.id);
+       row.querySelector('.icon-btn.danger').onclick=()=>deleteBook(item.id,item.pdf_path);
        bookBox.appendChild(row);
      });
    }
@@ -449,6 +606,34 @@ function toast(message,type='success'){
        row.querySelector('.icon-btn:not(.danger)').onclick=()=>editXpTotal(item);
        row.querySelector('.icon-btn.danger').onclick=()=>deleteXp(item.id);
        xpBox.appendChild(row);
+     });
+   }
+
+   const quizBox=document.getElementById('a-quiz-admin-list');
+   if(quizBox){
+     const q=await sb.from('quiz_questions').select('*').order('created_at',{ascending:false});
+     quizBox.innerHTML='';
+     if(!q.data || !q.data.length){ quizBox.innerHTML='<p class="admin-empty">Әзірге сұрақ жоқ.</p>'; }
+     else q.data.forEach(item=>{
+       const row=document.createElement('div'); row.className='admin-list-item';
+       row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(item.question)}</strong><small>Дұрыс жауап: ${item.correct_option.toUpperCase()}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
+       row.querySelector('.icon-btn:not(.danger)').onclick=()=>startEditQuiz(item);
+       row.querySelector('.icon-btn.danger').onclick=()=>deleteQuiz(item.id);
+       quizBox.appendChild(row);
+     });
+   }
+
+   const rewardBox=document.getElementById('a-reward-admin-list');
+   if(rewardBox){
+     const r=await sb.from('rewards').select('*').order('created_at',{ascending:true});
+     rewardBox.innerHTML='';
+     if(!r.data || !r.data.length){ rewardBox.innerHTML='<p class="admin-empty">Әзірге марапат жоқ.</p>'; }
+     else r.data.forEach(item=>{
+       const row=document.createElement('div'); row.className='admin-list-item';
+       row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(item.icon||'🏆')} ${escapeHtml(item.position)}</strong><small>${escapeHtml(item.title)}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
+       row.querySelector('.icon-btn:not(.danger)').onclick=()=>startEditReward(item);
+       row.querySelector('.icon-btn.danger').onclick=()=>deleteReward(item.id);
+       rewardBox.appendChild(row);
      });
    }
  }

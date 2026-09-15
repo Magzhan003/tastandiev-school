@@ -29,7 +29,7 @@
     <div class="kv-flow">
       <div class="kv-flow-step"><div><span>📖</span>Кітапхана</div></div><span class="kv-flow-arrow">→</span>
       <div class="kv-flow-step"><div><span>🎮</span>Квесттер</div></div><span class="kv-flow-arrow">→</span>
-      <div class="kv-flow-step"><div><span>🧠</span>Викториналар</div></div><span class="kv-flow-arrow">→</span>
+      <div class="kv-flow-step"><div><span>🧠</span>Викторина</div></div><span class="kv-flow-arrow">→</span>
       <div class="kv-flow-step"><div><span>⚔️</span>Battle</div></div><span class="kv-flow-arrow">→</span>
       <div class="kv-flow-step"><div><span>🏆</span>Рейтинг</div></div><span class="kv-flow-arrow">→</span>
       <div class="kv-flow-step"><div><span>🎬</span>Шығармашылық</div></div>
@@ -37,24 +37,55 @@
   </div>
 </section>
 
+<!-- 📖 Library, grouped by grade -->
 <section id="kv-library" class="kv-section">
   <div class="container">
     <div class="kv-section-head"><div><span class="kv-badge">📖 ІСКЕ ҚОСЫЛДЫ</span><h2 style="margin:10px 0 0">Кітапхана</h2></div></div>
+    <div class="kv-grade-tabs" id="kv-grade-tabs">
+      <button class="kv-grade-tab selected" data-grade="6">6 сынып</button>
+      <button class="kv-grade-tab" data-grade="7">7 сынып</button>
+      <button class="kv-grade-tab" data-grade="8">8 сынып</button>
+      <button class="kv-grade-tab" data-grade="9">9 сынып</button>
+      <button class="kv-grade-tab" data-grade="10">10 сынып</button>
+    </div>
     <div class="kv-grid" id="kv-books"><p class="kv-empty">Жүктелуде...</p></div>
   </div>
 </section>
 
+<!-- 🎮 Quests: Google Forms link -->
 <section class="kv-section alt">
   <div class="container">
-    <div class="kv-section-head"><div><span class="kv-badge">ЖАҚЫНДА</span><h2 style="margin:10px 0 0">Квесттер мен Викториналар</h2></div></div>
+    <div class="kv-section-head"><div><span class="kv-badge">📖 ІСКЕ ҚОСЫЛДЫ</span><h2 style="margin:10px 0 0">Квесттер</h2></div></div>
     <div class="kv-grid">
-      <div class="kv-soon reveal"><b>🎮</b><h3>Квесттер</h3><p>Оқыған кітап бойынша тапсырмалар тізбегі, XP үшін өтелетін миссиялар.</p><span class="status">Жақында қосылады</span></div>
-      <div class="kv-soon reveal"><b>🧠</b><h3>Викториналар</h3><p>Кітап мазмұны бойынша қысқа сұрақ-жауап турнирлері.</p><span class="status">Жақында қосылады</span></div>
-      <div class="kv-soon reveal"><b>⚔️</b><h3>Battle</h3><p>Сынып пен сыныптың арасындағы білім жарысы, тікелей эфирде ұпай санау.</p><span class="status">Жақында қосылады</span></div>
+      <div class="kv-quest-card">
+        <b>🎮</b><h3>Оқу квесті</h3><p>Google Forms арқылы дайындалған тапсырмалар тізбегін орында.</p>
+        <a class="btn btn-primary" id="kv-quest-link" href="#" target="_blank" rel="noopener">Квестке өту →</a>
+      </div>
     </div>
   </div>
 </section>
 
+<!-- 🧠 Live quiz -->
+<section id="kv-quiz" class="kv-section">
+  <div class="container">
+    <div class="kv-section-head"><div><span class="kv-badge">📖 ІСКЕ ҚОСЫЛДЫ</span><h2 style="margin:10px 0 0">Викторина</h2></div></div>
+    <p class="lead">Аты-жөніңді және сыныбыңды жаз, сұрақтарға жауап бер — ұпайың бойынша сыныбыңа автоматты түрде XP қосылады.</p>
+    <div id="kv-quiz-box" class="kv-quiz-box">
+      <p class="kv-empty">Жүктелуде...</p>
+    </div>
+  </div>
+</section>
+
+<!-- ⚔️ Battle (auto-computed from quiz attempts) -->
+<section class="kv-section alt">
+  <div class="container">
+    <div class="kv-section-head"><div><span class="kv-badge">📖 ІСКЕ ҚОСЫЛДЫ</span><h2 style="margin:10px 0 0">Battle: сынып пен сынып</h2></div></div>
+    <p class="lead">Викторина нәтижелері бойынша сыныптардың орташа ұпайы автоматты түрде салыстырылады.</p>
+    <div id="kv-battle" class="kv-grid"><p class="kv-empty">Жүктелуде...</p></div>
+  </div>
+</section>
+
+<!-- 🏆 Class rating board -->
 <section id="kv-rating" class="kv-section">
   <div class="container">
     <div class="kv-board">
@@ -65,7 +96,16 @@
   </div>
 </section>
 
+<!-- 👤 Student rating (top 5) + rewards -->
 <section class="kv-section alt">
+  <div class="container">
+    <div class="kv-section-head"><div><span class="kv-badge">📖 ІСКЕ ҚОСЫЛДЫ</span><h2 style="margin:10px 0 0">Үздік 5 оқушы</h2></div></div>
+    <div id="kv-students" class="kv-students"><p class="kv-empty">Жүктелуде...</p></div>
+    <div id="kv-rewards" class="kv-rewards"></div>
+  </div>
+</section>
+
+<section class="kv-section">
   <div class="container">
     <div class="kv-section-head"><div><span class="kv-badge">ЖАҚЫНДА</span><h2 style="margin:10px 0 0">Шығармашылық тапсырмалар</h2></div></div>
     <div class="kv-grid">

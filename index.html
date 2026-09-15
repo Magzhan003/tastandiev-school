@@ -98,6 +98,9 @@
         <input id="a-news-title" placeholder="Жаңалық тақырыбы">
         <input id="a-news-date" type="date">
         <textarea id="a-news-text" placeholder="Жаңалық мәтіні"></textarea>
+        <input id="a-news-photo" type="file" accept="image/*">
+        <p class="admin-hint" id="a-news-photo-hint" hidden>Жаңа фото таңдамасаңыз, ескі фото қалады.</p>
+        <img id="a-news-photo-preview" class="admin-photo-preview" hidden alt="Алдын ала қарау">
         <div class="admin-actions">
           <button class="btn btn-primary" id="a-news-add">Жаңалықты жариялау</button>
           <button class="btn btn-light cancel-edit" id="a-news-cancel">Болдырмау</button>
@@ -124,7 +127,17 @@
         <input id="a-book-icon" placeholder="Эмодзи (мысалы 📕, 📗, 📘)" maxlength="4">
         <input id="a-book-title" placeholder="Кітап атауы">
         <input id="a-book-author" placeholder="Авторы">
+        <select id="a-book-grade">
+          <option value="">Сынып таңдаңыз</option>
+          <option value="6">6 сынып</option>
+          <option value="7">7 сынып</option>
+          <option value="8">8 сынып</option>
+          <option value="9">9 сынып</option>
+          <option value="10">10 сынып</option>
+        </select>
         <textarea id="a-book-text" placeholder="Қысқаша сипаттама (міндетті емес)"></textarea>
+        <input id="a-book-pdf" type="file" accept="application/pdf">
+        <p class="admin-hint" id="a-book-pdf-hint" hidden>Жаңа PDF таңдамасаңыз, ескі файл қалады.</p>
         <div class="admin-actions">
           <button class="btn btn-primary" id="a-book-add">Кітапты қосу</button>
           <button class="btn btn-light cancel-edit" id="a-book-cancel">Болдырмау</button>
@@ -144,6 +157,49 @@
       </div>
       <div class="admin-section-title">Ағымдағы рейтинг</div>
       <div class="admin-list" id="a-xp-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
+
+      <div class="admin-form" id="a-quest-form">
+        <h3>🎮 Квест: Google Forms сілтемесі</h3>
+        <input id="a-quest-link" placeholder="https://forms.google.com/...">
+        <div class="admin-actions">
+          <button class="btn btn-primary" id="a-quest-save">Сілтемені сақтау</button>
+        </div>
+        <p class="admin-hint">Бұл сілтеме KITAPVERSE бетіндегі «Квесттер» карточкасында батырма ретінде шығады.</p>
+      </div>
+
+      <div class="admin-form" id="a-quiz-form">
+        <h3><span id="a-quiz-form-title">🧠 Викторина сұрағын қосу</span></h3>
+        <input id="a-quiz-q" placeholder="Сұрақ мәтіні">
+        <input id="a-quiz-a" placeholder="A нұсқасы">
+        <input id="a-quiz-b" placeholder="B нұсқасы">
+        <input id="a-quiz-c" placeholder="C нұсқасы">
+        <input id="a-quiz-d" placeholder="D нұсқасы">
+        <select id="a-quiz-correct">
+          <option value="a">Дұрыс жауап: A</option>
+          <option value="b">Дұрыс жауап: B</option>
+          <option value="c">Дұрыс жауап: C</option>
+          <option value="d">Дұрыс жауап: D</option>
+        </select>
+        <div class="admin-actions">
+          <button class="btn btn-primary" id="a-quiz-add">Сұрақты қосу</button>
+          <button class="btn btn-light cancel-edit" id="a-quiz-cancel">Болдырмау</button>
+        </div>
+      </div>
+      <div class="admin-section-title">Викторина сұрақтары</div>
+      <div class="admin-list" id="a-quiz-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
+
+      <div class="admin-form" id="a-reward-form">
+        <h3><span id="a-reward-form-title">🏅 Марапат қосу</span></h3>
+        <input id="a-reward-position" placeholder="Орын (мысалы 1-орын)">
+        <input id="a-reward-icon" placeholder="Эмодзи (мысалы 🏆)" maxlength="4">
+        <input id="a-reward-title" placeholder="Сыйлық сипаттамасы (мысалы: Тараз қаласына сапар)">
+        <div class="admin-actions">
+          <button class="btn btn-primary" id="a-reward-add">Марапатты қосу</button>
+          <button class="btn btn-light cancel-edit" id="a-reward-cancel">Болдырмау</button>
+        </div>
+      </div>
+      <div class="admin-section-title">Марапаттар тізімі</div>
+      <div class="admin-list" id="a-reward-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
 
       <div class="admin-form" id="a-doc-form">
         <h3><span id="a-doc-form-title">📄 Құжат қосу</span></h3>
