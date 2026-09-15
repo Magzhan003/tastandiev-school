@@ -105,6 +105,19 @@ set class_name = m.norm_name, xp = m.total_xp, updated_at = now()
 from merged m
 where cx.id = m.keep_id;
 
+-- Note: a CTE only lives for the single statement it's attached to, so the
+-- "delete" below repeats the same normalized/merged definition rather than
+-- reusing the one above (that's what caused the "relation normalized does
+-- not exist" error).
+with normalized as (
+  select id, xp, translate(upper(trim(class_name)), 'ABEKMHOPCTXY', 'АВЕКМНОРСТХУ') as norm_name
+  from public.class_xp
+),
+merged as (
+  select norm_name, sum(xp) as total_xp, min(id) as keep_id
+  from normalized
+  group by norm_name
+)
 delete from public.class_xp cx
 using normalized n, merged m
 where n.id = cx.id and n.norm_name = m.norm_name and cx.id <> m.keep_id;
