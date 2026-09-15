@@ -135,15 +135,18 @@ button[disabled],.btn[disabled],.icon-btn[disabled]{opacity:.55;cursor:not-allow
 .kv-board-title .section-label{color:#9db4ff}
 .kv-board-title h2{margin:8px 0;font-size:30px}
 .kv-board-gap{text-align:center;color:#ffd166;font-weight:800;font-size:15px;margin-bottom:30px}
-.kv-bar-row{display:grid;grid-template-columns:60px 110px 1fr 90px;align-items:center;gap:14px;padding:11px 0}
+.kv-bar-head{display:grid;grid-template-columns:60px 110px 1fr 110px;gap:14px;padding:0 0 6px;font-size:11px;font-weight:800;letter-spacing:1px;color:#8a93ad;text-align:right}
+.kv-bar-head span:first-child,.kv-bar-head span:nth-child(2),.kv-bar-head span:nth-child(3){text-align:left}
+.kv-bar-row{display:grid;grid-template-columns:60px 110px 1fr 110px;align-items:center;gap:14px;padding:11px 0}
 .kv-bar-rank{font-size:22px;text-align:center}
 .kv-bar-class{font-weight:800;font-size:15px}
-.kv-bar-track{background:#ffffff14;border-radius:10px;height:16px;overflow:hidden}
+.kv-bar-track{position:relative;background:#ffffff14;border-radius:10px;height:16px;overflow:hidden}
 .kv-bar-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,#165dff,#7fa8ff);width:0;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
 .kv-bar-fill.gold{background:linear-gradient(90deg,#e8b923,#ffe27a)}
-.kv-bar-xp{text-align:right;font-weight:800;font-size:14px;color:#c7cee6}
+.kv-bar-xp{position:absolute;right:10px;top:0;bottom:0;display:flex;align-items:center;font-weight:800;font-size:12px;color:#0d1226;text-shadow:0 1px 0 #ffffff40}
+.kv-bar-battle{text-align:right;font-weight:800;font-size:14px;color:#ff9f6b}
 .kv-empty{color:#8996ab;text-align:center;padding:30px 0}
-@media(max-width:850px){.kv-grid{grid-template-columns:1fr 1fr}.kv-bar-row{grid-template-columns:44px 76px 1fr 70px;gap:8px}.kv-promo-card{padding:26px}}
+@media(max-width:850px){.kv-grid{grid-template-columns:1fr 1fr}.kv-bar-row,.kv-bar-head{grid-template-columns:44px 76px 1fr 76px;gap:8px}.kv-promo-card{padding:26px}}
 @media(max-width:520px){.kv-grid{grid-template-columns:1fr}}
 
 /* ---- Library grade tabs ---- */
@@ -181,6 +184,32 @@ button[disabled],.btn[disabled],.icon-btn[disabled]{opacity:.55;cursor:not-allow
 .kv-battle-card small{color:#7a8496}
 
 /* ---- Student rating + rewards ---- */
+.kv-battle-list{display:flex;flex-direction:column;gap:24px}
+.kv-battle-arena{background:linear-gradient(160deg,#1a1030,#2b1030 55%,#3a1225);border-radius:26px;padding:34px 30px;color:#fff;position:relative;overflow:hidden;box-shadow:0 24px 50px #3a122530}
+.kv-battle-arena::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 85% 0%,#ff6b3530,transparent 55%);pointer-events:none}
+.kv-battle-arena-head h3{margin:8px 0 4px;font-size:26px;letter-spacing:-.5px}
+.kv-badge-fire{background:#ff6b3522;color:#ff9f6b}
+.kv-battle-note{color:#d8b9d0;font-size:13px;margin:0 0 6px}
+.kv-battle-note b{color:#fff}
+.kv-battle-timer{display:flex;gap:12px;margin:22px 0 6px}
+.kv-battle-timer div{background:#ffffff12;border:1px solid #ffffff20;border-radius:14px;padding:12px 10px;text-align:center;min-width:64px}
+.kv-battle-timer b{display:block;font-size:28px;font-weight:900;font-variant-numeric:tabular-nums}
+.kv-battle-timer span{display:block;font-size:11px;color:#d8b9d0;letter-spacing:.5px}
+.kv-battle-live{background:#ffffff10;border:1px solid #ffffff20;border-radius:18px;padding:22px;margin-top:18px;max-width:560px}
+.kv-battle-live input{width:100%;box-sizing:border-box;margin:6px 0;padding:13px 14px;border:1px solid #ffffff30;border-radius:12px;font:inherit;background:#ffffff14;color:#fff}
+.kv-battle-live input::placeholder{color:#d8b9d0}
+.kv-battle-live .kv-quiz-option{background:#ffffff12;border-color:#ffffff25;color:#fff}
+.kv-battle-live .kv-quiz-option:hover{border-color:#ff9f6b;background:#ff6b3525}
+.kv-battle-live .kv-quiz-option.picked{background:#ff6b35;border-color:#ff6b35;color:#fff}
+.kv-battle-live .kv-quiz-progress{color:#ff9f6b}
+.kv-battle-live .kv-quiz-result .score{color:#ff9f6b}
+.kv-battle-results{margin-top:22px}
+.kv-battle-results .kv-battle-card{background:#ffffff10;border-color:#ffffff20;color:#fff}
+.kv-battle-results .kv-battle-card .avg{color:#ff9f6b}
+.kv-battle-results .kv-battle-card small{color:#d8b9d0}
+.kv-battle-results .kv-battle-card.winner{border-color:#ff9f6b;box-shadow:0 18px 36px #ff6b3530}
+@media(max-width:520px){.kv-battle-timer{flex-wrap:wrap}.kv-battle-timer div{flex:1;min-width:60px}}
+
 .kv-students{display:flex;flex-direction:column;gap:10px;max-width:640px}
 .kv-student-row{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e4eaf2;border-radius:14px;padding:13px 16px}
 .kv-student-rank{font-size:20px;width:30px;text-align:center}

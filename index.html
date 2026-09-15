@@ -167,6 +167,42 @@
         <p class="admin-hint">Бұл сілтеме KITAPVERSE бетіндегі «Квесттер» карточкасында батырма ретінде шығады.</p>
       </div>
 
+      <div class="admin-form" id="a-battle-form">
+        <h3><span id="a-battle-form-title">⚔️ Battle құру</span></h3>
+        <input id="a-battle-title" placeholder="Battle атауы (мысалы: 8А vs 9Б)">
+        <input id="a-battle-classes" placeholder="Қатысатын сыныптар (мысалы: 8А, 9Б)">
+        <input id="a-battle-date" type="datetime-local">
+        <div class="admin-actions">
+          <button class="btn btn-primary" id="a-battle-add">Battle-ды жариялау</button>
+          <button class="btn btn-light cancel-edit" id="a-battle-cancel">Болдырмау</button>
+        </div>
+        <p class="admin-hint">KITAPVERSE бетінде осы күнге дейін таймер көрсетіледі. Уақыты келгенде төмендегі сұрақтар автоматты түрде викторина ретінде ашылады.</p>
+      </div>
+      <div class="admin-section-title">Жарияланған battle-дар</div>
+      <div class="admin-list" id="a-battle-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
+
+      <div class="admin-form" id="a-battle-q-form">
+        <h3><span id="a-battle-q-form-title">🧠 Battle сұрағын қосу</span></h3>
+        <select id="a-battle-q-battle"><option value="">Battle таңдаңыз</option></select>
+        <input id="a-battle-q-q" placeholder="Сұрақ мәтіні">
+        <input id="a-battle-q-a" placeholder="A нұсқасы">
+        <input id="a-battle-q-b" placeholder="B нұсқасы">
+        <input id="a-battle-q-c" placeholder="C нұсқасы">
+        <input id="a-battle-q-d" placeholder="D нұсқасы">
+        <select id="a-battle-q-correct">
+          <option value="a">Дұрыс жауап: A</option>
+          <option value="b">Дұрыс жауап: B</option>
+          <option value="c">Дұрыс жауап: C</option>
+          <option value="d">Дұрыс жауап: D</option>
+        </select>
+        <div class="admin-actions">
+          <button class="btn btn-primary" id="a-battle-q-add">Сұрақты қосу</button>
+          <button class="btn btn-light cancel-edit" id="a-battle-q-cancel">Болдырмау</button>
+        </div>
+      </div>
+      <div class="admin-section-title">Battle сұрақтары</div>
+      <div class="admin-list" id="a-battle-q-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
+
       <div class="admin-form" id="a-quiz-form">
         <h3><span id="a-quiz-form-title">🧠 Викторина сұрағын қосу</span></h3>
         <input id="a-quiz-q" placeholder="Сұрақ мәтіні">

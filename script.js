@@ -84,6 +84,16 @@ function toast(message,type='success'){
 
  function setBusy(btn,busy,idleLabel){ if(!btn)return; btn.disabled=busy; btn.textContent=busy?'Жүктелуде...':idleLabel; }
  function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+ /* Normalize a class name so lookalike input (extra spaces, latin letters that
+    look like Cyrillic) never creates a hidden duplicate row in the rating —
+    this is what made classes like "8А" sometimes disappear from the board. */
+ function normalizeClassName(s){
+   if(!s)return '';
+   let out=String(s).trim().toUpperCase().replace(/\s+/g,'');
+   const map={'A':'А','B':'В','E':'Е','K':'К','M':'М','H':'Н','O':'О','P':'Р','C':'С','T':'Т','X':'Х','Y':'У'};
+   out=out.replace(/[ABEKMHOPCTXY]/g,ch=>map[ch]);
+   return out;
+ }
 
  /* ---------- News: add / edit / delete ---------- */
  let editingNewsId=null, editingNewsPhotoPath=null;
@@ -275,7 +285,7 @@ function toast(message,type='success'){
  const xpClassI=document.getElementById('a-xp-class'), xpAmountI=document.getElementById('a-xp-amount'), xpAddBtn=document.getElementById('a-xp-add');
 
  xpAddBtn.onclick=async()=>{
-   const className=xpClassI.value.trim(), amount=parseInt(xpAmountI.value,10);
+   const className=normalizeClassName(xpClassI.value), amount=parseInt(xpAmountI.value,10);
    if(!className){toast('Сынып атын енгізіңіз (мысалы 7А).','error');return;}
    if(!Number.isFinite(amount)||amount===0){toast('XP мөлшерін дұрыс енгізіңіз.','error');return;}
    setBusy(xpAddBtn,true,'+ XP қосу');
@@ -310,6 +320,107 @@ function toast(message,type='success'){
    if(error){toast('Өшіру кезінде қате шықты.','error');return;}
    await refreshAdminLists();
    toast('Сынып рейтингтен өшірілді.');
+ }
+
+ /* ---------- KITAPVERSE: Battle (create/edit/delete + its own quiz questions) ---------- */
+ let editingBattleId=null, editingBattleQId=null;
+ const battleForm=document.getElementById('a-battle-form');
+ const battleTitleI=document.getElementById('a-battle-title'), battleClassesI=document.getElementById('a-battle-classes'), battleDateI=document.getElementById('a-battle-date');
+ const battleAddBtn=document.getElementById('a-battle-add'), battleCancelBtn=document.getElementById('a-battle-cancel'), battleFormTitle=document.getElementById('a-battle-form-title');
+
+ function startEditBattle(item){
+   editingBattleId=item.id; battleForm.classList.add('editing');
+   battleFormTitle.textContent='✏️ Battle-ды өңдеу'; battleAddBtn.textContent='Өзгерісті сақтау';
+   battleTitleI.value=item.title||''; battleClassesI.value=item.classes||'';
+   battleDateI.value=item.battle_date?new Date(item.battle_date).toISOString().slice(0,16):'';
+   battleForm.scrollIntoView({behavior:'smooth',block:'center'});
+ }
+ function stopEditBattle(){
+   editingBattleId=null; battleForm.classList.remove('editing');
+   battleFormTitle.textContent='⚔️ Battle құру'; battleAddBtn.textContent='Battle-ды жариялау';
+   battleTitleI.value='';battleClassesI.value='';battleDateI.value='';
+ }
+ battleCancelBtn.onclick=stopEditBattle;
+
+ battleAddBtn.onclick=async()=>{
+   const title=battleTitleI.value.trim(), classes=battleClassesI.value.trim(), battle_date=battleDateI.value;
+   if(!title||!classes||!battle_date){toast('Атауын, сыныптарды және күнін толтырыңыз.','error');return;}
+   setBusy(battleAddBtn,true,editingBattleId?'Өзгерісті сақтау':'Battle-ды жариялау');
+   const iso=new Date(battle_date).toISOString();
+   let error;
+   if(editingBattleId){
+     ({error}=await sb.from('battles').update({title,classes,battle_date:iso}).eq('id',editingBattleId));
+   } else {
+     ({error}=await sb.from('battles').insert({title,classes,battle_date:iso}));
+   }
+   setBusy(battleAddBtn,false,editingBattleId?'Өзгерісті сақтау':'Battle-ды жариялау');
+   if(error){toast('Battle сақтау кезінде қате шықты.','error');return;}
+   const wasEditing=!!editingBattleId; stopEditBattle();
+   await refreshAdminLists();
+   toast(wasEditing?'Battle жаңартылды!':'Battle жарияланды!');
+ };
+
+ async function deleteBattle(id){
+   if(!confirm('Бұл battle-ды және оның барлық сұрақтары мен нәтижелерін өшіруге сенімдісіз бе?'))return;
+   const {error}=await sb.from('battles').delete().eq('id',id);
+   if(error){toast('Өшіру кезінде қате шықты.','error');return;}
+   if(editingBattleId===id)stopEditBattle();
+   await refreshAdminLists();
+   toast('Battle өшірілді.');
+ }
+
+ /* ---- Battle questions (tied to a battle_id) ---- */
+ const battleQForm=document.getElementById('a-battle-q-form');
+ const battleQBattleI=document.getElementById('a-battle-q-battle');
+ const battleQQI=document.getElementById('a-battle-q-q'), battleQAI=document.getElementById('a-battle-q-a'), battleQBI=document.getElementById('a-battle-q-b'), battleQCI=document.getElementById('a-battle-q-c'), battleQDI=document.getElementById('a-battle-q-d'), battleQCorrectI=document.getElementById('a-battle-q-correct');
+ const battleQAddBtn=document.getElementById('a-battle-q-add'), battleQCancelBtn=document.getElementById('a-battle-q-cancel'), battleQFormTitle=document.getElementById('a-battle-q-form-title');
+
+ function startEditBattleQ(item){
+   editingBattleQId=item.id; battleQForm.classList.add('editing');
+   battleQFormTitle.textContent='✏️ Battle сұрағын өңдеу'; battleQAddBtn.textContent='Өзгерісті сақтау';
+   battleQBattleI.value=item.battle_id; battleQQI.value=item.question||''; battleQAI.value=item.option_a||''; battleQBI.value=item.option_b||''; battleQCI.value=item.option_c||''; battleQDI.value=item.option_d||''; battleQCorrectI.value=item.correct_option||'a';
+   battleQForm.scrollIntoView({behavior:'smooth',block:'center'});
+ }
+ function stopEditBattleQ(){
+   editingBattleQId=null; battleQForm.classList.remove('editing');
+   battleQFormTitle.textContent='🧠 Battle сұрағын қосу'; battleQAddBtn.textContent='Сұрақты қосу';
+   battleQQI.value='';battleQAI.value='';battleQBI.value='';battleQCI.value='';battleQDI.value='';battleQCorrectI.value='a';
+ }
+ battleQCancelBtn.onclick=stopEditBattleQ;
+
+ battleQAddBtn.onclick=async()=>{
+   const battle_id=parseInt(battleQBattleI.value,10);
+   const question=battleQQI.value.trim(), option_a=battleQAI.value.trim(), option_b=battleQBI.value.trim(), option_c=battleQCI.value.trim(), option_d=battleQDI.value.trim(), correct_option=battleQCorrectI.value;
+   if(!battle_id){toast('Алдымен Battle таңдаңыз.','error');return;}
+   if(!question||!option_a||!option_b||!option_c||!option_d){toast('Сұрақ пен барлық 4 нұсқаны толтырыңыз.','error');return;}
+   setBusy(battleQAddBtn,true,editingBattleQId?'Өзгерісті сақтау':'Сұрақты қосу');
+   let error;
+   if(editingBattleQId){
+     ({error}=await sb.from('battle_questions').update({battle_id,question,option_a,option_b,option_c,option_d,correct_option}).eq('id',editingBattleQId));
+   } else {
+     ({error}=await sb.from('battle_questions').insert({battle_id,question,option_a,option_b,option_c,option_d,correct_option}));
+   }
+   setBusy(battleQAddBtn,false,editingBattleQId?'Өзгерісті сақтау':'Сұрақты қосу');
+   if(error){toast('Сұрақты сақтау кезінде қате шықты.','error');return;}
+   const wasEditing=!!editingBattleQId; stopEditBattleQ();
+   await refreshAdminLists();
+   toast(wasEditing?'Сұрақ жаңартылды!':'Battle сұрағы қосылды!');
+ };
+
+ async function deleteBattleQ(id){
+   if(!confirm('Бұл сұрақты өшіруге сенімдісіз бе?'))return;
+   const {error}=await sb.from('battle_questions').delete().eq('id',id);
+   if(error){toast('Өшіру кезінде қате шықты.','error');return;}
+   if(editingBattleQId===id)stopEditBattleQ();
+   await refreshAdminLists();
+   toast('Сұрақ өшірілді.');
+ }
+
+ function battleCountdownLabel(iso){
+   const diff=new Date(iso).getTime()-Date.now();
+   if(diff<=0)return 'Басталды';
+   const days=Math.floor(diff/86400000), hours=Math.floor((diff%86400000)/3600000);
+   return `${days} күн ${hours} сағ қалды`;
  }
 
  /* ---------- KITAPVERSE: Quest Google Forms link ---------- */
@@ -606,6 +717,45 @@ function toast(message,type='success'){
        row.querySelector('.icon-btn:not(.danger)').onclick=()=>editXpTotal(item);
        row.querySelector('.icon-btn.danger').onclick=()=>deleteXp(item.id);
        xpBox.appendChild(row);
+     });
+   }
+
+   const battleBox=document.getElementById('a-battle-admin-list');
+   let battlesData=[];
+   if(battleBox){
+     const bt=await sb.from('battles').select('*').order('battle_date',{ascending:true});
+     battlesData=bt.data||[];
+     battleBox.innerHTML='';
+     if(!battlesData.length){ battleBox.innerHTML='<p class="admin-empty">Әзірге battle жарияланған жоқ.</p>'; }
+     else battlesData.forEach(item=>{
+       const row=document.createElement('div'); row.className='admin-list-item';
+       const when=new Date(item.battle_date).toLocaleString('kk-KZ',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+       row.innerHTML=`<div class="ali-info"><strong>⚔️ ${escapeHtml(item.title)}</strong><small>${escapeHtml(item.classes)} · ${when} · ${battleCountdownLabel(item.battle_date)}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
+       row.querySelector('.icon-btn:not(.danger)').onclick=()=>startEditBattle(item);
+       row.querySelector('.icon-btn.danger').onclick=()=>deleteBattle(item.id);
+       battleBox.appendChild(row);
+     });
+   }
+
+   const battleQSelect=document.getElementById('a-battle-q-battle');
+   if(battleQSelect){
+     const prev=battleQSelect.value;
+     battleQSelect.innerHTML='<option value="">Battle таңдаңыз</option>'+battlesData.map(b=>`<option value="${b.id}">${escapeHtml(b.title)}</option>`).join('');
+     if(prev)battleQSelect.value=prev;
+   }
+
+   const battleQBox=document.getElementById('a-battle-q-admin-list');
+   if(battleQBox){
+     const bq=await sb.from('battle_questions').select('*').order('created_at',{ascending:false});
+     battleQBox.innerHTML='';
+     if(!bq.data || !bq.data.length){ battleQBox.innerHTML='<p class="admin-empty">Әзірге battle сұрағы жоқ.</p>'; }
+     else bq.data.forEach(item=>{
+       const battleTitle=(battlesData.find(b=>b.id===item.battle_id)||{}).title||'—';
+       const row=document.createElement('div'); row.className='admin-list-item';
+       row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(item.question)}</strong><small>${escapeHtml(battleTitle)} · Дұрыс жауап: ${item.correct_option.toUpperCase()}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
+       row.querySelector('.icon-btn:not(.danger)').onclick=()=>startEditBattleQ(item);
+       row.querySelector('.icon-btn.danger').onclick=()=>deleteBattleQ(item.id);
+       battleQBox.appendChild(row);
      });
    }
 

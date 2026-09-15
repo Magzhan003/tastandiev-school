@@ -76,12 +76,12 @@
   </div>
 </section>
 
-<!-- ⚔️ Battle (auto-computed from quiz attempts) -->
-<section class="kv-section alt">
+<!-- ⚔️ Battle: scheduled class-vs-class events with countdown + own quiz -->
+<section id="kv-battle-section" class="kv-section alt">
   <div class="container">
-    <div class="kv-section-head"><div><span class="kv-badge">📖 ІСКЕ ҚОСЫЛДЫ</span><h2 style="margin:10px 0 0">Battle: сынып пен сынып</h2></div></div>
-    <p class="lead">Викторина нәтижелері бойынша сыныптардың орташа ұпайы автоматты түрде салыстырылады.</p>
-    <div id="kv-battle" class="kv-grid"><p class="kv-empty">Жүктелуде...</p></div>
+    <div class="kv-section-head"><div><span class="kv-badge">⚔️ BATTLE</span><h2 style="margin:10px 0 0">Сынып пен сыныптың Battle-і</h2></div></div>
+    <p class="lead">Әкімшілік жариялаған күнге дейін таймер санайды. Battle басталғанда — викторина ашылады, нәтиже бойынша жеңімпаз сынып анықталады.</p>
+    <div id="kv-battle-list" class="kv-battle-list"><p class="kv-empty">Жүктелуде...</p></div>
   </div>
 </section>
 
@@ -91,6 +91,7 @@
     <div class="kv-board">
       <div class="kv-board-title"><span class="section-label">БҮГІНГІ КІТАП</span><h2>Сыныптар рейтингі</h2></div>
       <div class="kv-board-gap" id="kv-gap"></div>
+      <div class="kv-bar-head"><span></span><span></span><span>Жалпы балл</span><span>Battle ұпайы</span></div>
       <div id="kv-bars"><p class="kv-empty">Жүктелуде...</p></div>
     </div>
   </div>
