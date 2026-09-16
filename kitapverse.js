@@ -145,15 +145,7 @@ function normalizeClassList(s){
    if(!questListBox)return;
    const {data,error}=await sb.from('quests').select('id,title,description,created_at,book_id').eq('published',true).order('created_at',{ascending:false});
    if(error||!data?.length){questListBox.innerHTML='<p class="kv-empty">Жаңа квесттер жақында қосылады.</p>';return;}
-   questListBox.innerHTML='';
-  const groups={};
-  data.forEach(q=>{const book=allBooks.find(b=>String(b.quest_id)===String(q.id));const grade=book?.grade||'Барлық сынып';(groups[grade] ||= []).push({q,book});});
-  Object.keys(groups).sort((a,b)=>a.localeCompare(b,'kk',{numeric:true})).forEach(grade=>{
-    const section=document.createElement('section');section.className='kv-quest-group';section.innerHTML=`<h3>🎓 ${escapeHtml(grade==='Барлық сынып'?grade:grade+' сынып')}</h3><div class="kv-grid"></div>`;
-    const grid=section.querySelector('.kv-grid');
-    groups[grade].forEach(({q,book})=>{const card=document.createElement('div');card.className='kv-quest-card';card.id=`kv-quest-${q.id}`;const locked=q.book_id && !book?.id || (q.book_id && !currentProgress.has(String(book.id)));card.innerHTML=`<b>🎮</b><h3>${escapeHtml(q.title)}</h3><p>${escapeHtml(q.description||'Оқу квесті')}</p>${q.book_id?`<span class="kv-quest-lock">${locked?'🔒 Кітапты оқып «Я прочитал» басыңыз':'🔓 Квест ашық'}</span>`:''}<button class="btn btn-primary" ${locked?'disabled':''}>${locked?'🔒 Құлыпталған':'Квестті бастау →'}</button>`;if(!locked)card.querySelector('button').onclick=()=>renderQuest(card,q);grid.appendChild(card);});
-    questListBox.appendChild(section);
-  });
+   questListBox.innerHTML=''; data.forEach(q=>{const card=document.createElement('div');card.className='kv-quest-card';card.id=`kv-quest-${q.id}`;const locked=q.book_id && ![...allBooks].some(b=>String(b.quest_id)===String(q.id)&&currentProgress.has(String(b.id)));card.innerHTML=`<b>🎮</b><h3>${escapeHtml(q.title)}</h3><p>${escapeHtml(q.description||'Оқу квесті')}</p>${q.book_id?`<span class="kv-quest-lock">${locked?'🔒 Кітапты оқып «Я прочитал» басыңыз':'🔓 Квест ашық'}</span>`:''}<button class="btn btn-primary" ${locked?'disabled':''}>${locked?'🔒 Құлыпталған':'Квестті бастау →'}</button>`;if(!locked)card.querySelector('button').onclick=()=>renderQuest(card,q);questListBox.appendChild(card);});
  }
  /* ---- Library, grouped by grade ---- */
  let allBooks=[];
