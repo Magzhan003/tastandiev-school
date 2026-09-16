@@ -854,3 +854,96 @@ body.kv-page footer small{color:#818cb9}
   body.kv-page .kv-book-actions{grid-template-columns:1fr}
   body.kv-page .kv-quest-player{display:none}
 }
+
+
+/* =========================================================
+   KITAPVERSE — KІТАП ӘЛЕМІ / FINAL VISUAL POLISH
+   Keep existing functionality; visual layer only.
+   ========================================================= */
+body.kv-page{background:#070a24;color:#eaf0ff;overflow-x:hidden}
+body.kv-page main{background:#070a24}
+body.kv-page .site-header{background:rgba(8,12,40,.78);border-bottom:1px solid rgba(152,166,255,.12);backdrop-filter:blur(20px);box-shadow:0 8px 35px rgba(0,0,0,.18)}
+body.kv-page .brand{color:#fff}.kv-page .brand strong{color:#fff}.kv-page .brand small{color:#8e99c2}.kv-page .nav a{color:#aeb8df}.kv-page .nav a:hover,.kv-page .nav .kv-nav-active{color:#78dcff!important}
+body.kv-page .brand-mark{background:linear-gradient(135deg,#3978ff,#8a55ff);box-shadow:0 0 28px rgba(83,102,255,.35)}
+
+/* richer cosmic background */
+body.kv-page .kv-hero,body.kv-page .kv-section{isolation:isolate}
+body.kv-page .kv-hero::before,body.kv-page .kv-section::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1}
+body.kv-page .kv-hero::before{background-image:radial-gradient(circle at 18% 24%,rgba(120,220,255,.85) 0 1px,transparent 1.5px),radial-gradient(circle at 72% 16%,rgba(255,255,255,.8) 0 1px,transparent 1.6px),radial-gradient(circle at 88% 63%,rgba(171,130,255,.8) 0 1px,transparent 1.5px),radial-gradient(circle at 42% 78%,rgba(120,220,255,.55) 0 1px,transparent 1.5px);background-size:230px 190px,310px 250px,270px 220px,360px 300px;opacity:.55}
+body.kv-page .kv-section::after{background:radial-gradient(circle at 50% 0,rgba(74,112,255,.10),transparent 36%),radial-gradient(circle at 100% 100%,rgba(184,79,255,.08),transparent 30%);z-index:-1}
+
+/* hero like the reference: stronger title + luminous flow */
+body.kv-page .kv-hero{min-height:650px;padding:82px 0 72px;background:radial-gradient(circle at 15% 40%,rgba(44,98,255,.20),transparent 34%),radial-gradient(circle at 82% 25%,rgba(174,77,255,.22),transparent 34%),linear-gradient(135deg,#070d36 0%,#101450 48%,#24104c 100%);overflow:hidden}
+body.kv-page .kv-hero h1{font-weight:900;text-shadow:0 0 40px rgba(98,113,255,.25)}
+body.kv-page .kv-flow-step{min-width:110px;transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+body.kv-page .kv-flow-step:hover{transform:translateY(-5px);border-color:rgba(120,220,255,.45);box-shadow:0 18px 40px rgba(42,80,255,.22),inset 0 0 24px rgba(120,220,255,.06)}
+
+/* profile / login */
+body.kv-page #kv-auth-guest,body.kv-page #kv-auth-user,body.kv-page .kv-login-box,body.kv-page .kv-profile-dashboard{box-shadow:0 30px 90px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.09)}
+body.kv-page .kv-profile-dashboard{background:linear-gradient(145deg,rgba(30,37,106,.82),rgba(18,18,70,.88) 58%,rgba(62,27,99,.82));}
+body.kv-page .kv-stat{background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025));border-color:rgba(182,198,255,.12)}
+body.kv-page .kv-stat b{color:#fff}
+body.kv-page .kv-level-track i,body.kv-page .kv-mini-track i{background:linear-gradient(90deg,#63ddff,#777cff,#d46cff);box-shadow:0 0 14px rgba(110,180,255,.45)}
+
+/* all cards become part of the same universe */
+body.kv-page .kv-book,body.kv-page .kv-quest-card,body.kv-page .kv-quiz-box,body.kv-page .kv-battle-card,body.kv-page .kv-student-row,body.kv-page .kv-reward-chip,body.kv-page .kv-soon{background:linear-gradient(145deg,rgba(28,34,83,.88),rgba(15,18,61,.92))!important;color:#edf1ff;border:1px solid rgba(151,170,255,.14)!important;box-shadow:0 18px 45px rgba(0,0,0,.20)!important}
+body.kv-page .kv-book:hover,body.kv-page .kv-quest-card:hover,body.kv-page .kv-student-row:hover{border-color:rgba(110,216,255,.30)!important;box-shadow:0 25px 60px rgba(30,55,150,.26)!important}
+body.kv-page .kv-book h3,body.kv-page .kv-quest-card h3,body.kv-page .kv-soon h3{color:#fff}
+body.kv-page .kv-book-author,body.kv-page .kv-book p,body.kv-page .kv-quest-card p,body.kv-page .kv-soon p{color:#aeb9e5;opacity:1}
+body.kv-page .kv-book-meta{color:#8d99c8}.kv-page .kv-book-meta b{color:#6fe1bf}
+body.kv-page .kv-book-cover{background:linear-gradient(145deg,#263b9a,#633d9b);box-shadow:inset -8px 0 20px rgba(0,0,0,.15)}
+body.kv-page .kv-book-cover::after{background:rgba(0,0,0,.28)}
+body.kv-page .kv-book-pdf{background:rgba(120,150,255,.10);color:#b7c7ff}
+body.kv-page .kv-book-read{background:linear-gradient(135deg,#367bff,#8056ff);color:#fff!important;border:0;box-shadow:0 10px 25px rgba(70,86,255,.24)}
+body.kv-page .kv-book-quest{color:#8f9bd0;opacity:1}
+
+/* tools and grade navigation */
+body.kv-page .kv-search{background:rgba(18,23,68,.82);border-color:rgba(148,165,255,.14);box-shadow:0 12px 30px rgba(0,0,0,.18)}
+body.kv-page .kv-search input{color:#fff}.kv-page .kv-search input::placeholder{color:#7f8ab8}
+body.kv-page .kv-filter,body.kv-page .kv-grade-tab{background:rgba(255,255,255,.055);border:1px solid rgba(151,170,255,.13);color:#b9c3ea}
+body.kv-page .kv-filter.active,body.kv-page .kv-grade-tab.selected{background:linear-gradient(135deg,#356dff,#7b55ff);border-color:transparent;color:#fff;box-shadow:0 10px 24px rgba(72,80,255,.24)}
+
+/* reading flow */
+body.kv-page .kv-reading-flow-guide{position:relative;padding:18px;border-radius:22px;background:linear-gradient(145deg,rgba(21,27,78,.74),rgba(13,17,55,.82));border:1px solid rgba(151,170,255,.12);box-shadow:0 18px 45px rgba(0,0,0,.18);margin-bottom:20px}
+body.kv-page .flow-node{background:rgba(255,255,255,.045)!important;border-color:rgba(151,170,255,.12)!important;color:#fff!important}
+body.kv-page .flow-node small{color:#8f9bc8!important}
+body.kv-page .flow-line{background:linear-gradient(90deg,#5c78ff,#8a60ff)!important;box-shadow:0 0 14px rgba(96,115,255,.35)}
+
+/* THE MISSING WHITE BLOCK: premium Оқу прогресі */
+body.kv-page .kv-reading-progress{margin:26px 0 0}
+body.kv-page .kv-reading-progress .kv-progress-card{position:relative;overflow:hidden;padding:26px 28px;border-radius:26px;background:radial-gradient(circle at 90% 10%,rgba(132,91,255,.18),transparent 32%),linear-gradient(145deg,rgba(28,37,103,.94),rgba(12,17,57,.96))!important;border:1px solid rgba(133,188,255,.18)!important;box-shadow:0 24px 60px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08)!important;color:#fff;display:grid;gap:11px}
+body.kv-page .kv-reading-progress .kv-progress-card::before{content:"📚";position:absolute;right:25px;top:14px;font-size:54px;opacity:.10;filter:drop-shadow(0 0 18px #72dfff)}
+body.kv-page .kv-reading-progress .kv-progress-card strong{font-size:20px;letter-spacing:-.3px}
+body.kv-page .kv-reading-progress .kv-progress-card span{color:#aeb9e5;opacity:1;font-size:13px}
+body.kv-page .kv-reading-progress .kv-progress-track{height:13px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.06)}
+body.kv-page .kv-reading-progress .kv-progress-track i{background:linear-gradient(90deg,#63ddff,#6e7cff,#d86bff);box-shadow:0 0 18px rgba(98,202,255,.55)}
+
+/* sections */
+body.kv-page .kv-section{padding:92px 0}
+body.kv-page .kv-section.alt{background:radial-gradient(circle at 90% 10%,rgba(181,76,255,.12),transparent 28%),linear-gradient(180deg,#0c0b3a,#110c42)}
+body.kv-page .kv-section:not(.alt){background:radial-gradient(circle at 8% 15%,rgba(60,105,255,.11),transparent 30%),linear-gradient(180deg,#070a2c,#090d35)}
+body.kv-page .kv-section h2{font-weight:900;text-shadow:0 8px 30px rgba(85,105,255,.18)}
+body.kv-page .kv-badge{box-shadow:0 0 22px rgba(95,202,255,.08)}
+
+/* quiz / battle surfaces */
+body.kv-page .kv-quiz-option{background:rgba(255,255,255,.045);border-color:rgba(151,170,255,.14);color:#eaf0ff}
+body.kv-page .kv-quiz-option:hover{background:rgba(80,111,255,.16);border-color:#6edcff}
+body.kv-page .kv-quiz-option.picked{background:linear-gradient(135deg,#356dff,#7955ff);border-color:transparent}
+body.kv-page .kv-quiz-progress{color:#73dcff}
+body.kv-page .kv-quiz-result .score{color:#77ddff;text-shadow:0 0 22px rgba(119,221,255,.25)}
+body.kv-page .kv-battle-arena{box-shadow:0 30px 80px rgba(0,0,0,.32)}
+
+/* rating */
+body.kv-page .kv-board{background:radial-gradient(circle at 50% -20%,rgba(74,103,255,.20),transparent 40%),linear-gradient(145deg,#10143f,#0a0b2a);border:1px solid rgba(151,170,255,.14);box-shadow:0 28px 70px rgba(0,0,0,.30)}
+body.kv-page .kv-bar-track{background:rgba(255,255,255,.07)}
+body.kv-page .kv-bar-fill{background:linear-gradient(90deg,#3e7bff,#8d5cff,#d65cff);box-shadow:0 0 14px rgba(94,105,255,.45)}
+
+body.kv-page footer{background:#05071d;border-top:1px solid rgba(151,170,255,.10)}
+
+@media(max-width:720px){
+ body.kv-page .site-header{background:rgba(7,10,35,.94)}
+ body.kv-page .nav{background:#0b0e32;border-color:rgba(151,170,255,.12)}
+ body.kv-page .nav a{color:#b8c2e8}
+ body.kv-page .kv-hero{padding:52px 0 58px}
+ body.kv-page .kv-reading-progress .kv-progress-card{padding:22px 20px}
+}
