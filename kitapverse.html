@@ -45,7 +45,38 @@
       <div id="kv-auth-guest"><strong>👤 KITAPVERSE профилі</strong><span>Кітап оқу прогресін сақтау үшін оқушы аккаунтымен кіріңіз.</span><button class="btn btn-primary" id="kv-login-btn">Кіру</button></div>
       <div id="kv-auth-user" hidden><div><strong id="kv-user-name">—</strong><span id="kv-user-class">—</span></div><div class="kv-profile-mini"><span>⭐ <b id="kv-user-xp">0</b> XP</span><span>🔥 <b id="kv-user-streak">0</b> күн</span><span>📚 <b id="kv-user-books">0</b> кітап</span><span>📈 <b id="kv-user-level">1</b> деңгей</span></div><button class="btn btn-light" id="kv-logout-btn">Шығу</button></div>
     </div>
-    <div id="kv-login-box" class="kv-login-box" hidden><h3>🔐 Оқушының кіруі</h3><input id="kv-login-iin" inputmode="numeric" placeholder="Логин (ИИН)"><input id="kv-login-password" type="password" placeholder="Пароль"><button class="btn btn-primary" id="kv-login-submit">Кіру →</button><p class="kv-battle-note">ИИН тек кіру үшін қолданылады және сайтта жарияланбайды.</p></div>
+    <div id="kv-login-box" class="kv-login-box" hidden>
+      <div class="kv-login-glow"></div>
+      <div class="kv-login-icon">🔐</div>
+      <div><span class="kv-eyebrow">ОҚУШЫ ПРОФИЛІ</span><h3>Өз әлеміңе кір</h3><p>ИИН — тек логин ретінде. Басқа оқушылар оны көрмейді.</p></div>
+      <div class="kv-login-fields"><input id="kv-login-iin" inputmode="numeric" autocomplete="username" placeholder="Логин (ИИН)"><input id="kv-login-password" type="password" autocomplete="current-password" placeholder="Пароль"></div>
+      <button class="btn btn-primary kv-login-submit" id="kv-login-submit">Кіру <span>→</span></button>
+      <small>Егер кіруде қиындық болса, мектеп әкімшілігіне хабарласыңыз.</small>
+    </div>
+
+    <div id="kv-profile-dashboard" class="kv-profile-dashboard" hidden>
+      <div class="kv-profile-top">
+        <div class="kv-avatar" id="kv-profile-avatar">11</div>
+        <div class="kv-profile-main"><span class="kv-eyebrow">СЕНІҢ KITAPVERSE ӘЛЕМІҢ</span><h3 id="kv-profile-name">—</h3><span id="kv-profile-class">—</span></div>
+        <div class="kv-level-badge"><span>ДЕҢГЕЙ</span><b id="kv-profile-level">1</b></div>
+      </div>
+      <div class="kv-stat-grid">
+        <div class="kv-stat"><span>⭐</span><div><b id="kv-profile-xp">0</b><small>XP</small></div></div>
+        <div class="kv-stat"><span>🔥</span><div><b id="kv-profile-streak">0</b><small>күн streak</small></div></div>
+        <div class="kv-stat"><span>📚</span><div><b id="kv-profile-books">0</b><small>кітап</small></div></div>
+        <div class="kv-stat"><span>🏅</span><div><b id="kv-profile-achievements">0</b><small>мақсат</small></div></div>
+      </div>
+      <div class="kv-level-progress"><div class="kv-level-row"><span>Келесі деңгейге прогресс</span><b id="kv-profile-level-text">0 / 25 XP</b></div><div class="kv-level-track"><i id="kv-profile-level-bar"></i></div></div>
+      <div class="kv-reading-summary"><div><b>📖 Оқу жолы</b><span id="kv-profile-reading-text">0 кітап оқылды</span></div><div class="kv-mini-track"><i id="kv-profile-reading-bar"></i></div></div>
+    </div>
+
+    <div class="kv-library-tools">
+      <div class="kv-search"><span>⌕</span><input id="kv-book-search" type="search" placeholder="Кітапты атауы немесе авторы бойынша іздеу..."></div>
+      <button class="kv-filter active" data-book-filter="all">Барлығы</button>
+      <button class="kv-filter" data-book-filter="unread">Оқылмаған</button>
+      <button class="kv-filter" data-book-filter="read">Прочитано</button>
+    </div>
+
     <div class="kv-grade-tabs" id="kv-grade-tabs">
       <button class="kv-grade-tab selected" data-grade="6">6 сынып</button>
       <button class="kv-grade-tab" data-grade="7">7 сынып</button>
