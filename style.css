@@ -205,6 +205,7 @@ button[disabled],.btn[disabled],.icon-btn[disabled]{opacity:.55;cursor:not-allow
 .kv-battle-live .kv-quiz-result .score{color:#ff9f6b}
 .kv-battle-results{margin-top:22px}
 .kv-battle-results .kv-battle-card{background:#ffffff10;border-color:#ffffff20;color:#fff}
+.kv-battle-class-results{margin-top:18px}
 .kv-battle-results .kv-battle-card .avg{color:#ff9f6b}
 .kv-battle-results .kv-battle-card small{color:#d8b9d0}
 .kv-battle-results .kv-battle-card.winner{border-color:#ff9f6b;box-shadow:0 18px 36px #ff6b3530}
@@ -221,3 +222,46 @@ button[disabled],.btn[disabled],.icon-btn[disabled]{opacity:.55;cursor:not-allow
 .kv-reward-chip b{font-size:22px}
 .kv-reward-chip strong{display:block;font-size:12px;color:#165dff}
 .kv-reward-chip span{font-size:13px;color:#59677c}
+
+/* Daily quiz */
+.kv-quiz-daily{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 14px;margin-bottom:14px;border-radius:14px;background:rgba(255,255,255,.06)}
+.kv-quiz-daily span{opacity:.75;font-size:.9rem}
+@media(max-width:640px){.kv-quiz-daily{flex-direction:column;align-items:flex-start}}
+/* ================= Daily quiz + Battle upgrades ================= */
+.admin-label{display:block;font-size:12px;font-weight:800;color:#667085;margin-top:8px}
+.quiz-admin-card{background:#fff;border:1px solid #e2e7ef;border-radius:16px;padding:15px;margin:12px 0}
+.quiz-admin-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.quiz-admin-options{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.kv-daily-timer-wrap{background:#f5f8ff;border:1px solid #dfe8ff;border-radius:13px;padding:12px 14px;margin:12px 0;text-align:center;color:#667085}
+.kv-daily-timer{font-size:22px;color:#165dff;font-variant-numeric:tabular-nums;margin-left:5px}
+.kv-battle-test-head{display:flex;justify-content:space-between;align-items:center;font-size:15px;margin-bottom:12px}
+.bt-test-timer{font-size:30px;font-weight:900;color:#ff9f6b;font-variant-numeric:tabular-nums}
+.kv-battle-question-card{background:#ffffff0d;border:1px solid #ffffff20;border-radius:16px;padding:18px;margin:12px 0}
+.kv-battle-question-card label{display:block;border:1px solid #ffffff20;border-radius:11px;padding:11px 13px;margin:8px 0;cursor:pointer}
+.kv-battle-question-card label:has(input:checked){background:#ff6b3530;border-color:#ff9f6b}
+.kv-battle-question-card input{accent-color:#ff9f6b;margin-right:8px}
+.kv-battle-final{text-align:center;padding:14px 0 24px}
+.kv-battle-final-title{font-size:13px;font-weight:900;letter-spacing:1.5px;color:#ff9f6b}
+.kv-battle-final h3{font-size:30px;margin:8px 0}
+.kv-battle-final-score{font-size:52px;font-weight:900;color:#ff9f6b;line-height:1}
+.kv-battle-best{background:#ffffff10;border:1px solid #ffffff20;border-radius:16px;padding:15px;margin-top:18px}
+.kv-battle-best span,.kv-battle-best small{color:#d8b9d0}
+@media(max-width:620px){.quiz-admin-options{grid-template-columns:1fr}.kv-battle-final h3{font-size:24px}.bt-test-timer{font-size:25px}}
+.kv-tie-row{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;text-align:left;padding:9px 0;border-bottom:1px solid #ffffff16;font-size:13px}.kv-tie-row:last-of-type{border-bottom:0}.kv-tie-row span:last-child{color:#d8b9d0;font-variant-numeric:tabular-nums}.kv-battle-best>small{display:block;margin-top:10px;color:#d8b9d0}@media(max-width:520px){.kv-tie-row{grid-template-columns:1fr auto}.kv-tie-row span:last-child{grid-column:1/-1}}
+
+/* Native KITAPVERSE quests */
+.kv-quest-wide{text-align:left;grid-column:1/-1}.kv-quest-wide>input{width:100%;box-sizing:border-box;margin:6px 0;padding:13px 14px;border:1px solid #e4eaf2;border-radius:12px;font:inherit}.kv-quest-questions{margin:16px 0}.kv-quest-question-card{background:#f8faff;border:1px solid #e4eaf2;border-radius:16px;padding:18px;margin:12px 0}.kv-quest-question-card label{display:block;border:1px solid #e4eaf2;border-radius:11px;padding:11px 13px;margin:8px 0;cursor:pointer}.kv-quest-question-card label:has(input:checked){background:#eef4ff;border-color:#165dff}.kv-quest-question-card input{margin-right:8px}.kv-quest-wide .btn{margin-top:4px}
+
+/* Separate admin areas */
+.admin-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 20px;position:sticky;top:0;z-index:3;padding:8px 0;background:inherit}
+.admin-tab{border:1px solid rgba(0,0,0,.12);background:#fff;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer}
+.admin-tab.active{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-1px)}
+.admin-tab-panel{display:none}.admin-tab-panel.active{display:block}
+.admin-class-limit-row{display:grid;grid-template-columns:1fr 160px 44px;gap:10px;align-items:center;margin:8px 0}
+.admin-class-limit-row input{min-width:0}
+@media(max-width:600px){.admin-class-limit-row{grid-template-columns:1fr 100px 44px}.admin-tabs{position:static}}
+
+
+/* KITAPVERSE student profile + reading flow */
+.kv-student-bar{margin:18px 0 24px;padding:18px 20px;border:1px solid rgba(127,127,127,.18);border-radius:18px;background:var(--card,#fff);box-shadow:0 8px 30px rgba(0,0,0,.06)}
+.kv-student-bar>div{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.kv-student-bar strong{font-size:17px}.kv-student-bar span{opacity:.72}.kv-student-bar button{margin-left:auto}.kv-profile-mini{display:flex;gap:12px;flex-wrap:wrap;margin-left:auto}.kv-profile-mini span{opacity:1}.kv-login-box{max-width:520px;margin:0 0 24px;padding:20px;border-radius:18px;background:var(--card,#fff);border:1px solid rgba(127,127,127,.18)}.kv-login-box h3{margin-top:0}.kv-login-box input{display:block;width:100%;box-sizing:border-box;margin:9px 0;padding:13px 14px;border-radius:12px;border:1px solid rgba(127,127,127,.25);background:transparent;color:inherit}.kv-login-box .btn{margin-top:8px}.kv-book{display:flex;flex-direction:column;align-items:flex-start;gap:8px}.kv-book-pdf{display:inline-flex;margin-top:3px}.kv-book-read{margin-top:3px}.kv-book-read:disabled{cursor:default;opacity:.85}.kv-book-quest{opacity:.72;margin-top:2px}.kv-quest-lock{display:block;margin:6px 0 10px;opacity:.75;font-size:14px}.kv-quest-card button:disabled{opacity:.55;cursor:not-allowed}.kv-reading-progress{margin-top:22px}.kv-progress-card{padding:18px;border-radius:18px;background:var(--card,#fff);border:1px solid rgba(127,127,127,.18);display:grid;gap:9px}.kv-progress-card span{opacity:.7}.kv-progress-track{height:9px;border-radius:99px;background:rgba(127,127,127,.15);overflow:hidden}.kv-progress-track i{display:block;height:100%;border-radius:inherit;background:currentColor}

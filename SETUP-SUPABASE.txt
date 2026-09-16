@@ -1,12 +1,81 @@
-SUPABASE SETUP
+KITAPVERSE — SUPABASE SETUP (FINAL, оқушы логиндерімен)
 
-1) The website config is already filled with your Project URL, Publishable key, and admin email.
-2) In Supabase -> SQL Editor, run supabase-migration.sql once.
-3) Your admin password is the password you set for the Supabase Auth user. It is NOT stored in this website.
-4) Upload the website files to the GitHub repository root.
-5) After GitHub Pages updates, tap the school logo/11 five times quickly to open Admin.
-6) Sign in with the configured admin email and your Supabase Auth password.
+===============================================================
+1) SQL миграциясы
+===============================================================
+Supabase → SQL Editor → supabase-migration-FINAL.sql файлының
+БҮКІЛ мазмұнын қойып, "Run" басыңыз. Бір рет орындау жеткілікті.
 
-SECURITY
-- The Publishable key may be public in the frontend when RLS is configured.
-- NEVER put a Supabase Secret key in GitHub or this file.
+Бұл миграция мыналарды жасайды:
+- Барлық негізгі кестелер мен саясаттар (RLS)
+- Күнделікті викторина (24 сағат сайын 1 сұрақ, сервер жағында тексеріледі)
+- Battle жүйесі (таймер + 30 минуттық тест)
+- Native квесттер мен мектеп тесттері (Google Forms қажет емес)
+- Оқушы аккаунттары үшін кестелер (student_profiles, book_progress)
+- Әкімшілік аккаунтын қорғау (тек imankulovmagzan56@gmail.com жаза алады)
+
+===============================================================
+2) Оқушы аккаунттарын жасау (МІНДЕТТІ, бір рет)
+===============================================================
+Бұл қадам сайтты жүктеу емес — компьютерде Node.js арқылы бір рет
+іске қосылатын скрипт. Онсыз оқушылар кіре алмайды.
+
+а) Node.js орнатыңыз (егер жоқ болса): https://nodejs.org (LTS нұсқасы)
+
+ә) Терминалда осы файлдар жатқан папкаға өтіңіз де:
+   npm install @supabase/supabase-js
+
+б) Supabase Dashboard → Project Settings → API бөлімінен:
+   - Project URL
+   - service_role secret key (⚠️ ескерту: бұл құпия кілт, ешқашан
+     GitHub-қа немесе сайтқа қоспаңыз — тек осы бір реттік командада
+     ғана пайдаланылады)
+
+в) Терминалда (Mac/Linux):
+   SUPABASE_URL="https://xxxx.supabase.co" SUPABASE_SERVICE_ROLE_KEY="xxxx" node create-student-accounts.mjs student-accounts.csv
+
+   Windows (PowerShell):
+   $env:SUPABASE_URL="https://xxxx.supabase.co"; $env:SUPABASE_SERVICE_ROLE_KEY="xxxx"; node create-student-accounts.mjs student-accounts.csv
+
+г) Скрипт әр оқушыға:
+   - логин = ИИН
+   - пароль = CSV-дегі password бағаны
+   арқылы Supabase Auth аккаунтын жасайды және student_profiles
+   кестесіне жазады. Соңында "Created/updated N student accounts."
+   деп шығуы керек.
+
+Ескерту: CSV файлындағы құпиясөздерді (Kitap001, Kitap002, ...)
+оқушыларға қауіпсіз түрде (қағазбен/жеке хабарламамен) таратыңыз —
+олар сайтта ешқашан көрсетілмейді.
+
+===============================================================
+3) Сынып лимиттерін теңшеу (МІНДЕТТІ, викторина мен Battle үшін)
+===============================================================
+Сайттың Әкімшілік панелінде (KITAPVERSE қойындысы) "👥 Сыныптар
+және лимиттер" бөліміне барып, әр сыныптың нақты оқушы санын
+жазып сақтаңыз. Бұл жасалмайынша, оқушылар күнделікті викторина
+мен Battle-ге қатыса АЛМАЙДЫ ("class is not configured" қатесі
+шығады) — бұл әдейі қауіпсіздік шектеуі.
+
+===============================================================
+4) Файлдарды жүктеу
+===============================================================
+index.html, kitapverse.html, script.js, kitapverse.js, style.css,
+supabase-config.js файлдарын (және assets/ қалтасын) GitHub
+репозиторийіне жүктеңіз (drag & drop, мәтін ретінде емес).
+
+===============================================================
+5) Тексеру
+===============================================================
+- Сайттың логотипін ("11") 5 рет тез басып, әкімші құпиясөзімен
+  кіріп көріңіз.
+- KITAPVERSE бетінде "🔐 Оқушының кіруі" арқылы бір оқушының
+  ИИН+паролімен кіріп көріңіз.
+- Викторина мен Battle тек class_limits теңшелгеннен кейін жұмыс
+  істейтінін ұмытпаңыз (3-қадам).
+
+ҚАУІПСІЗДІК
+- Publishable (anon) кілт коды браузерде ашық тұрады — бұл қалыпты,
+  себебі RLS барлық жазуды шектейді.
+- Service Role кілтін ЕШҚАШАН сайтқа, GitHub-қа немесе кез келген
+  ортақ жерге қоймаңыз — ол тек 2-қадамдағы бір реттік команда үшін.

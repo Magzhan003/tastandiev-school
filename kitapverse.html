@@ -41,6 +41,11 @@
 <section id="kv-library" class="kv-section">
   <div class="container">
     <div class="kv-section-head"><div><span class="kv-badge">📖 ІСКЕ ҚОСЫЛДЫ</span><h2 style="margin:10px 0 0">Кітапхана</h2></div></div>
+    <div id="kv-student-bar" class="kv-student-bar">
+      <div id="kv-auth-guest"><strong>👤 KITAPVERSE профилі</strong><span>Кітап оқу прогресін сақтау үшін оқушы аккаунтымен кіріңіз.</span><button class="btn btn-primary" id="kv-login-btn">Кіру</button></div>
+      <div id="kv-auth-user" hidden><div><strong id="kv-user-name">—</strong><span id="kv-user-class">—</span></div><div class="kv-profile-mini"><span>⭐ <b id="kv-user-xp">0</b> XP</span><span>🔥 <b id="kv-user-streak">0</b> күн</span><span>📚 <b id="kv-user-books">0</b> кітап</span><span>📈 <b id="kv-user-level">1</b> деңгей</span></div><button class="btn btn-light" id="kv-logout-btn">Шығу</button></div>
+    </div>
+    <div id="kv-login-box" class="kv-login-box" hidden><h3>🔐 Оқушының кіруі</h3><input id="kv-login-iin" inputmode="numeric" placeholder="Логин (ИИН)"><input id="kv-login-password" type="password" placeholder="Пароль"><button class="btn btn-primary" id="kv-login-submit">Кіру →</button><p class="kv-battle-note">ИИН тек кіру үшін қолданылады және сайтта жарияланбайды.</p></div>
     <div class="kv-grade-tabs" id="kv-grade-tabs">
       <button class="kv-grade-tab selected" data-grade="6">6 сынып</button>
       <button class="kv-grade-tab" data-grade="7">7 сынып</button>
@@ -49,19 +54,16 @@
       <button class="kv-grade-tab" data-grade="10">10 сынып</button>
     </div>
     <div class="kv-grid" id="kv-books"><p class="kv-empty">Жүктелуде...</p></div>
+    <div id="kv-reading-progress" class="kv-reading-progress"></div>
   </div>
 </section>
 
-<!-- 🎮 Quests: Google Forms link -->
-<section class="kv-section alt">
+<!-- 🎮 Native quests -->
+<section id="kv-quests" class="kv-section alt">
   <div class="container">
-    <div class="kv-section-head"><div><span class="kv-badge">📖 ІСКЕ ҚОСЫЛДЫ</span><h2 style="margin:10px 0 0">Квесттер</h2></div></div>
-    <div class="kv-grid">
-      <div class="kv-quest-card">
-        <b>🎮</b><h3>Оқу квесті</h3><p>Google Forms арқылы дайындалған тапсырмалар тізбегін орында.</p>
-        <a class="btn btn-primary" id="kv-quest-link" href="#" target="_blank" rel="noopener">Квестке өту →</a>
-      </div>
-    </div>
+    <div class="kv-section-head"><div><span class="kv-badge">🎮 ОЙЫН ФОРМАТЫ</span><h2 style="margin:10px 0 0">Квесттер</h2></div></div>
+    <p class="lead">Кітапты аш → оқып болған соң «✅ Я прочитал» батырмасын бас → сол кітаптың квестін орында. Дұрыс жауаптар рейтингке ұпай қосады.</p>
+    <div id="kv-quest-list" class="kv-grid"><p class="kv-empty">Жүктелуде...</p></div>
   </div>
 </section>
 
@@ -69,7 +71,7 @@
 <section id="kv-quiz" class="kv-section">
   <div class="container">
     <div class="kv-section-head"><div><span class="kv-badge">📖 ІСКЕ ҚОСЫЛДЫ</span><h2 style="margin:10px 0 0">Викторина</h2></div></div>
-    <p class="lead">Аты-жөніңді және сыныбыңды жаз, сұрақтарға жауап бер — ұпайың бойынша сыныбыңа автоматты түрде XP қосылады.</p>
+    <p class="lead">Күн сайын 1 жаңа сұрақ. Әр оқушыға тек 1 мүмкіндік беріледі: дұрыс жауапқа — 1 ұпай. Сұрақ ауысқаннан кейін ғана келесі викторинаға қатыса алады.</p>
     <div id="kv-quiz-box" class="kv-quiz-box">
       <p class="kv-empty">Жүктелуде...</p>
     </div>

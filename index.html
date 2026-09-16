@@ -66,14 +66,8 @@
 </div>
 </div></section>
 <section id="tests" class="section"><div class="container"><div class="section-head"><div><span class="section-label">ОНЛАЙН БАҒАЛАУ</span><h2>Тесттер</h2></div></div>
-<p class="lead">4–11 сынып оқушылары өз сыныбын таңдап, дайын Google Forms тестіне өте алады. Нақты тест сілтемелері Google Forms жасалғаннан кейін осы жерге қосылады.</p>
-<div class="test-grid">
-<div class="test-info"><span class="test-icon">📝</span><h3>Қалай жұмыс істейді?</h3><ol><li>Өз сыныбыңызды таңдаңыз.</li><li>Аты-жөніңізді Google Forms ішінде жазыңыз.</li><li>Сұрақтарға жауап беріңіз.</li><li>Нәтиже мектептің Google Sheets кестесіне автоматты түрде сақталады.</li></ol><p class="note">Нәтижелер бір мектептік Google аккаунтта сақталып, сынып бойынша реттеледі.</p></div>
-<div class="class-grid" aria-label="Сынып таңдау">
-<div class="class-title">Сыныбыңызды таңдаңыз</div>
-<button class="class-btn" data-class="4">4 сынып</button><button class="class-btn" data-class="5">5 сынып</button><button class="class-btn" data-class="6">6 сынып</button><button class="class-btn" data-class="7">7 сынып</button><button class="class-btn" data-class="8">8 сынып</button><button class="class-btn" data-class="9">9 сынып</button><button class="class-btn" data-class="10">10 сынып</button><button class="class-btn" data-class="11">11 сынып</button>
-<p id="test-message" class="test-message">Сыныпты таңдағанда тестке өту батырмасы шығады.</p><a id="test-link" class="btn btn-primary disabled" href="#tests">Тестке өту</a>
-</div></div></div></section>
+<p class="lead">Тесттер енді Google Forms арқылы емес, KITAPVERSE квесттері сияқты тікелей сайттың ішінде орындалады.</p>
+<div id="school-tests-list" class="test-grid"></div><div id="school-test-workspace"></div></div></section>
 <section id="contacts" class="section contact-section"><div class="container contact-grid"><div><span class="section-label">БАЙЛАНЫС</span><h2>Бізбен байланысыңыз</h2><p>Мектеп бойынша сұрақтарыңыз болса, ресми байланыс арналары арқылы хабарласа аласыз.</p></div><div class="contact-box"><div><span>📍</span><div><small>Мекенжай</small><strong>Жуалы ауданы, Жамбыл облысы</strong></div></div><div><span>✉️</span><div><small>E-mail</small><strong><a href="mailto:juali-tastandiev-om@mail.kz">juali-tastandiev-om@mail.kz</a></strong></div></div><div><span>📞</span><div><small>Қабылдау бөлмесі / бухгалтерия</small><strong><a href="tel:+77263526425">+7 (726) 35-2-64-25</a></strong></div></div></div></div></section>
 </main>
 <footer><div class="container footer-wrap"><div><strong>№11 Тайыр Тастандиев атындағы орта мектеп</strong><small>Ресми мектеп сайты</small></div><span>© 2026 Барлық құқықтар қорғалған</span></div></footer>
@@ -91,7 +85,8 @@
       <p class="admin-hint">Бұл жасырын бөлім. Кәдімгі келушілер оны көрмейді.</p>
     </div>
     <div id="admin-content" hidden>
-      <span class="section-label">САЙТТЫ БАСҚАРУ</span><h2>Жаңалықтар мен құжаттар</h2>
+      <div class="admin-tabs" role="tablist"><button class="admin-tab active" data-admin-tab="site">🌐 Сайт</button><button class="admin-tab" data-admin-tab="kitap">📚 KITAPVERSE</button></div>
+      <div class="admin-tab-panel active" data-admin-panel="site"><span class="section-label">САЙТТЫ БАСҚАРУ</span><h2>Жаңалықтар, жетістіктер, құжаттар және тесттер</h2>
 
       <div class="admin-form" id="a-news-form">
         <h3><span id="a-news-form-title">📰 Жаңалық қосу</span></h3>
@@ -122,6 +117,17 @@
       <div class="admin-section-title">Жарияланған жетістіктер</div>
       <div class="admin-list" id="a-ach-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
 
+      <div class="admin-form" id="a-test-form">
+        <h3>📝 Жаңа мектеп тесті</h3>
+        <input id="a-test-title" placeholder="Тест атауы">
+        <textarea id="a-test-description" placeholder="Қысқаша сипаттама"></textarea>
+        <label class="admin-label">Сұрақтар</label><div id="a-test-bulk-list"></div>
+        <div class="admin-actions"><button class="btn btn-light" id="a-test-add-card" type="button">+ Сұрақ қосу</button><button class="btn btn-primary" id="a-test-bulk-save" type="button">Тестті жариялау</button></div>
+        <p class="admin-hint">Тест те Google Forms сияқты толықтай сайттың ішінде өтеді. Бұл тесттерде сынып бойынша арнайы 20/25 сияқты лимит қолданылмайды — лимит тек күнделікті Викторина мен Battle үшін.</p>
+      </div>
+      <div class="admin-section-title">Жарияланған тесттер</div><div class="admin-list" id="a-test-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
+      </div><!-- /site admin -->
+      <div class="admin-tab-panel" data-admin-panel="kitap"><span class="section-label">KITAPVERSE</span><h2>Кітаптар, квесттер, викторина және Battle</h2>
       <div class="admin-form" id="a-book-form">
         <h3><span id="a-book-form-title">📖 Кітапханаға кітап қосу</span></h3>
         <input id="a-book-icon" placeholder="Эмодзи (мысалы 📕, 📗, 📘)" maxlength="4">
@@ -136,8 +142,8 @@
           <option value="10">10 сынып</option>
         </select>
         <textarea id="a-book-text" placeholder="Қысқаша сипаттама (міндетті емес)"></textarea>
-        <input id="a-book-pdf" type="file" accept="application/pdf">
-        <p class="admin-hint" id="a-book-pdf-hint" hidden>Жаңа PDF таңдамасаңыз, ескі файл қалады.</p>
+        <input id="a-book-drive" type="url" placeholder="Google Drive PDF сілтемесі">
+        <p class="admin-hint" id="a-book-pdf-hint">PDF-ті Google Drive-қа жүктеп, «Anyone with the link» режимін қосып, осы жерге сілтемесін қойыңыз. Supabase Storage қолданылмайды.</p>
         <div class="admin-actions">
           <button class="btn btn-primary" id="a-book-add">Кітапты қосу</button>
           <button class="btn btn-light cancel-edit" id="a-book-cancel">Болдырмау</button>
@@ -158,14 +164,22 @@
       <div class="admin-section-title">Ағымдағы рейтинг</div>
       <div class="admin-list" id="a-xp-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
 
+      <div class="admin-form" id="a-class-limit-form"><h3>👥 Сыныптар және лимиттер</h3><p class="admin-hint">Әр сыныпқа оқушылар санын нақты көрсетіңіз. Бұл лимит тек Викторина мен Battle үшін қолданылады. Бір қате атымен жіберілген әрекет те бір мүмкіндік ретінде есептеледі.</p><div id="a-class-limit-list"></div><div class="admin-actions"><button class="btn btn-light" id="a-class-add" type="button">+ Сынып қосу</button><button class="btn btn-primary" id="a-class-save" type="button">Сынып лимиттерін сақтау</button></div></div>
       <div class="admin-form" id="a-quest-form">
-        <h3>🎮 Квест: Google Forms сілтемесі</h3>
-        <input id="a-quest-link" placeholder="https://forms.google.com/...">
+        <h3>🎮 Жаңа оқу квесті</h3>
+        <input id="a-quest-title" placeholder="Квест атауы (мысалы: Абай әлемі)">
+        <textarea id="a-quest-description" placeholder="Қысқаша сипаттама"></textarea>
+        <select id="a-quest-book"><option value="">Кітаппен байланыстырмау</option></select>
+        <label class="admin-label">Сұрақтар</label>
+        <div id="a-quest-bulk-list"></div>
         <div class="admin-actions">
-          <button class="btn btn-primary" id="a-quest-save">Сілтемені сақтау</button>
+          <button class="btn btn-light" id="a-quest-add-card" type="button">+ Сұрақ қосу</button>
+          <button class="btn btn-primary" id="a-quest-bulk-save" type="button">Квестті жариялау</button>
         </div>
-        <p class="admin-hint">Бұл сілтеме KITAPVERSE бетіндегі «Квесттер» карточкасында батырма ретінде шығады.</p>
+        <p class="admin-hint">Google Forms қажет емес. Бір квестке қалағаныңызша сұрақ қосуға болады. Оқушы квестті бір рет тапсырады; әр дұрыс жауапқа +1 ұпай.</p>
       </div>
+      <div class="admin-section-title">Жарияланған квесттер</div>
+      <div class="admin-list" id="a-quest-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
 
       <div class="admin-form" id="a-battle-form">
         <h3><span id="a-battle-form-title">⚔️ Battle құру</span></h3>
@@ -204,24 +218,18 @@
       <div class="admin-list" id="a-battle-q-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
 
       <div class="admin-form" id="a-quiz-form">
-        <h3><span id="a-quiz-form-title">🧠 Викторина сұрағын қосу</span></h3>
-        <input id="a-quiz-q" placeholder="Сұрақ мәтіні">
-        <input id="a-quiz-a" placeholder="A нұсқасы">
-        <input id="a-quiz-b" placeholder="B нұсқасы">
-        <input id="a-quiz-c" placeholder="C нұсқасы">
-        <input id="a-quiz-d" placeholder="D нұсқасы">
-        <select id="a-quiz-correct">
-          <option value="a">Дұрыс жауап: A</option>
-          <option value="b">Дұрыс жауап: B</option>
-          <option value="c">Дұрыс жауап: C</option>
-          <option value="d">Дұрыс жауап: D</option>
-        </select>
+        <h3>🧠 Күнделікті викторина пакеті</h3>
+        <p class="admin-hint">Бірден 10 сұрақ қосыңыз. Әр сұрақ автоматты түрде 24 сағатқа жарияланады. Уақыт біткенде алдыңғы сұрақ архивке өтеді, оның нәтижесі рейтингке қосылады да келесі сұрақ ашылады.</p>
+        <label class="admin-label">1-сұрақтың басталу уақыты</label>
+        <input id="a-quiz-start-at" type="datetime-local">
+        <div id="a-quiz-bulk-list"></div>
         <div class="admin-actions">
-          <button class="btn btn-primary" id="a-quiz-add">Сұрақты қосу</button>
-          <button class="btn btn-light cancel-edit" id="a-quiz-cancel">Болдырмау</button>
+          <button class="btn btn-light" id="a-quiz-add-card" type="button">+ Сұрақ қосу</button>
+          <button class="btn btn-primary" id="a-quiz-bulk-save" type="button">10 сұрақты жариялау</button>
         </div>
+        <p class="admin-hint">Әр сұрақ: A/B/C/D және дұрыс жауап. Бір оқушыға әр сұрақта тек 1 мүмкіндік.</p>
       </div>
-      <div class="admin-section-title">Викторина сұрақтары</div>
+      <div class="admin-section-title">Викторина пакеттері және архив</div>
       <div class="admin-list" id="a-quiz-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
 
       <div class="admin-form" id="a-reward-form">
@@ -250,6 +258,7 @@
       <div class="admin-section-title">Жарияланған құжаттар</div>
       <div class="admin-list" id="a-doc-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
 
+      </div><!-- /kitap admin -->
       <div class="admin-actions"><button class="btn btn-light" id="a-logout">Шығу</button></div>
       <p class="admin-hint">Өзгерістер бірден барлық келушілерге көрінеді (ортақ бұлттық сақтау арқылы).</p>
     </div>
