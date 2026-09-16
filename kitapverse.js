@@ -21,7 +21,7 @@ function toast(message,type='success'){
 }
 
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
-
+function setBusy(btn,busy,idleLabel){ if(!btn)return; btn.disabled=busy; btn.textContent=busy?'Жүктелуде...':idleLabel; }
 /* Normalize a class name so lookalike input never creates a hidden duplicate
    row in the rating (e.g. "8 А", "8а", latin "8A" all become "8А"). */
 function normalizeClassName(s){
