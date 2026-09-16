@@ -62,7 +62,7 @@ function normalizeClassList(s){
  const profileReadingText=document.getElementById('kv-profile-reading-text'), profileReadingBar=document.getElementById('kv-profile-reading-bar');
  const bookSearch=document.getElementById('kv-book-search');
  let bookFilter='all', bookSearchText='';
- let currentStudent=null, currentProgress=new Set();
+ let currentStudent=null, currentProgress=new Set(), openedQuests=new Set();
 
  if(!configured){
    if(booksBox)booksBox.innerHTML='<p class="kv-empty">Бұлттық қосылым әлі теңшелмеген.</p>';
@@ -150,14 +150,19 @@ function normalizeClassList(s){
    if(!currentStudent){loginBox.hidden=false;loginIin?.focus();toast('Алдымен оқушы аккаунтымен кіріңіз.','error');return;}
    if(currentProgress.has(String(book.id))){
      if(book.quest_id){document.getElementById(`kv-quest-${book.quest_id}`)?.scrollIntoView({behavior:'smooth',block:'center'});}
-     else toast('Бұл кітап бұрын белгіленген.','success');
+     else toast('Бұл кітап бұрын расталған.','success');
      return;
    }
-   const {error}=await sb.from('book_progress').upsert({student_id:currentStudent.id,book_id:book.id},{onConflict:'student_id,book_id'});
-   if(error){toast('Кітап прогресін сақтау кезінде қате шықты.','error');return;}
-   currentProgress.add(String(book.id));renderBooks();await loadStudentStats();await loadQuests();
-   toast(book.quest_id?'📚 Кітап белгіленді. Квест ашылды!':'📚 Кітап оқу прогресіне қосылды!');
-   if(book.quest_id)setTimeout(()=>document.getElementById(`kv-quest-${book.quest_id}`)?.scrollIntoView({behavior:'smooth',block:'center'}),250);
+   if(!book.quest_id){
+     toast('Бұл кітапқа квест әлі қосылмаған. Әкімшілік квестті байланыстырады.','error');
+     return;
+   }
+   // "Я прочитал" does NOT mark the book as read. It only opens its quest.
+   openedQuests.add(String(book.quest_id));
+   await loadQuests();
+   const card=document.getElementById(`kv-quest-${book.quest_id}`);
+   if(card){card.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>card.querySelector('button')?.click(),250);}
+   toast('🧩 Квест ашылды. Өткізіп болғаннан кейін кітап расталады!');
  }
  /* ---- Native quests ---- */
  async function submitQuestAttempt(questId,name,cls,answers){
@@ -171,13 +176,23 @@ function normalizeClassList(s){
    box.innerHTML=`<div class="kv-quest-card kv-quest-wide"><div class="kv-quest-headline"><b>🎮</b><div><span class="kv-eyebrow">СЕНІҢ КВЕСТІҢ</span><h3>${escapeHtml(quest.title)}</h3></div><span class="kv-quest-player">👤 ${escapeHtml(currentStudent.full_name)}</span></div><p>${escapeHtml(quest.description||'Оқу квестін орындаңыз.')}</p><div class="kv-quest-questions"></div><button class="btn btn-primary quest-submit">Квестті аяқтау →</button><p class="kv-battle-note" style="margin-top:12px">⚠️ Бір оқушыға бір ғана мүмкіндік беріледі.</p></div>`;
    const qbox=box.querySelector('.kv-quest-questions');
    questions.forEach((q,i)=>{const card=document.createElement('div');card.className='kv-quest-question-card';card.innerHTML=`<div class="kv-quiz-progress">СҰРАҚ ${i+1} / ${questions.length}</div><div class="kv-quiz-question">${escapeHtml(q.question)}</div><label><input type="radio" name="qq-${q.id}" value="a"> ${escapeHtml(q.option_a)}</label><label><input type="radio" name="qq-${q.id}" value="b"> ${escapeHtml(q.option_b)}</label><label><input type="radio" name="qq-${q.id}" value="c"> ${escapeHtml(q.option_c)}</label><label><input type="radio" name="qq-${q.id}" value="d"> ${escapeHtml(q.option_d)}</label>`;qbox.appendChild(card);});
-   box.querySelector('.quest-submit').onclick=async()=>{const name=currentStudent.full_name,cls=currentStudent.class_name;const answers=questions.map(q=>{const x=box.querySelector(`input[name="qq-${q.id}"]:checked`);return {question_id:q.id,answer:x?x.value:null};});const btn=box.querySelector('.quest-submit');btn.disabled=true;try{const r=await submitQuestAttempt(quest.id,name,cls,answers);box.innerHTML=`<div class="kv-quiz-result"><p>🎉 Квест аяқталды!</p><div class="score">${r.score} / ${r.total}</div><p>Нәтиже рейтингке қосылды.</p></div>`;await loadRating();await loadStudents();}catch(err){btn.disabled=false;const m=String(err?.message||'');if(m.includes('already submitted'))toast('Бұл квест бұрын тапсырылған.','error');else toast('Квест нәтижесін сақтау кезінде қате шықты.','error');}};
+   box.querySelector('.quest-submit').onclick=async()=>{const name=currentStudent.full_name,cls=currentStudent.class_name;const answers=questions.map(q=>{const x=box.querySelector(`input[name="qq-${q.id}"]:checked`);return {question_id:q.id,answer:x?x.value:null};});const btn=box.querySelector('.quest-submit');btn.disabled=true;try{const r=await submitQuestAttempt(quest.id,name,cls,answers);
+     // Only a successfully submitted quest confirms the linked book as read.
+     const linkedBook=allBooks.find(b=>String(b.quest_id)===String(quest.id)||String(b.id)===String(quest.book_id));
+     let bookConfirmed=false;
+     if(linkedBook && !currentProgress.has(String(linkedBook.id))){
+       const {error:progressError}=await sb.from('book_progress').upsert({student_id:currentStudent.id,book_id:linkedBook.id},{onConflict:'student_id,book_id'});
+       if(!progressError){currentProgress.add(String(linkedBook.id));bookConfirmed=true;}
+     } else if(linkedBook){bookConfirmed=true;}
+     openedQuests.delete(String(quest.id));
+     box.innerHTML=`<div class="kv-quiz-result"><p>🎉 Квест аяқталды!</p><div class="score">${r.score} / ${r.total}</div><p>${bookConfirmed?'📚 Кітап расталды. Нәтиже рейтингке қосылды.':'Нәтиже рейтингке қосылды. Кітап прогресін сақтау кезінде қайта байқап көріңіз.'}</p></div>`;
+     await loadStudentStats();await loadBooks();await loadQuests();await loadRating();await loadStudents();}catch(err){btn.disabled=false;const m=String(err?.message||'');if(m.includes('already submitted'))toast('Бұл квест бұрын тапсырылған.','error');else toast('Квест нәтижесін сақтау кезінде қате шықты.','error');}};
  }
  async function loadQuests(){
    if(!questListBox)return;
    const {data,error}=await sb.from('quests').select('id,title,description,created_at,book_id').eq('published',true).order('created_at',{ascending:false});
    if(error||!data?.length){questListBox.innerHTML='<p class="kv-empty">Жаңа квесттер жақында қосылады.</p>';return;}
-   questListBox.innerHTML=''; data.forEach(q=>{const card=document.createElement('div');card.className='kv-quest-card';card.id=`kv-quest-${q.id}`;const linkedBook=allBooks.find(b=>String(b.quest_id)===String(q.id)||String(b.id)===String(q.book_id));const locked=!!linkedBook && !currentProgress.has(String(linkedBook.id));card.innerHTML=`<b>🎮</b><h3>${escapeHtml(q.title)}</h3><p>${escapeHtml(q.description||'Оқу квесті')}</p>${q.book_id?`<span class="kv-quest-lock">${locked?'🔒 Кітапты оқып «Я прочитал» басыңыз':'🔓 Квест ашық'}</span>`:''}<button class="btn btn-primary" ${locked?'disabled':''}>${locked?'🔒 Құлыпталған':'Квестті бастау →'}</button>`;if(!locked)card.querySelector('button').onclick=()=>renderQuest(card,q);questListBox.appendChild(card);});
+   questListBox.innerHTML=''; data.forEach(q=>{const card=document.createElement('div');card.className='kv-quest-card';card.id=`kv-quest-${q.id}`;const linkedBook=allBooks.find(b=>String(b.quest_id)===String(q.id)||String(b.id)===String(q.book_id));const locked=!!linkedBook && !currentProgress.has(String(linkedBook.id)) && !openedQuests.has(String(q.id));card.innerHTML=`<b>🎮</b><h3>${escapeHtml(q.title)}</h3><p>${escapeHtml(q.description||'Оқу квесті')}</p>${q.book_id?`<span class="kv-quest-lock">${locked?'🔒 Кітапты оқып «Я прочитал» басыңыз':'🔓 Квест ашық'}</span>`:''}<button class="btn btn-primary" ${locked?'disabled':''}>${locked?'🔒 Құлыпталған':'🧩 Квестті бастау →'}</button>`;if(!locked)card.querySelector('button').onclick=()=>renderQuest(card,q);questListBox.appendChild(card);});
  }
  /* ---- Library, grouped by grade ---- */
  let allBooks=[];

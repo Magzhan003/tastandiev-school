@@ -7,7 +7,7 @@
   <meta name="description" content="KITAPVERSE — мектептің оқу ғаламы: кітапхана, квесттер, викториналар, battle, рейтинг және шығармашылық тапсырмалар.">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="kv-page">
 <header class="site-header">
   <div class="container nav-wrap">
     <a class="brand" href="index.html" aria-label="Басты бет">
@@ -22,26 +22,23 @@
 
 <main>
 <section class="kv-hero">
-  <div class="container">
-    <span class="section-label">KITAPVERSE</span>
-    <h1>Оқы. Ойлан. Ізде. Бөліс.</h1>
-    <p>Мектептің оқу ғаламы — кітап оқу, білім алу және достарыңмен бірге сыныбыңды рейтингте алға жылжыту.</p>
-    <div class="kv-flow">
-      <div class="kv-flow-step"><div><span>📖</span>Кітапхана</div></div><span class="kv-flow-arrow">→</span>
-      <div class="kv-flow-step"><div><span>🎮</span>Квесттер</div></div><span class="kv-flow-arrow">→</span>
-      <div class="kv-flow-step"><div><span>🧠</span>Викторина</div></div><span class="kv-flow-arrow">→</span>
-      <div class="kv-flow-step"><div><span>⚔️</span>Battle</div></div><span class="kv-flow-arrow">→</span>
-      <div class="kv-flow-step"><div><span>🏆</span>Рейтинг</div></div><span class="kv-flow-arrow">→</span>
-      <div class="kv-flow-step"><div><span>🎬</span>Шығармашылық</div></div>
+  <div class="kv-stars"></div><div class="kv-nebula nebula-one"></div><div class="kv-nebula nebula-two"></div>
+  <div class="container kv-hero-grid">
+    <div class="kv-hero-copy">
+      <span class="section-label">KITAPVERSE</span>
+      <h1>Оқы. Ойлан.<br><span>Ізде. Бөліс.</span></h1>
+      <p>Мектептің оқу ғаламы — кітап оқу, білім алу және достарыңмен бірге сыныбыңды рейтингте алға жылжыту.</p>
+      <div class="kv-flow">
+        <div class="kv-flow-step"><div><span>📖</span><b>Кітапхана</b></div></div><span class="kv-flow-arrow">✦</span>
+        <div class="kv-flow-step"><div><span>🧩</span><b>Квест</b></div></div><span class="kv-flow-arrow">✦</span>
+        <div class="kv-flow-step"><div><span>🧠</span><b>Викторина</b></div></div><span class="kv-flow-arrow">✦</span>
+        <div class="kv-flow-step"><div><span>⚔️</span><b>Battle</b></div></div><span class="kv-flow-arrow">✦</span>
+        <div class="kv-flow-step"><div><span>🏆</span><b>Кубок</b></div></div>
+      </div>
     </div>
-  </div>
-</section>
-
-<!-- 📖 Library, grouped by grade -->
-<section id="kv-library" class="kv-section">
-  <div class="container">
-    <div class="kv-section-head"><div><span class="kv-badge">📖 ІСКЕ ҚОСЫЛДЫ</span><h2 style="margin:10px 0 0">Кітапхана</h2></div></div>
-    <div id="kv-student-bar" class="kv-student-bar">
+    <div class="kv-hero-side">
+      <div class="kv-login-orbit"></div>
+      <div id="kv-student-bar" class="kv-student-bar">
       <div id="kv-auth-guest"><strong>👤 KITAPVERSE профилі</strong><span>Кітап оқу прогресін сақтау үшін оқушы аккаунтымен кіріңіз.</span><button class="btn btn-primary" id="kv-login-btn">Кіру</button></div>
       <div id="kv-auth-user" hidden><div><strong id="kv-user-name">—</strong><span id="kv-user-class">—</span></div><div class="kv-profile-mini"><span>⭐ <b id="kv-user-xp">0</b> XP</span><span>🔥 <b id="kv-user-streak">0</b> күн</span><span>📚 <b id="kv-user-books">0</b> кітап</span><span>📈 <b id="kv-user-level">1</b> деңгей</span></div><button class="btn btn-light" id="kv-logout-btn">Шығу</button></div>
     </div>
@@ -69,7 +66,14 @@
       <div class="kv-level-progress"><div class="kv-level-row"><span>Келесі деңгейге прогресс</span><b id="kv-profile-level-text">0 / 25 XP</b></div><div class="kv-level-track"><i id="kv-profile-level-bar"></i></div></div>
       <div class="kv-reading-summary"><div><b>📖 Оқу жолы</b><span id="kv-profile-reading-text">0 кітап оқылды</span></div><div class="kv-mini-track"><i id="kv-profile-reading-bar"></i></div></div>
     </div>
+    </div>
+  </div>
+</section>
 
+<!-- 📖 Library, grouped by grade -->
+<section id="kv-library" class="kv-section">
+  <div class="container">
+    <div class="kv-section-head"><div><span class="kv-badge">📖 ІСКЕ ҚОСЫЛДЫ</span><h2 style="margin:10px 0 0">Кітапхана</h2></div></div>
     <div class="kv-library-tools">
       <div class="kv-search"><span>⌕</span><input id="kv-book-search" type="search" placeholder="Кітапты атауы немесе авторы бойынша іздеу..."></div>
       <button class="kv-filter active" data-book-filter="all">Барлығы</button>
@@ -84,6 +88,15 @@
       <button class="kv-grade-tab" data-grade="9">9 сынып</button>
       <button class="kv-grade-tab" data-grade="10">10 сынып</button>
     </div>
+    <div class="kv-reading-flow-guide">
+      <div class="flow-node"><span>📖</span><b>Оқы</b><small>Кітапты аш</small></div>
+      <div class="flow-line"></div>
+      <div class="flow-node"><span>✅</span><b>«Мен оқыдым»</b><small>Квест ашылады</small></div>
+      <div class="flow-line"></div>
+      <div class="flow-node"><span>🧩</span><b>Квест</b><small>Біліміңді тексер</small></div>
+      <div class="flow-line"></div>
+      <div class="flow-node"><span>⭐</span><b>XP</b><small>Жетістігіңді жина</small></div>
+    </div>
     <div class="kv-grid" id="kv-books"><p class="kv-empty">Жүктелуде...</p></div>
     <div id="kv-reading-progress" class="kv-reading-progress"></div>
   </div>
@@ -93,7 +106,7 @@
 <section id="kv-quests" class="kv-section alt">
   <div class="container">
     <div class="kv-section-head"><div><span class="kv-badge">🎮 ОЙЫН ФОРМАТЫ</span><h2 style="margin:10px 0 0">Квесттер</h2></div></div>
-    <p class="lead">Кітапты аш → оқып болған соң «✅ Я прочитал» батырмасын бас → сол кітаптың квестін орында. Дұрыс жауаптар рейтингке ұпай қосады.</p>
+    <p class="lead">Кітапты аш → оқып болған соң «✅ Мен оқыдым» батырмасын бас → сол кітаптың квестін орында. Кітап тек квест аяқталғаннан кейін оқылған болып саналады.</p>
     <div id="kv-quest-list" class="kv-grid"><p class="kv-empty">Жүктелуде...</p></div>
   </div>
 </section>
