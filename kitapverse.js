@@ -81,11 +81,22 @@ function normalizeClassList(s){
    if(!sb?.auth)return;
    const {data:{session}}=await sb.auth.getSession();
    if(!session){currentStudent=null;currentProgress=new Set();renderStudentBar();return;}
-   let {data,error}=await sb.from('student_profiles').select('*').eq('auth_user_id',session.user.id).eq('active',true).maybeSingle();
-   // Repair/re-link the profile by the signed-in Auth email (IIN@students.kitapverse.local).
-   // This also fixes accounts whose old auth_user_id points to a previous Auth UUID.
-   if(!data){const claim=await sb.rpc('claim_my_student_profile');if(!claim.error){data=Array.isArray(claim.data)?claim.data[0]:claim.data;error=null;}}
-   if(!data){const repair=await sb.rpc('link_my_student_profile');if(!repair.error){data=Array.isArray(repair.data)?repair.data[0]:repair.data;error=null;}}
+   // Do not depend on the profile's auth_user_id being correct. The canonical
+   // connection is the signed-in Auth email prefix (12-digit IIN) -> iin_login.
+   let {data,error}=await sb.rpc('link_my_student_profile');
+   data=Array.isArray(data)?data[0]:data;
+   // Compatibility with databases that only have the older claim function.
+   if(error || !data){
+     const claim=await sb.rpc('claim_my_student_profile');
+     data=Array.isArray(claim.data)?claim.data[0]:claim.data;
+     error=claim.error;
+   }
+   // Last read: useful after the profile has been linked, and also supports
+   // older databases where the repair RPC has not been deployed yet.
+   if(error || !data){
+     const res=await sb.from('student_profiles').select('*').eq('auth_user_id',session.user.id).eq('active',true).maybeSingle();
+     data=res.data; error=res.error;
+   }
    if(error||!data){currentStudent=null;currentProgress=new Set();renderStudentBar();toast('Бұл аккаунт үшін оқушы профилі табылмады. Әкімшілікке хабарласыңыз.','error');return;}
    currentStudent=data;
    const {data:prog}=await sb.from('book_progress').select('book_id,marked_read_at').eq('student_id',data.id);
