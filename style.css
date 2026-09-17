@@ -947,3 +947,31 @@ body.kv-page footer{background:#05071d;border-top:1px solid rgba(151,170,255,.10
  body.kv-page .kv-hero{padding:52px 0 58px}
  body.kv-page .kv-reading-progress .kv-progress-card{padding:22px 20px}
 }
+
+/* KITAPVERSE v2 — compact library/quests + single student dashboard */
+body.kv-page .kv-profile-dashboard{display:block;position:relative}
+body.kv-page .kv-profile-logout{margin-left:auto;position:relative;z-index:3;white-space:nowrap}
+body.kv-page .kv-profile-logout:hover{transform:translateY(-1px)}
+body.kv-page .kv-expand-toggle{
+  display:flex;align-items:center;justify-content:center;gap:10px;width:min(100%,360px);margin:18px auto 0;
+  padding:13px 18px;border:1px solid rgba(125,217,255,.20);border-radius:15px;
+  color:#dce8ff;background:rgba(255,255,255,.045);font-weight:800;cursor:pointer;
+  transition:.2s ease;box-shadow:0 10px 28px rgba(0,0,0,.12)
+}
+body.kv-page .kv-expand-toggle:hover{background:rgba(91,117,255,.16);border-color:rgba(125,217,255,.35);transform:translateY(-2px)}
+body.kv-page .kv-expand-toggle span{font-size:17px;color:#7fe0ff}
+body.kv-page .kv-quest-grade-tabs{margin-top:22px}
+body.kv-page .kv-login-box input,
+body.kv-page .kv-login-box input:-webkit-autofill,
+body.kv-page .kv-login-box input:-webkit-autofill:hover,
+body.kv-page .kv-login-box input:-webkit-autofill:focus{
+  color:#fff!important;-webkit-text-fill-color:#fff!important;caret-color:#fff!important;
+  background-color:rgba(7,10,43,.52)!important;
+  -webkit-box-shadow:0 0 0 1000px rgba(7,10,43,.92) inset!important;
+  box-shadow:0 0 0 1000px rgba(7,10,43,.92) inset!important;
+}
+body.kv-page .kv-login-box input::placeholder{color:#8d98c8!important;opacity:1}
+@media(max-width:700px){
+  body.kv-page .kv-profile-logout{order:3;width:100%;margin:4px 0 0}
+  body.kv-page .kv-profile-top{gap:11px}
+}
