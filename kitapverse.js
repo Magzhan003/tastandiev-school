@@ -173,19 +173,62 @@ function normalizeClassList(s){
    const {data:questions,error}=await sb.from('quest_questions_public').select('*').eq('quest_id',quest.id).order('sequence_no',{ascending:true});
    if(error||!questions?.length){box.innerHTML='<p class="kv-empty">Бұл квесттің сұрақтары әлі дайын емес.</p>';return;}
    if(!currentStudent){box.innerHTML='<div class="kv-login-required"><span>🔐</span><div><b>Квестке қатысу үшін кіріңіз</b><small>Профиль арқылы нәтижеңіз бен XP дұрыс есептеледі.</small></div><button class="btn btn-primary" onclick="document.getElementById(\'kv-login-btn\')?.click()">Кіру →</button></div>';return;}
-   box.innerHTML=`<div class="kv-quest-card kv-quest-wide"><div class="kv-quest-headline"><b>🎮</b><div><span class="kv-eyebrow">СЕНІҢ КВЕСТІҢ</span><h3>${escapeHtml(quest.title)}</h3></div><span class="kv-quest-player">👤 ${escapeHtml(currentStudent.full_name)}</span></div><p>${escapeHtml(quest.description||'Оқу квестін орындаңыз.')}</p><div class="kv-quest-questions"></div><button class="btn btn-primary quest-submit">Квестті аяқтау →</button><p class="kv-battle-note" style="margin-top:12px">⚠️ Бір оқушыға бір ғана мүмкіндік беріледі.</p></div>`;
+   box.innerHTML=`<div class="kv-quest-card kv-quest-wide"><div class="kv-quest-headline"><b>🎮</b><div><span class="kv-eyebrow">СЕНІҢ КВЕСТІҢ</span><h3>${escapeHtml(quest.title)}</h3></div><span class="kv-quest-player">👤 ${escapeHtml(currentStudent.full_name)}</span></div><p>${escapeHtml(quest.description||'Оқу квестін орындаңыз.')}</p><div class="kv-quest-questions"></div><button class="btn btn-primary quest-submit">Квестті аяқтау →</button><p class="kv-battle-note" style="margin-top:12px">
+  📚 Квестті кітапты растау үшін өту керек. Өтпеген жағдайда қайта тапсыруға болады.
+</p>`;
    const qbox=box.querySelector('.kv-quest-questions');
    questions.forEach((q,i)=>{const card=document.createElement('div');card.className='kv-quest-question-card';card.innerHTML=`<div class="kv-quiz-progress">СҰРАҚ ${i+1} / ${questions.length}</div><div class="kv-quiz-question">${escapeHtml(q.question)}</div><label><input type="radio" name="qq-${q.id}" value="a"> ${escapeHtml(q.option_a)}</label><label><input type="radio" name="qq-${q.id}" value="b"> ${escapeHtml(q.option_b)}</label><label><input type="radio" name="qq-${q.id}" value="c"> ${escapeHtml(q.option_c)}</label><label><input type="radio" name="qq-${q.id}" value="d"> ${escapeHtml(q.option_d)}</label>`;qbox.appendChild(card);});
    box.querySelector('.quest-submit').onclick=async()=>{const name=currentStudent.full_name,cls=currentStudent.class_name;const answers=questions.map(q=>{const x=box.querySelector(`input[name="qq-${q.id}"]:checked`);return {question_id:q.id,answer:x?x.value:null};});const btn=box.querySelector('.quest-submit');btn.disabled=true;try{const r=await submitQuestAttempt(quest.id,name,cls,answers);
      // Only a successfully submitted quest confirms the linked book as read.
-     const linkedBook=allBooks.find(b=>String(b.quest_id)===String(quest.id)||String(b.id)===String(quest.book_id));
-     let bookConfirmed=false;
-     if(linkedBook && !currentProgress.has(String(linkedBook.id))){
-       const {error:progressError}=await sb.from('book_progress').upsert({student_id:currentStudent.id,book_id:linkedBook.id},{onConflict:'student_id,book_id'});
-       if(!progressError){currentProgress.add(String(linkedBook.id));bookConfirmed=true;}
-     } else if(linkedBook){bookConfirmed=true;}
+   const linkedBook = allBooks.find(
+  b =>
+    String(b.quest_id) === String(quest.id) ||
+    String(b.id) === String(quest.book_id)
+);
+
+let bookConfirmed = false;
+
+// Книгу отмечаем прочитанной ТОЛЬКО если квест пройден
+// Проходной результат: 60% или больше
+const score = Number(r.score || 0);
+const total = Number(r.total || questions.length);
+const passed = total > 0 && (score / total) >= 0.6;
+
+if (passed && linkedBook) {
+  const { error: progressError } = await sb
+    .from('book_progress')
+    .upsert(
+      {
+        student_id: currentStudent.id,
+        book_id: linkedBook.id,
+        progress_percent: 100,
+        completed: true,
+        completed_at: new Date().toISOString()
+      },
+      {
+        onConflict: 'student_id,book_id'
+      }
+    );
+
+  if (!progressError) {
+    currentProgress.add(String(linkedBook.id));
+    bookConfirmed = true;
+  }
+}
      openedQuests.delete(String(quest.id));
-     box.innerHTML=`<div class="kv-quiz-result"><p>🎉 Квест аяқталды!</p><div class="score">${r.score} / ${r.total}</div><p>${bookConfirmed?'📚 Кітап расталды. Нәтиже рейтингке қосылды.':'Нәтиже рейтингке қосылды. Кітап прогресін сақтау кезінде қайта байқап көріңіз.'}</p></div>`;
+    box.innerHTML = `
+  <div class="kv-quiz-result">
+    <p>${passed ? '🎉 Квест пройден!' : '❌ Квест не пройден'}</p>
+    <div class="score">${r.score} / ${r.total}</div>
+    <p>
+      ${
+        passed
+          ? '📚 Кітап расталды. Нәтиже рейтингке қосылды.'
+          : '📖 Кітап әзірге оқылды деп есептелмейді. «Мен оқыдым» батырмасын қайта басып, квестті тағы бір рет өтіңіз.'
+      }
+    </p>
+  </div>
+`;
      await loadStudentStats();await loadBooks();await loadQuests();await loadRating();await loadStudents();}catch(err){btn.disabled=false;const m=String(err?.message||'');if(m.includes('already submitted'))toast('Бұл квест бұрын тапсырылған.','error');else toast('Квест нәтижесін сақтау кезінде қате шықты.','error');}};
  }
  async function loadQuests(){
