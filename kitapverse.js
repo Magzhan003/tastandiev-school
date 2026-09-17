@@ -82,7 +82,10 @@ function normalizeClassList(s){
    const {data:{session}}=await sb.auth.getSession();
    if(!session){currentStudent=null;currentProgress=new Set();renderStudentBar();return;}
    let {data,error}=await sb.from('student_profiles').select('*').eq('auth_user_id',session.user.id).eq('active',true).maybeSingle();
+   // Repair/re-link the profile by the signed-in Auth email (IIN@students.kitapverse.local).
+   // This also fixes accounts whose old auth_user_id points to a previous Auth UUID.
    if(!data){const claim=await sb.rpc('claim_my_student_profile');if(!claim.error){data=Array.isArray(claim.data)?claim.data[0]:claim.data;error=null;}}
+   if(!data){const repair=await sb.rpc('link_my_student_profile');if(!repair.error){data=Array.isArray(repair.data)?repair.data[0]:repair.data;error=null;}}
    if(error||!data){currentStudent=null;currentProgress=new Set();renderStudentBar();toast('Бұл аккаунт үшін оқушы профилі табылмады. Әкімшілікке хабарласыңыз.','error');return;}
    currentStudent=data;
    const {data:prog}=await sb.from('book_progress').select('book_id,marked_read_at').eq('student_id',data.id);
