@@ -57,7 +57,6 @@ function normalizeClassList(s){
  const readingProgressBox=document.getElementById('kv-reading-progress');
  const profileDashboard=document.getElementById('kv-profile-dashboard');
  const profileName=document.getElementById('kv-profile-name'), profileClass=document.getElementById('kv-profile-class'), profileLevel=document.getElementById('kv-profile-level');
- const booksToggle=document.getElementById('kv-books-toggle'), questsToggle=document.getElementById('kv-quests-toggle'), questGradeTabs=document.getElementById('kv-quest-grade-tabs');
  const profileXp=document.getElementById('kv-profile-xp'), profileStreak=document.getElementById('kv-profile-streak'), profileBooks=document.getElementById('kv-profile-books');
  const profileLevelText=document.getElementById('kv-profile-level-text'), profileLevelBar=document.getElementById('kv-profile-level-bar');
  const profileReadingText=document.getElementById('kv-profile-reading-text'), profileReadingBar=document.getElementById('kv-profile-reading-bar');
@@ -81,22 +80,8 @@ function normalizeClassList(s){
    if(!sb?.auth)return;
    const {data:{session}}=await sb.auth.getSession();
    if(!session){currentStudent=null;currentProgress=new Set();renderStudentBar();return;}
-   // Do not depend on the profile's auth_user_id being correct. The canonical
-   // connection is the signed-in Auth email prefix (12-digit IIN) -> iin_login.
-   let {data,error}=await sb.rpc('link_my_student_profile');
-   data=Array.isArray(data)?data[0]:data;
-   // Compatibility with databases that only have the older claim function.
-   if(error || !data){
-     const claim=await sb.rpc('claim_my_student_profile');
-     data=Array.isArray(claim.data)?claim.data[0]:claim.data;
-     error=claim.error;
-   }
-   // Last read: useful after the profile has been linked, and also supports
-   // older databases where the repair RPC has not been deployed yet.
-   if(error || !data){
-     const res=await sb.from('student_profiles').select('*').eq('auth_user_id',session.user.id).eq('active',true).maybeSingle();
-     data=res.data; error=res.error;
-   }
+   let {data,error}=await sb.from('student_profiles').select('*').eq('auth_user_id',session.user.id).eq('active',true).maybeSingle();
+   if(!data){const claim=await sb.rpc('claim_my_student_profile');if(!claim.error){data=Array.isArray(claim.data)?claim.data[0]:claim.data;error=null;}}
    if(error||!data){currentStudent=null;currentProgress=new Set();renderStudentBar();toast('Бұл аккаунт үшін оқушы профилі табылмады. Әкімшілікке хабарласыңыз.','error');return;}
    currentStudent=data;
    const {data:prog}=await sb.from('book_progress').select('book_id,marked_read_at').eq('student_id',data.id);
@@ -110,7 +95,7 @@ function normalizeClassList(s){
  function renderStudentBar(){
    if(!authGuest||!authUser)return;
    const logged=!!currentStudent;
-   authGuest.hidden=logged;authUser.hidden=true;
+   authGuest.hidden=logged;authUser.hidden=!logged;
    if(profileDashboard)profileDashboard.hidden=!logged;
    if(logged){
      userNameBox.textContent=currentStudent.full_name;
@@ -206,28 +191,12 @@ function normalizeClassList(s){
  async function loadQuests(){
    if(!questListBox)return;
    const {data,error}=await sb.from('quests').select('id,title,description,created_at,book_id').eq('published',true).order('created_at',{ascending:false});
-   if(error||!data?.length){questListBox.innerHTML='<p class="kv-empty">Жаңа квесттер жақында қосылады.</p>';if(questsToggle)questsToggle.hidden=true;return;}
-   const grade=String(selectedQuestGrade);
-   const list=data.filter(q=>{const b=allBooks.find(x=>String(x.id)===String(q.book_id)||String(x.quest_id)===String(q.id));return b && String(b.grade)===grade;});
-   if(!list.length){questListBox.innerHTML='<div class="kv-empty kv-empty-rich"><span>🎮</span><b>Бұл сыныпқа квесттер дайын емес</b><small>Әкімшілік кітаптарға квесттерді байланыстырады.</small></div>';if(questsToggle)questsToggle.hidden=true;return;}
-   const visible=questsExpanded?list:list.slice(0,3);
-   questListBox.innerHTML='';
-   visible.forEach(q=>{
-     const card=document.createElement('div');card.className='kv-quest-card';card.id=`kv-quest-${q.id}`;
-     const linkedBook=allBooks.find(b=>String(b.quest_id)===String(q.id)||String(b.id)===String(q.book_id));
-     const locked=!!linkedBook && !currentProgress.has(String(linkedBook.id)) && !openedQuests.has(String(q.id));
-     card.innerHTML=`<b>🎮</b><h3>${escapeHtml(q.title)}</h3><p>${escapeHtml(q.description||'Оқу квесті')}</p><span class="kv-quest-lock">${locked?'🔒 Кітапты оқып «Я прочитал» басыңыз':'🔓 Квест ашық'}</span><button class="btn btn-primary" ${locked?'disabled':''}>${locked?'🔒 Құлыпталған':'🧩 Квестті бастау →'}</button>`;
-     if(!locked)card.querySelector('button').onclick=()=>renderQuest(card,q);questListBox.appendChild(card);
-   });
-   if(questsToggle){questsToggle.hidden=list.length<=3;questsToggle.innerHTML=questsExpanded?'Жасыру <span>↑</span>':'Барлық квесттерді көрсету <span>↓</span>';}
+   if(error||!data?.length){questListBox.innerHTML='<p class="kv-empty">Жаңа квесттер жақында қосылады.</p>';return;}
+   questListBox.innerHTML=''; data.forEach(q=>{const card=document.createElement('div');card.className='kv-quest-card';card.id=`kv-quest-${q.id}`;const linkedBook=allBooks.find(b=>String(b.quest_id)===String(q.id)||String(b.id)===String(q.book_id));const locked=!!linkedBook && !currentProgress.has(String(linkedBook.id)) && !openedQuests.has(String(q.id));card.innerHTML=`<b>🎮</b><h3>${escapeHtml(q.title)}</h3><p>${escapeHtml(q.description||'Оқу квесті')}</p>${q.book_id?`<span class="kv-quest-lock">${locked?'🔒 Кітапты оқып «Я прочитал» басыңыз':'🔓 Квест ашық'}</span>`:''}<button class="btn btn-primary" ${locked?'disabled':''}>${locked?'🔒 Құлыпталған':'🧩 Квестті бастау →'}</button>`;if(!locked)card.querySelector('button').onclick=()=>renderQuest(card,q);questListBox.appendChild(card);});
  }
-
  /* ---- Library, grouped by grade ---- */
  let allBooks=[];
  let selectedGrade='6';
- let booksExpanded=false;
- let selectedQuestGrade='6';
- let questsExpanded=false;
  function renderBooks(){
    if(!booksBox)return;
    const query=bookSearchText.toLowerCase();
@@ -239,21 +208,15 @@ function normalizeClassList(s){
      if(query&&!`${b.title||''} ${b.author||''} ${b.description||''}`.toLowerCase().includes(query))return false;
      return true;
    });
-   if(!list.length){booksBox.innerHTML=`<div class="kv-empty kv-empty-rich"><span>📚</span><b>Бұл сүзгіде кітап табылмады</b><small>Басқа сыныпты немесе іздеу сөзін көріңіз.</small></div>`;if(booksToggle)booksToggle.hidden=true;return;}
-   const visible=booksExpanded?list:list.slice(0,3);
+   if(!list.length){booksBox.innerHTML=`<div class="kv-empty kv-empty-rich"><span>📚</span><b>Бұл сүзгіде кітап табылмады</b><small>Басқа сыныпты немесе іздеу сөзін көріңіз.</small></div>`;return;}
    booksBox.innerHTML='';
-   visible.forEach(x=>{
+   list.forEach(x=>{
      const el=document.createElement('article');el.className=`kv-book card-in ${currentProgress.has(String(x.id))?'is-read':''}`;
      const read=currentProgress.has(String(x.id));const link=x.drive_url||x.pdf_url;
      el.innerHTML=`<div class="kv-book-cover"><span>${escapeHtml(x.icon||'📕')}</span>${read?'<i>✓</i>':''}</div><div class="kv-book-content"><div class="kv-book-meta"><span>${String(x.grade||'')} СЫНЫП</span>${read?'<b>ОҚЫЛДЫ</b>':''}</div><h3>${escapeHtml(x.title)}</h3>${x.author?`<span class="kv-book-author">${escapeHtml(x.author)}</span>`:''}${x.description?`<p>${escapeHtml(x.description)}</p>`:''}<div class="kv-book-actions">${link?`<a class="kv-book-pdf" href="${escapeHtml(link)}" target="_blank" rel="noopener">📖 Кітапты оқу <span>↗</span></a>`:''}<button class="btn ${read?'btn-light':'btn-primary'} kv-book-read" ${read?'disabled':''}>${read?'✓ Прочитано':'Я прочитал'}</button></div>${x.quest_id?`<small class="kv-book-quest">${read?'🧩 Квест дайын — төменге түсіңіз':'🔒 Кітапты оқып, «Я прочитал» басыңыз'}</small>`:''}</div>`;
      el.querySelector('.kv-book-read')?.addEventListener('click',()=>markBookRead(x));booksBox.appendChild(el);
    });
-   if(booksToggle){booksToggle.hidden=list.length<=3;booksToggle.innerHTML=booksExpanded?'Жасыру <span>↑</span>':'Қалған кітаптарды көрсету <span>↓</span>';}
  }
-
- booksToggle?.addEventListener('click',()=>{booksExpanded=!booksExpanded;renderBooks();});
- questsToggle?.addEventListener('click',()=>{questsExpanded=!questsExpanded;loadQuests();});
- questGradeTabs?.querySelectorAll('[data-quest-grade]').forEach(btn=>btn.addEventListener('click',()=>{selectedQuestGrade=btn.dataset.questGrade;questsExpanded=false;questGradeTabs.querySelectorAll('[data-quest-grade]').forEach(x=>x.classList.toggle('selected',x===btn));loadQuests();}));
  async function loadBooks(){
    if(!booksBox)return;
    const {data,error}=await sb.from('library_books').select('*').order('created_at',{ascending:false});

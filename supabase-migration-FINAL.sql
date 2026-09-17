@@ -954,39 +954,6 @@ begin
 end; $$;
 grant execute on function public.claim_my_student_profile() to authenticated;
 
--- Repair/re-link helper for existing student accounts.
--- It matches the signed-in Auth email prefix (IIN) to student_profiles.iin_login,
--- removes any stale link for that same profile, then links the current Auth user.
-create or replace function public.link_my_student_profile()
-returns public.student_profiles
-language plpgsql
-security definer
-set search_path=public,auth as $$
-declare
-  v_iin text;
-  v_row public.student_profiles;
-begin
-  if auth.uid() is null then raise exception 'authentication required'; end if;
-  v_iin := split_part(coalesce(auth.jwt()->>'email',''),'@',1);
-  if v_iin is null or v_iin='' then raise exception 'student login email is invalid'; end if;
-
-  -- The current user must match the synthetic student email convention.
-  -- First clear a stale UUID on the matching profile (if any).
-  update public.student_profiles
-    set auth_user_id=null, updated_at=now()
-    where iin_login=v_iin and auth_user_id is not null and auth_user_id<>auth.uid();
-
-  update public.student_profiles
-    set auth_user_id=auth.uid(), updated_at=now()
-    where iin_login=v_iin and active=true
-    returning * into v_row;
-
-  if not found then raise exception 'student profile not found'; end if;
-  return v_row;
-end; $$;
-grant execute on function public.link_my_student_profile() to authenticated;
-
-
 -- ===== Admin-only write protection after student accounts are enabled =====
 create or replace function public.is_kitapverse_admin()
 returns boolean language sql stable security definer set search_path=public as $$
