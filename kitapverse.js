@@ -148,19 +148,20 @@ function normalizeClassList(s){
  logoutBtn?.addEventListener('click',async()=>{await sb.auth.signOut();currentStudent=null;currentProgress=new Set();if(loginIin)loginIin.value='';if(loginPassword)loginPassword.value='';if(loginBox)loginBox.hidden=true;renderStudentBar();toast('Профильден шықтыңыз.');});
  async function markBookRead(book){
    if(!currentStudent){loginBox.hidden=false;loginIin?.focus();toast('Алдымен оқушы аккаунтымен кіріңіз.','error');return;}
+   const questId=questIdForBook(book);
    if(currentProgress.has(String(book.id))){
-     if(book.quest_id){document.getElementById(`kv-quest-${book.quest_id}`)?.scrollIntoView({behavior:'smooth',block:'center'});}
+     if(questId){document.getElementById(`kv-quest-${questId}`)?.scrollIntoView({behavior:'smooth',block:'center'});}
      else toast('Бұл кітап бұрын расталған.','success');
      return;
    }
-   if(!book.quest_id){
+   if(!questId){
      toast('Бұл кітапқа квест әлі қосылмаған. Әкімшілік квестті байланыстырады.','error');
      return;
    }
    // "Я прочитал" does NOT mark the book as read. It only opens its quest.
-   openedQuests.add(String(book.quest_id));
+   openedQuests.add(String(questId));
    await loadQuests();
-   const card=document.getElementById(`kv-quest-${book.quest_id}`);
+   const card=document.getElementById(`kv-quest-${questId}`);
    if(card){card.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>card.querySelector('button')?.click(),250);}
    toast('🧩 Квест ашылды. Өткізіп болғаннан кейін кітап расталады!');
  }
@@ -191,11 +192,24 @@ function normalizeClassList(s){
  async function loadQuests(){
    if(!questListBox)return;
    const {data,error}=await sb.from('quests').select('id,title,description,created_at,book_id').eq('published',true).order('created_at',{ascending:false});
-   if(error||!data?.length){questListBox.innerHTML='<p class="kv-empty">Жаңа квесттер жақында қосылады.</p>';return;}
+   allQuests=(!error&&data)?data:[];
+   if(error||!data?.length){questListBox.innerHTML='<p class="kv-empty">Жаңа квесттер жақында қосылады.</p>';renderBooks();return;}
    questListBox.innerHTML=''; data.forEach(q=>{const card=document.createElement('div');card.className='kv-quest-card';card.id=`kv-quest-${q.id}`;const linkedBook=allBooks.find(b=>String(b.quest_id)===String(q.id)||String(b.id)===String(q.book_id));const locked=!!linkedBook && !currentProgress.has(String(linkedBook.id)) && !openedQuests.has(String(q.id));card.innerHTML=`<b>🎮</b><h3>${escapeHtml(q.title)}</h3><p>${escapeHtml(q.description||'Оқу квесті')}</p>${q.book_id?`<span class="kv-quest-lock">${locked?'🔒 Кітапты оқып «Я прочитал» басыңыз':'🔓 Квест ашық'}</span>`:''}<button class="btn btn-primary" ${locked?'disabled':''}>${locked?'🔒 Құлыпталған':'🧩 Квестті бастау →'}</button>`;if(!locked)card.querySelector('button').onclick=()=>renderQuest(card,q);questListBox.appendChild(card);});
+   // Re-render the library so book cards immediately reflect quests linked via quest.book_id.
+   renderBooks();
  }
  /* ---- Library, grouped by grade ---- */
  let allBooks=[];
+ let allQuests=[];
+ /* A quest can be linked to a book from either side: book.quest_id,
+    or quest.book_id (this is what the admin panel actually sets when
+    you pick a book while creating a quest). Always resolve both ways
+    so the link never silently breaks. */
+ function questIdForBook(book){
+   if(book?.quest_id)return book.quest_id;
+   const q=allQuests.find(q=>String(q.book_id)===String(book?.id));
+   return q?q.id:null;
+ }
  let selectedGrade='6';
  function renderBooks(){
    if(!booksBox)return;
@@ -212,8 +226,8 @@ function normalizeClassList(s){
    booksBox.innerHTML='';
    list.forEach(x=>{
      const el=document.createElement('article');el.className=`kv-book card-in ${currentProgress.has(String(x.id))?'is-read':''}`;
-     const read=currentProgress.has(String(x.id));const link=x.drive_url||x.pdf_url;
-     el.innerHTML=`<div class="kv-book-cover"><span>${escapeHtml(x.icon||'📕')}</span>${read?'<i>✓</i>':''}</div><div class="kv-book-content"><div class="kv-book-meta"><span>${String(x.grade||'')} СЫНЫП</span>${read?'<b>ОҚЫЛДЫ</b>':''}</div><h3>${escapeHtml(x.title)}</h3>${x.author?`<span class="kv-book-author">${escapeHtml(x.author)}</span>`:''}${x.description?`<p>${escapeHtml(x.description)}</p>`:''}<div class="kv-book-actions">${link?`<a class="kv-book-pdf" href="${escapeHtml(link)}" target="_blank" rel="noopener">📖 Кітапты оқу <span>↗</span></a>`:''}<button class="btn ${read?'btn-light':'btn-primary'} kv-book-read" ${read?'disabled':''}>${read?'✓ Оқылды':'Мен оқыдым'}</button></div>${x.quest_id?`<small class="kv-book-quest">${read?'🧩 Квест дайын — төменге түсіңіз':'🔒 Кітапты оқып, «Мен оқыдым» басыңыз'}</small>`:''}</div>`;
+     const read=currentProgress.has(String(x.id));const link=x.drive_url||x.pdf_url;const questId=questIdForBook(x);
+     el.innerHTML=`<div class="kv-book-cover"><span>${escapeHtml(x.icon||'📕')}</span>${read?'<i>✓</i>':''}</div><div class="kv-book-content"><div class="kv-book-meta"><span>${String(x.grade||'')} СЫНЫП</span>${read?'<b>ОҚЫЛДЫ</b>':''}</div><h3>${escapeHtml(x.title)}</h3>${x.author?`<span class="kv-book-author">${escapeHtml(x.author)}</span>`:''}${x.description?`<p>${escapeHtml(x.description)}</p>`:''}<div class="kv-book-actions">${link?`<a class="kv-book-pdf" href="${escapeHtml(link)}" target="_blank" rel="noopener">📖 Кітапты оқу <span>↗</span></a>`:''}<button class="btn ${read?'btn-light':'btn-primary'} kv-book-read" ${read?'disabled':''}>${read?'✓ Прочитано':'Я прочитал'}</button></div>${questId?`<small class="kv-book-quest">${read?'🧩 Квест дайын — төменге түсіңіз':'🔒 Кітапты оқып, «Я прочитал» басыңыз'}</small>`:''}</div>`;
      el.querySelector('.kv-book-read')?.addEventListener('click',()=>markBookRead(x));booksBox.appendChild(el);
    });
  }
