@@ -158,7 +158,7 @@ function normalizeClassList(s){
      toast('Бұл кітапқа квест әлі қосылмаған. Әкімшілік квестті байланыстырады.','error');
      return;
    }
-   // "Я прочитал" does NOT mark the book as read. It only opens its quest.
+   // "Мен оқыдым" does NOT mark the book as read. It only opens its quest.
    openedQuests.add(String(questId));
    await loadQuests();
    const card=document.getElementById(`kv-quest-${questId}`);
@@ -189,18 +189,43 @@ function normalizeClassList(s){
      box.innerHTML=`<div class="kv-quiz-result"><p>🎉 Квест аяқталды!</p><div class="score">${r.score} / ${r.total}</div><p>${bookConfirmed?'📚 Кітап расталды. Нәтиже рейтингке қосылды.':'Нәтиже рейтингке қосылды. Кітап прогресін сақтау кезінде қайта байқап көріңіз.'}</p></div>`;
      await loadStudentStats();await loadBooks();await loadQuests();await loadRating();await loadStudents();}catch(err){btn.disabled=false;const m=String(err?.message||'');if(m.includes('already submitted'))toast('Бұл квест бұрын тапсырылған.','error');else toast('Квест нәтижесін сақтау кезінде қате шықты.','error');}};
  }
+ let allQuestCards=[];
+ let questsExpanded=false;
+ const QUEST_PAGE_SIZE=3;
  async function loadQuests(){
    if(!questListBox)return;
    const {data,error}=await sb.from('quests').select('id,title,description,created_at,book_id').eq('published',true).order('created_at',{ascending:false});
    allQuests=(!error&&data)?data:[];
-   if(error||!data?.length){questListBox.innerHTML='<p class="kv-empty">Жаңа квесттер жақында қосылады.</p>';renderBooks();return;}
-   questListBox.innerHTML=''; data.forEach(q=>{const card=document.createElement('div');card.className='kv-quest-card';card.id=`kv-quest-${q.id}`;const linkedBook=allBooks.find(b=>String(b.quest_id)===String(q.id)||String(b.id)===String(q.book_id));const locked=!!linkedBook && !currentProgress.has(String(linkedBook.id)) && !openedQuests.has(String(q.id));card.innerHTML=`<b>🎮</b><h3>${escapeHtml(q.title)}</h3><p>${escapeHtml(q.description||'Оқу квесті')}</p>${q.book_id?`<span class="kv-quest-lock">${locked?'🔒 Кітапты оқып «Я прочитал» басыңыз':'🔓 Квест ашық'}</span>`:''}<button class="btn btn-primary" ${locked?'disabled':''}>${locked?'🔒 Құлыпталған':'🧩 Квестті бастау →'}</button>`;if(!locked)card.querySelector('button').onclick=()=>renderQuest(card,q);questListBox.appendChild(card);});
+   if(error||!data?.length){questListBox.innerHTML='<p class="kv-empty">Жаңа квесттер жақында қосылады.</p>';allQuestCards=[];renderQuestToggle();renderBooks();return;}
+   allQuestCards=data.map(q=>{const card=document.createElement('div');card.className='kv-quest-card';card.id=`kv-quest-${q.id}`;const linkedBook=allBooks.find(b=>String(b.quest_id)===String(q.id)||String(b.id)===String(q.book_id));const locked=!!linkedBook && !currentProgress.has(String(linkedBook.id)) && !openedQuests.has(String(q.id));card.innerHTML=`<b>🎮</b><h3>${escapeHtml(q.title)}</h3><p>${escapeHtml(q.description||'Оқу квесті')}</p>${q.book_id?`<span class="kv-quest-lock">${locked?'🔒 Кітапты оқып «Мен оқыдым» басыңыз':'🔓 Квест ашық'}</span>`:''}<button class="btn btn-primary" ${locked?'disabled':''}>${locked?'🔒 Құлыпталған':'🧩 Квестті бастау →'}</button>`;if(!locked)card.querySelector('button').onclick=()=>renderQuest(card,q);return card;});
+   renderQuestList();
    // Re-render the library so book cards immediately reflect quests linked via quest.book_id.
    renderBooks();
+ }
+ function renderQuestList(){
+   if(!questListBox)return;
+   questListBox.innerHTML='';
+   const visible=questsExpanded?allQuestCards:allQuestCards.slice(0,QUEST_PAGE_SIZE);
+   visible.forEach(card=>questListBox.appendChild(card));
+   renderQuestToggle();
+ }
+ function renderQuestToggle(){
+   let toggle=document.getElementById('kv-quest-toggle');
+   if(allQuestCards.length<=QUEST_PAGE_SIZE){toggle?.remove();return;}
+   if(!toggle){
+     toggle=document.createElement('button');
+     toggle.id='kv-quest-toggle';
+     toggle.className='btn btn-light kv-toggle-more';
+     questListBox.insertAdjacentElement('afterend',toggle);
+     toggle.onclick=()=>{questsExpanded=!questsExpanded;renderQuestList();};
+   }
+   toggle.textContent=questsExpanded?'▲ Жасыру':`▼ Барлық квесттер (${allQuestCards.length})`;
  }
  /* ---- Library, grouped by grade ---- */
  let allBooks=[];
  let allQuests=[];
+ let booksExpanded=false;
+ const BOOK_PAGE_SIZE=3;
  /* A quest can be linked to a book from either side: book.quest_id,
     or quest.book_id (this is what the admin panel actually sets when
     you pick a book while creating a quest). Always resolve both ways
@@ -222,14 +247,31 @@ function normalizeClassList(s){
      if(query&&!`${b.title||''} ${b.author||''} ${b.description||''}`.toLowerCase().includes(query))return false;
      return true;
    });
-   if(!list.length){booksBox.innerHTML=`<div class="kv-empty kv-empty-rich"><span>📚</span><b>Бұл сүзгіде кітап табылмады</b><small>Басқа сыныпты немесе іздеу сөзін көріңіз.</small></div>`;return;}
+   const bookToggle=document.getElementById('kv-book-toggle');
+   if(!list.length){booksBox.innerHTML=`<div class="kv-empty kv-empty-rich"><span>📚</span><b>Бұл сүзгіде кітап табылмады</b><small>Басқа сыныпты немесе іздеу сөзін көріңіз.</small></div>`;bookToggle?.remove();return;}
+   const visibleList=booksExpanded?list:list.slice(0,BOOK_PAGE_SIZE);
    booksBox.innerHTML='';
-   list.forEach(x=>{
+   visibleList.forEach(x=>{
      const el=document.createElement('article');el.className=`kv-book card-in ${currentProgress.has(String(x.id))?'is-read':''}`;
-     const read=currentProgress.has(String(x.id));const link=x.drive_url||x.pdf_url;const questId=questIdForBook(x);
-     el.innerHTML=`<div class="kv-book-cover"><span>${escapeHtml(x.icon||'📕')}</span>${read?'<i>✓</i>':''}</div><div class="kv-book-content"><div class="kv-book-meta"><span>${String(x.grade||'')} СЫНЫП</span>${read?'<b>ОҚЫЛДЫ</b>':''}</div><h3>${escapeHtml(x.title)}</h3>${x.author?`<span class="kv-book-author">${escapeHtml(x.author)}</span>`:''}${x.description?`<p>${escapeHtml(x.description)}</p>`:''}<div class="kv-book-actions">${link?`<a class="kv-book-pdf" href="${escapeHtml(link)}" target="_blank" rel="noopener">📖 Кітапты оқу <span>↗</span></a>`:''}<button class="btn ${read?'btn-light':'btn-primary'} kv-book-read" ${read?'disabled':''}>${read?'✓ Прочитано':'Я прочитал'}</button></div>${questId?`<small class="kv-book-quest">${read?'🧩 Квест дайын — төменге түсіңіз':'🔒 Кітапты оқып, «Я прочитал» басыңыз'}</small>`:''}</div>`;
+     const read=currentProgress.has(String(x.id));const questId=questIdForBook(x);
+     el.innerHTML=`<div class="kv-book-cover"><span>${escapeHtml(x.icon||'📕')}</span>${read?'<i>✓</i>':''}</div><div class="kv-book-content"><div class="kv-book-meta"><span>${String(x.grade||'')} СЫНЫП</span>${read?'<b>ОҚЫЛДЫ</b>':''}</div><h3>${escapeHtml(x.title)}</h3><div class="kv-book-actions"><button class="btn ${read?'btn-light':'btn-primary'} kv-book-read" ${read?'disabled':''}>${read?'✓ Оқылды':'Мен оқыдым'}</button></div>${questId?`<small class="kv-book-quest">${read?'🧩 Квест дайын — төменге түсіңіз':'🔒 Кітапты оқып, «Мен оқыдым» басыңыз'}</small>`:''}</div>`;
      el.querySelector('.kv-book-read')?.addEventListener('click',()=>markBookRead(x));booksBox.appendChild(el);
    });
+   renderBookToggle(list.length);
+ }
+ function renderBookToggle(total){
+   let toggle=document.getElementById('kv-book-toggle');
+   if(total<=BOOK_PAGE_SIZE){toggle?.remove();return;}
+   if(!toggle){
+     toggle=document.createElement('button');
+     toggle.id='kv-book-toggle';
+     toggle.className='btn btn-light kv-toggle-more';
+     booksBox.insertAdjacentElement('afterend',toggle);
+     toggle.onclick=()=>{booksExpanded=!booksExpanded;renderBooks();};
+   } else {
+     booksBox.insertAdjacentElement('afterend',toggle);
+   }
+   toggle.textContent=booksExpanded?'▲ Жасыру':`▼ Барлық кітаптар (${total})`;
  }
  async function loadBooks(){
    if(!booksBox)return;
@@ -287,7 +329,7 @@ function normalizeClassList(s){
    if(gapBox){
      if(rows.length>1){
        const gap=rows[0].xp-rows[1].xp;
-       gapBox.textContent=gap>0?`🔥 ${rows[0].cls} көш бастап тұр! ${rows[1].cls}-ға дейін ${gap} XP қалды.`:'🔥 Топ екі сынып тең түсуде!';
+       gapBox.textContent=gap>0?`🔥 ${rows[0].cls} көш бастап тұр! ${rows[1].cls} үшін ${gap} XP қалды.`:'🔥 Топ екі сынып тең түсуде!';
      } else { gapBox.textContent=''; }
    }
  }
