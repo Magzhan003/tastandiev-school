@@ -567,17 +567,20 @@ if(questAddCard)questAddCard.onclick=()=>addQuestCard(); if(questBulkList&&!ques
    docFormTitle.textContent='✏️ Құжатты өңдеу';
    docAddBtn.textContent='Өзгерісті сақтау';
    docTitleI.value=item.title||''; docFileI.value=''; docFileHint.hidden=false;
+   if(docFolderI)docFolderI.value=item.folder_id!=null?String(item.folder_id):'';
    docForm.scrollIntoView({behavior:'smooth',block:'center'});
  }
  function stopEditDoc(){
    editingDoc=null; docForm.classList.remove('editing');
    docFormTitle.textContent='📄 Құжат қосу'; docAddBtn.textContent='Құжатты қосу';
    docTitleI.value='';docFileI.value='';docFileHint.hidden=true;
+   if(docFolderI)docFolderI.value='';
  }
  docCancelBtn.onclick=stopEditDoc;
 
  docAddBtn.onclick=async()=>{
    const title=docTitleI.value.trim(), file=docFileI.files[0];
+   const folderId=docFolderI&&docFolderI.value?Number(docFolderI.value):null;
    if(!title){toast('Құжат атауын енгізіңіз.','error');return;}
    if(!editingDoc && !file){toast('Файлды таңдаңыз.','error');return;}
    if(file && file.size>50*1024*1024){toast('Файл 50 МБ-тан аспауы керек.','error');return;}
@@ -585,7 +588,7 @@ if(questAddCard)questAddCard.onclick=()=>addQuestCard(); if(questBulkList&&!ques
    setBusy(docAddBtn,true,editingDoc?'Өзгерісті сақтау':'Құжатты қосу');
    try{
      if(editingDoc){
-       const updates={title};
+       const updates={title,folder_id:folderId};
        if(file){
          const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_'); const path=`${Date.now()}_${safe}`;
          const up=await sb.storage.from('documents').upload(path,file,{upsert:false});
@@ -603,7 +606,7 @@ if(questAddCard)questAddCard.onclick=()=>addQuestCard(); if(questBulkList&&!ques
        const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_'); const path=`${Date.now()}_${safe}`;
        const up=await sb.storage.from('documents').upload(path,file,{upsert:false});
        if(up.error)throw new Error('upload');
-       const {error}=await sb.from('documents').insert({title,file_name:file.name,storage_path:path,file_url:sb.storage.from('documents').getPublicUrl(path).data.publicUrl});
+       const {error}=await sb.from('documents').insert({title,folder_id:folderId,file_name:file.name,storage_path:path,file_url:sb.storage.from('documents').getPublicUrl(path).data.publicUrl});
        if(error){await sb.storage.from('documents').remove([path]);throw new Error('insert');}
        stopEditDoc();
        await loadPublic(); await refreshAdminLists();
@@ -626,6 +629,79 @@ if(questAddCard)questAddCard.onclick=()=>addQuestCard(); if(questBulkList&&!ques
    toast('Құжат өшірілді.');
  }
 
+ /* ---------- Document folders: add / edit / delete ---------- */
+ let editingFolder=null; // {id}
+ const folderForm=document.getElementById('a-folder-form');
+ const folderNameI=document.getElementById('a-folder-name'), folderPasswordI=document.getElementById('a-folder-password'), folderPasswordHint=document.getElementById('a-folder-password-hint');
+ const folderAddBtn=document.getElementById('a-folder-add'), folderCancelBtn=document.getElementById('a-folder-cancel'), folderFormTitle=document.getElementById('a-folder-form-title');
+ const docFolderI=document.getElementById('a-doc-folder');
+
+ function startEditFolder(item){
+   editingFolder={id:item.id}; folderForm?.classList.add('editing');
+   if(folderFormTitle)folderFormTitle.textContent='✏️ Папканы өңдеу';
+   if(folderAddBtn)folderAddBtn.textContent='Өзгерісті сақтау';
+   if(folderNameI)folderNameI.value=item.name||'';
+   if(folderPasswordI)folderPasswordI.value='';
+   if(folderPasswordHint)folderPasswordHint.hidden=!item.is_locked;
+   folderForm?.scrollIntoView({behavior:'smooth',block:'center'});
+ }
+ function stopEditFolder(){
+   editingFolder=null; folderForm?.classList.remove('editing');
+   if(folderFormTitle)folderFormTitle.textContent='📁 Жаңа папка құру';
+   if(folderAddBtn)folderAddBtn.textContent='Папканы құру';
+   if(folderNameI)folderNameI.value=''; if(folderPasswordI)folderPasswordI.value='';
+   if(folderPasswordHint)folderPasswordHint.hidden=true;
+ }
+ if(folderCancelBtn)folderCancelBtn.onclick=stopEditFolder;
+
+ async function loadFolderOptions(){
+   if(!docFolderI)return;
+   const current=docFolderI.value;
+   const {data}=await sb.rpc('list_document_folders');
+   docFolderI.innerHTML='<option value="">Жалпы (топсыз, бәрі көреді)</option>'+(data||[]).map(f=>`<option value="${f.id}">${escapeHtml(f.name)}${f.is_locked?' 🔒':''}</option>`).join('');
+   if(current && [...docFolderI.options].some(o=>o.value===current))docFolderI.value=current;
+ }
+
+ if(folderAddBtn)folderAddBtn.onclick=async()=>{
+   const name=folderNameI?.value.trim(); const pw=folderPasswordI?.value.trim();
+   if(!name){toast('Папка атауын енгізіңіз.','error');return;}
+   setBusy(folderAddBtn,true,editingFolder?'Өзгерісті сақтау':'Папканы құру');
+   try{
+     if(editingFolder){
+       const updates={name}; if(pw)updates.password=pw;
+       const {error}=await sb.from('document_folders').update(updates).eq('id',editingFolder.id);
+       if(error)throw new Error('update');
+       stopEditFolder(); toast('Папка жаңартылды!');
+     } else {
+       const {error}=await sb.from('document_folders').insert({name,password:pw||null});
+       if(error)throw new Error('insert');
+       stopEditFolder(); toast('Папка құрылды!');
+     }
+     await loadPublic(); await refreshAdminLists(); await loadFolderOptions();
+   }catch(err){
+     toast('Папканы сақтау кезінде қате шықты.','error');
+   } finally {
+     setBusy(folderAddBtn,false,editingFolder?'Өзгерісті сақтау':'Папканы құру');
+   }
+ };
+
+ async function unlockFolderRemovePassword(id){
+   if(!confirm('Осы папканың құпиясөзін алып тастап, ашық ету керек пе? Оны енді бәрі көре алады.'))return;
+   const {error}=await sb.from('document_folders').update({password:null}).eq('id',id);
+   if(error){toast('Қате шықты.','error');return;}
+   await loadPublic(); await refreshAdminLists(); await loadFolderOptions();
+   toast('Папка ашық болды.');
+ }
+
+ async function deleteFolder(id){
+   if(!confirm('Бұл папканы өшіруге сенімдісіз бе? Ішіндегі құжаттар өшірілмейді, олар "Жалпы" топқа өтеді.'))return;
+   const {error}=await sb.from('document_folders').delete().eq('id',id);
+   if(error){toast('Папканы өшіру кезінде қате шықты.','error');return;}
+   if(editingFolder?.id===id)stopEditFolder();
+   await loadPublic(); await refreshAdminLists(); await loadFolderOptions();
+   toast('Папка өшірілді.');
+ }
+
  /* ---------- Public (visitor-facing) lists ---------- */
  function toggleEmpty(container,emptyId,hasItems){
    const empty=document.getElementById(emptyId);
@@ -635,7 +711,6 @@ if(questAddCard)questAddCard.onclick=()=>addQuestCard(); if(questBulkList&&!ques
  async function loadPublic(){
    const n=await sb.from('news').select('*').order('published_date',{ascending:false}).order('created_at',{ascending:false});
    const a=await sb.from('achievements').select('*').order('created_at',{ascending:false});
-   const d=await sb.from('documents').select('*').order('created_at',{ascending:false});
 
    const list=document.getElementById('news-list');
    if(n.data){
@@ -662,19 +737,102 @@ if(questAddCard)questAddCard.onclick=()=>addQuestCard(); if(questBulkList&&!ques
      toggleEmpty(al,'achievements-empty',a.data.length>0);
    }
 
+   // Documents are grouped into folders. "list_document_folders" hides any
+   // folder password — visitors only ever learn whether a folder is locked.
    const dl=document.getElementById('documents-list');
-   if(d.data){
+   if(dl){
+     const fRes=await sb.rpc('list_document_folders');
+     const folders=fRes.data||[];
+     let ungroupedCount=0;
+     const ug=await sb.from('documents').select('id',{count:'exact',head:true}).is('folder_id',null);
+     if(!ug.error){ ungroupedCount=ug.count||0; }
+     else { const all=await sb.from('documents').select('id',{count:'exact',head:true}); ungroupedCount=all.count||0; }
+
      dl.querySelectorAll('[data-cloud-item]').forEach(el=>el.remove());
-     d.data.forEach(x=>{
-       const url=x.file_url || (x.storage_path ? sb.storage.from('documents').getPublicUrl(x.storage_path).data.publicUrl : '#');
-       const el=document.createElement('a');
-       el.className='doc-card card-in'; el.setAttribute('data-cloud-item',''); el.href=url; el.target='_blank'; el.rel='noopener';
-       el.innerHTML=`<span>📄</span><h3>${escapeHtml(x.title)}</h3><p>${escapeHtml(x.file_name||'')}</p><span class="status">Ашу / жүктеу</span>`;
+     let total=0;
+     if(ungroupedCount>0){
+       total++;
+       const el=document.createElement('button');
+       el.type='button'; el.className='folder-card card-in'; el.setAttribute('data-cloud-item','');
+       el.innerHTML=`<span class="folder-icon">📂</span><h3>Жалпы құжаттар</h3><span class="folder-meta">${ungroupedCount} құжат</span>`;
+       el.addEventListener('click',()=>openFolderModal({id:null,name:'Жалпы құжаттар',is_locked:false}));
+       dl.appendChild(el);
+     }
+     folders.forEach(f=>{
+       total++;
+       const el=document.createElement('button');
+       el.type='button'; el.className='folder-card card-in'+(f.is_locked?' locked':''); el.setAttribute('data-cloud-item','');
+       el.innerHTML=`<span class="folder-icon">${f.is_locked?'🔒':'📁'}</span><h3>${escapeHtml(f.name)}</h3><span class="folder-meta">${f.is_locked?'<span class="folder-lock-badge">🔒 Құпиясөзбен</span>':(Number(f.doc_count||0)+' құжат')}</span>`;
+       el.addEventListener('click',()=>openFolderModal(f));
        dl.appendChild(el);
      });
-     toggleEmpty(dl,'documents-empty-msg',d.data.length>0);
+     toggleEmpty(dl,'documents-empty-msg',total>0);
    }
  }
+
+ /* ---------- Public folder modal: shows a folder's documents, gated by password ---------- */
+ const folderModal=document.getElementById('folder-modal');
+ const folderModalTitle=document.getElementById('folder-modal-title');
+ const folderModalLock=document.getElementById('folder-modal-lock');
+ const folderModalPassword=document.getElementById('folder-modal-password');
+ const folderModalUnlock=document.getElementById('folder-modal-unlock');
+ const folderModalError=document.getElementById('folder-modal-error');
+ const folderModalDocs=document.getElementById('folder-modal-docs');
+ const folderModalEmpty=document.getElementById('folder-modal-empty');
+ let currentFolder=null;
+ const unlockedFolders=new Set(); // folder ids already unlocked this visit
+
+ function closeFolderModal(){ folderModal?.classList.remove('show'); folderModal?.setAttribute('aria-hidden','true'); }
+ document.getElementById('folder-modal-close')?.addEventListener('click',closeFolderModal);
+ folderModal?.addEventListener('click',e=>{if(e.target===folderModal)closeFolderModal();});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&folderModal?.classList.contains('show'))closeFolderModal();});
+
+ function renderFolderDocs(docs){
+   if(!folderModalDocs)return;
+   folderModalDocs.innerHTML='';
+   (docs||[]).forEach(x=>{
+     const url=x.file_url || (x.storage_path ? sb.storage.from('documents').getPublicUrl(x.storage_path).data.publicUrl : '#');
+     const el=document.createElement('a');
+     el.className='doc-card'; el.href=url; el.target='_blank'; el.rel='noopener';
+     el.innerHTML=`<span>📄</span><h3>${escapeHtml(x.title)}</h3><p>${escapeHtml(x.file_name||'')}</p><span class="status">Ашу / жүктеу</span>`;
+     folderModalDocs.appendChild(el);
+   });
+   const hasDocs=!!(docs&&docs.length);
+   folderModalDocs.hidden=!hasDocs; if(folderModalEmpty)folderModalEmpty.hidden=hasDocs;
+ }
+
+ async function fetchAndShowDocs(folder,password){
+   let res=await sb.rpc('get_folder_documents',{p_folder_id:folder.id,p_password:password||null});
+   if(res.error && folder.id===null){ res=await sb.from('documents').select('*').order('created_at',{ascending:false}); }
+   if(res.error)return false;
+   renderFolderDocs(res.data);
+   if(folder.id!=null)unlockedFolders.add(folder.id);
+   return true;
+ }
+
+ async function openFolderModal(folder){
+   if(!folderModal)return;
+   currentFolder=folder;
+   if(folderModalTitle)folderModalTitle.textContent=folder.name;
+   if(folderModalDocs)folderModalDocs.hidden=true; if(folderModalEmpty)folderModalEmpty.hidden=true;
+   if(folderModalError)folderModalError.hidden=true;
+   if(folderModalPassword)folderModalPassword.value='';
+   const needsPassword=!!folder.is_locked && !unlockedFolders.has(folder.id);
+   if(folderModalLock)folderModalLock.hidden=!needsPassword;
+   folderModal.classList.add('show'); folderModal.setAttribute('aria-hidden','false');
+   if(!needsPassword){ await fetchAndShowDocs(folder,null); }
+   else { folderModalPassword?.focus(); }
+ }
+
+ folderModalUnlock?.addEventListener('click',async()=>{
+   if(!currentFolder)return;
+   setBusy(folderModalUnlock,true,'Ашу');
+   const ok=await fetchAndShowDocs(currentFolder,folderModalPassword?.value.trim());
+   setBusy(folderModalUnlock,false,'Ашу');
+   if(ok){ if(folderModalLock)folderModalLock.hidden=true; if(folderModalError)folderModalError.hidden=true; }
+   else if(folderModalError){ folderModalError.hidden=false; }
+ });
+ folderModalPassword?.addEventListener('keydown',e=>{if(e.key==='Enter')folderModalUnlock?.click();});
 
  /* ---------- Admin-facing lists (with edit / delete buttons) ---------- */
  async function refreshAdminLists(){
@@ -705,12 +863,41 @@ if(questAddCard)questAddCard.onclick=()=>addQuestCard(); if(questBulkList&&!ques
      achBox.appendChild(row);
    });
 
+   const folderBox=document.getElementById('a-folder-admin-list');
+   let foldersAdmin=[];
+   if(folderBox){
+     const ff=await sb.from('document_folders').select('*').order('created_at',{ascending:false});
+     foldersAdmin=ff.data||[];
+     folderBox.innerHTML='';
+     if(ff.error){ folderBox.innerHTML='<p class="admin-empty">Папка кестесі әлі қосылмаған (SQL скриптін орындаңыз).</p>'; }
+     else if(!foldersAdmin.length){ folderBox.innerHTML='<p class="admin-empty">Әзірге папка жоқ.</p>'; }
+     else foldersAdmin.forEach(item=>{
+       const locked=!!(item.password&&item.password.trim());
+       const row=document.createElement('div'); row.className='admin-list-item';
+       row.innerHTML=`<div class="ali-info"><strong>${locked?'🔒':'📁'} ${escapeHtml(item.name)}</strong><small>${locked?'Құпиясөзбен қорғалған':'Ашық — бәрі көреді'}</small></div><div class="ali-actions"></div>`;
+       const actions=row.querySelector('.ali-actions');
+       if(locked){
+         const unlockBtn=document.createElement('button'); unlockBtn.type='button'; unlockBtn.className='icon-btn'; unlockBtn.title='Құпиясөзді алып тастау (ашық ету)'; unlockBtn.textContent='🔓';
+         unlockBtn.onclick=()=>unlockFolderRemovePassword(item.id);
+         actions.appendChild(unlockBtn);
+       }
+       const editBtn=document.createElement('button'); editBtn.type='button'; editBtn.className='icon-btn'; editBtn.title='Өңдеу'; editBtn.textContent='✎';
+       editBtn.onclick=()=>startEditFolder({...item,is_locked:locked});
+       const delBtn=document.createElement('button'); delBtn.type='button'; delBtn.className='icon-btn danger'; delBtn.title='Өшіру'; delBtn.textContent='🗑';
+       delBtn.onclick=()=>deleteFolder(item.id);
+       actions.appendChild(editBtn); actions.appendChild(delBtn);
+       folderBox.appendChild(row);
+     });
+   }
+   const folderNameById={}; foldersAdmin.forEach(f=>{folderNameById[f.id]=f.name;});
+
    const d=await sb.from('documents').select('*').order('created_at',{ascending:false});
    docBox.innerHTML='';
    if(!d.data || !d.data.length){ docBox.innerHTML='<p class="admin-empty">Әзірге құжат жоқ.</p>'; }
    else d.data.forEach(item=>{
      const row=document.createElement('div'); row.className='admin-list-item';
-     row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.file_name||'')}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
+     const folderLabel=item.folder_id&&folderNameById[item.folder_id]?` · 📁 ${escapeHtml(folderNameById[item.folder_id])}`:'';
+     row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.file_name||'')}${folderLabel}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
      row.querySelector('.icon-btn:not(.danger)').onclick=()=>startEditDoc(item);
      row.querySelector('.icon-btn.danger').onclick=()=>deleteDoc(item.id,item.storage_path);
      docBox.appendChild(row);
@@ -826,5 +1013,5 @@ if(questAddCard)questAddCard.onclick=()=>addQuestCard(); if(questBulkList&&!ques
    }
  }
 
- await loadPublic(); await loadQuestBookOptions();
+ await loadPublic(); await loadQuestBookOptions(); await loadFolderOptions();
 })();

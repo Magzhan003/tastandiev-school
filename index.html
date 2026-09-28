@@ -73,6 +73,21 @@
 <footer><div class="container footer-wrap"><div><strong>№11 Тайыр Тастандиев атындағы орта мектеп</strong><small>Ресми мектеп сайты</small></div><span>© 2026 Барлық құқықтар қорғалған</span></div></footer>
 <div class="modal" id="news-modal" aria-hidden="true"><div class="modal-card"><button class="modal-close" aria-label="Жабу">×</button><span class="section-label">ЖАҢАЛЫҚ</span><h2 id="modal-title"></h2><p id="modal-text"></p><button class="btn btn-primary" id="modal-back">Жаңалықтарға оралу</button></div></div>
 
+<!-- Document folder modal: shows a folder's documents, or a password gate if locked -->
+<div class="modal" id="folder-modal" aria-hidden="true"><div class="modal-card folder-modal-card">
+  <button class="modal-close" id="folder-modal-close" aria-label="Жабу">×</button>
+  <span class="section-label" id="folder-modal-label">ҚҰЖАТ ПАПКАСЫ</span>
+  <h2 id="folder-modal-title"></h2>
+  <div id="folder-modal-lock" hidden>
+    <p>Бұл папка құпиясөзбен қорғалған. Ашу үшін құпиясөзді енгізіңіз.</p>
+    <input id="folder-modal-password" type="password" placeholder="Құпиясөз" autocomplete="off">
+    <div class="admin-actions"><button class="btn btn-primary" id="folder-modal-unlock">Ашу</button></div>
+    <p class="admin-hint" id="folder-modal-error" hidden>Құпиясөз қате. Қайталап көріңіз.</p>
+  </div>
+  <div id="folder-modal-docs" class="doc-grid" hidden></div>
+  <p class="admin-empty" id="folder-modal-empty" hidden>Бұл папкада құжат жоқ.</p>
+</div></div>
+
 <!-- Hidden admin panel: opens after 5 logo taps -->
 <div class="admin-overlay" id="admin-overlay" aria-hidden="true">
   <div class="admin-panel">
@@ -245,9 +260,24 @@
       <div class="admin-section-title">Марапаттар тізімі</div>
       <div class="admin-list" id="a-reward-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
 
+      <div class="admin-form" id="a-folder-form">
+        <h3><span id="a-folder-form-title">📁 Жаңа папка құру</span></h3>
+        <input id="a-folder-name" placeholder="Папка атауы (өзіңіз жазасыз, мысалы: Бұйрықтар)">
+        <input id="a-folder-password" type="password" placeholder="Құпиясөз (міндетті емес)" autocomplete="new-password">
+        <p class="admin-hint" id="a-folder-password-hint" hidden>Жаңа құпиясөз енгізбесеңіз, ескісі өзгермей қалады.</p>
+        <div class="admin-actions">
+          <button class="btn btn-primary" id="a-folder-add">Папканы құру</button>
+          <button class="btn btn-light cancel-edit" id="a-folder-cancel">Болдырмау</button>
+        </div>
+        <p class="admin-hint">Құпиясөзді бос қалдырсаңыз — папканы сайттағы барлық келушілер көре алады. Құпиясөз қойсаңыз — оны тек сіз және директор білуі керек.</p>
+      </div>
+      <div class="admin-section-title">Жасалған папкалар</div>
+      <div class="admin-list" id="a-folder-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
+
       <div class="admin-form" id="a-doc-form">
         <h3><span id="a-doc-form-title">📄 Құжат қосу</span></h3>
-        <input id="a-doc-title" placeholder="Құжат атауы">
+        <input id="a-doc-title" placeholder="Құжат атауы (өзіңіз жазасыз)">
+        <select id="a-doc-folder"><option value="">Жалпы (топсыз, бәрі көреді)</option></select>
         <input id="a-doc-file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx">
         <p class="admin-hint" id="a-doc-file-hint" hidden>Файлды өзгертпесеңіз, тек атауы жаңартылады.</p>
         <div class="admin-actions">
