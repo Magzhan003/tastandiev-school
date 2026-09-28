@@ -15,7 +15,7 @@
     </a>
     <button class="menu-toggle" aria-label="Мәзірді ашу" aria-expanded="false">☰</button>
     <nav class="nav" aria-label="Негізгі мәзір">
-      <a href="#home">Басты бет</a><a href="#school">Мектеп туралы</a><a href="#news">Жаңалықтар</a><a href="#achievements">Жетістіктер</a><a href="#documents">Құжаттар</a><a href="#tests">Тесттер</a><a href="kitapverse.html">KITAPVERSE</a><a href="#contacts">Байланыс</a>
+      <a href="#home">Басты бет</a><a href="#school">Мектеп туралы</a><a href="#news">Жаңалықтар</a><a href="#achievements">Жетістіктер</a><a href="#documents">Құжаттар</a><a href="#schedule">Сабақ кестесі</a><a href="#tests">Тесттер</a><a href="kitapverse.html">KITAPVERSE</a><a href="#contacts">Байланыс</a>
     </nav>
   </div>
 </header>
@@ -64,6 +64,10 @@
 <div class="doc-grid" id="documents-list">
 <p class="admin-empty" id="documents-empty-msg">Құжаттар жақында қосылады.</p>
 </div>
+</div></section>
+<section id="schedule" class="section"><div class="container"><span class="section-label">САБАҚ КЕСТЕСІ</span><h2>Сабақ кестесі</h2><p class="lead">Сыныбыңызды таңдаңыз — апталық сабақ кестесі төменде көрсетіледі.</p>
+<div class="sched-classes" id="schedule-classes"></div>
+<div class="sched-wrap" id="schedule-table"><p class="admin-empty">Кесте жақында қосылады.</p></div>
 </div></section>
 <section id="tests" class="section"><div class="container"><div class="section-head"><div><span class="section-label">ОНЛАЙН БАҒАЛАУ</span><h2>Тесттер</h2></div></div>
 <p class="lead">Тесттер енді Google Forms арқылы емес, KITAPVERSE квесттері сияқты тікелей сайттың ішінде орындалады.</p>
@@ -141,6 +145,22 @@
         <p class="admin-hint">Тест те Google Forms сияқты толықтай сайттың ішінде өтеді. Бұл тесттерде сынып бойынша арнайы 20/25 сияқты лимит қолданылмайды — лимит тек күнделікті Викторина мен Battle үшін.</p>
       </div>
       <div class="admin-section-title">Жарияланған тесттер</div><div class="admin-list" id="a-test-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
+
+      <div class="admin-section-title">Тест нәтижелері</div>
+      <div class="admin-form" id="a-results-box">
+        <select id="a-results-test"><option value="">Барлық тесттер</option></select>
+        <input id="a-results-class" placeholder="Сынып бойынша іздеу (мысалы: 7А)">
+        <div class="admin-actions"><button class="btn btn-light" id="a-results-refresh" type="button">Жаңарту</button><button class="btn btn-primary" id="a-results-export" type="button">Excel-ге жүктеу</button></div>
+      </div>
+      <div class="admin-list" id="a-results-list"><p class="admin-empty">Жүктелуде...</p></div>
+
+      <div class="admin-section-title">Сабақ кестесі</div>
+      <div class="admin-form" id="a-sched-box">
+        <select id="a-sched-class"></select>
+        <div id="a-sched-editor"><p class="admin-empty">Жүктелуде...</p></div>
+        <div class="admin-actions"><button class="btn btn-light" id="a-sched-add" type="button">+ Сабақ қосу</button><button class="btn btn-primary" id="a-sched-save" type="button">Кестені сақтау</button></div>
+        <p class="admin-hint">Кез келген ұяшықты өзгертіңіз де «Кестені сақтау» басыңыз. Бос ұяшық — сабақ жоқ.</p>
+      </div>
       </div><!-- /site admin -->
       <div class="admin-tab-panel" data-admin-panel="kitap"><span class="section-label">KITAPVERSE</span><h2>Кітаптар, квесттер, викторина және Battle</h2>
       <div class="admin-form" id="a-book-form">

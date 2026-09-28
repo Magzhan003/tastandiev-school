@@ -835,6 +835,146 @@ if(questAddCard)questAddCard.onclick=()=>addQuestCard(); if(questBulkList&&!ques
  folderModalPassword?.addEventListener('keydown',e=>{if(e.key==='Enter')folderModalUnlock?.click();});
 
  /* ---------- Admin-facing lists (with edit / delete buttons) ---------- */
+ /* ---------- Test results (admin) ---------- */
+ let resultsCache=[];
+ function filteredResults(){
+   const tid=document.getElementById('a-results-test')?.value||'';
+   const cls=(document.getElementById('a-results-class')?.value||'').trim().toLowerCase().replace(/\s+/g,'');
+   return resultsCache.filter(r=>(!tid||String(r.test_id)===tid)&&(!cls||String(r.class_name||'').toLowerCase().replace(/\s+/g,'').includes(cls)));
+ }
+ function renderTestResults(){
+   const box=document.getElementById('a-results-list'); if(!box)return;
+   const rows=filteredResults(); box.innerHTML='';
+   if(!rows.length){ box.innerHTML='<p class="admin-empty">Нәтиже жоқ.</p>'; return; }
+   rows.forEach(r=>{
+     const row=document.createElement('div'); row.className='admin-list-item';
+     const d=r.created_at?new Date(r.created_at).toLocaleString('kk-KZ'):'';
+     row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(r.student_name)} · ${escapeHtml(r.class_name)}</strong><small>${escapeHtml(r.test_title||'')} · ${d}</small></div><div class="ali-actions"><strong>${r.score} / ${r.total}</strong></div>`;
+     box.appendChild(row);
+   });
+ }
+ async function loadTestResults(){
+   const box=document.getElementById('a-results-list'); if(!box)return;
+   const [a,t]=await Promise.all([
+     sb.from('school_test_attempts').select('*').order('created_at',{ascending:false}),
+     sb.from('school_tests').select('id,title')
+   ]);
+   if(a.error){ box.innerHTML='<p class="admin-empty">Нәтижелерді жүктеу мүмкін болмады.</p>'; return; }
+   const titles={}; (t.data||[]).forEach(x=>{titles[x.id]=x.title;});
+   resultsCache=(a.data||[]).map(r=>({...r,test_title:titles[r.test_id]||''}));
+   const sel=document.getElementById('a-results-test');
+   if(sel){ const cur=sel.value; sel.innerHTML='<option value="">Барлық тесттер</option>'+(t.data||[]).map(x=>`<option value="${x.id}">${escapeHtml(x.title)}</option>`).join(''); sel.value=cur; }
+   renderTestResults();
+ }
+ document.getElementById('a-results-test')?.addEventListener('change',renderTestResults);
+ document.getElementById('a-results-class')?.addEventListener('input',renderTestResults);
+ document.getElementById('a-results-refresh')?.addEventListener('click',loadTestResults);
+ document.getElementById('a-results-export')?.addEventListener('click',()=>{
+   const rows=filteredResults(); if(!rows.length){toast('Жүктейтін нәтиже жоқ.','error');return;}
+   const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+   const lines=[['Тест','Аты-жөні','Сынып','Балл','Барлығы','Күні'].map(esc).join(';')];
+   rows.forEach(r=>lines.push([r.test_title,r.student_name,r.class_name,r.score,r.total,r.created_at?new Date(r.created_at).toLocaleString('kk-KZ'):''].map(esc).join(';')));
+   const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='test-results.csv'; document.body.appendChild(a); a.click(); a.remove();
+ });
+
+ /* ---------- Lesson schedule ---------- */
+ const DAY_NAMES=['ДҮЙСЕНБІ','СЕЙСЕНБІ','СӘРСЕНБІ','БЕЙСЕНБІ','ЖҰМА'];
+ const DAY_SHORT=['Дс','Сс','Ср','Бс','Жм'];
+ let scheduleData={}; // class -> [rows sorted by lesson_no]
+ let schedPublicClass=null;
+ const schedTable=document.getElementById('schedule-table');
+ const schedChips=document.getElementById('schedule-classes');
+ const aSchedClass=document.getElementById('a-sched-class');
+ const aSchedEditor=document.getElementById('a-sched-editor');
+
+ function sortClasses(list){
+   return list.slice().sort((a,b)=>{
+     const na=parseInt(a,10), nb=parseInt(b,10);
+     return na!==nb?na-nb:a.localeCompare(b,'kk');
+   });
+ }
+ function renderPublicSchedule(){
+   if(!schedTable||!schedChips)return;
+   const classes=sortClasses(Object.keys(scheduleData));
+   if(!classes.length){ schedChips.innerHTML=''; schedTable.innerHTML='<p class="admin-empty">Кесте жақында қосылады.</p>'; return; }
+   if(!schedPublicClass||!scheduleData[schedPublicClass])schedPublicClass=classes[0];
+   schedChips.innerHTML='';
+   classes.forEach(c=>{
+     const b=document.createElement('button'); b.type='button';
+     b.className='sched-chip'+(c===schedPublicClass?' active':''); b.textContent=c;
+     b.addEventListener('click',()=>{schedPublicClass=c; renderPublicSchedule();});
+     schedChips.appendChild(b);
+   });
+   const today=new Date().getDay(); // 1..5 = Mon..Fri
+   const rows=scheduleData[schedPublicClass]||[];
+   let html='<table class="sched-table"><thead><tr><th>№</th><th>Уақыты</th>'+DAY_NAMES.map((d,i)=>`<th class="${today===i+1?'today':''}">${d}</th>`).join('')+'</tr></thead><tbody>';
+   rows.forEach(r=>{
+     html+=`<tr><td class="sched-no">${r.lesson_no}</td><td class="sched-time">${escapeHtml(r.time_text||'')}${r.break_text?`<small>${escapeHtml(r.break_text)}</small>`:''}</td>`;
+     [r.d1,r.d2,r.d3,r.d4,r.d5].forEach((v,i)=>{ html+=`<td class="${today===i+1?'today':''}">${v?escapeHtml(v):'<span class="sched-empty">—</span>'}</td>`; });
+     html+='</tr>';
+   });
+   html+='</tbody></table>';
+   schedTable.innerHTML=html;
+ }
+
+ // Admin editor keeps its own working copy of the selected class
+ let schedEditRows=[];
+ function renderAdminSchedule(){
+   if(!aSchedClass||!aSchedEditor)return;
+   const classes=sortClasses(Object.keys(scheduleData));
+   const cur=aSchedClass.value;
+   aSchedClass.innerHTML=classes.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)} сынып</option>`).join('');
+   if(cur&&classes.includes(cur))aSchedClass.value=cur;
+   loadSchedEditor();
+ }
+ function loadSchedEditor(){
+   const c=aSchedClass?.value;
+   schedEditRows=(scheduleData[c]||[]).map(r=>({...r}));
+   drawSchedEditor();
+ }
+ function drawSchedEditor(){
+   if(!aSchedEditor)return;
+   if(!aSchedClass?.value){ aSchedEditor.innerHTML='<p class="admin-empty">Кесте әлі қосылмаған (SQL скриптін орындаңыз).</p>'; return; }
+   aSchedEditor.innerHTML='';
+   schedEditRows.forEach((r,idx)=>{
+     const box=document.createElement('div'); box.className='sched-ed-lesson';
+     const days=[r.d1,r.d2,r.d3,r.d4,r.d5];
+     box.innerHTML=`<div class="sched-ed-head"><strong>${r.lesson_no}-сабақ</strong><input data-f="time_text" placeholder="Уақыты (8:00–8:45)" value="${escapeHtml(r.time_text||'')}"><input data-f="break_text" placeholder="Үзіліс" value="${escapeHtml(r.break_text||'')}"><button type="button" class="icon-btn danger" title="Өшіру">🗑</button></div><div class="sched-ed-days">${days.map((v,i)=>`<div><label>${DAY_SHORT[i]}</label><input data-f="d${i+1}" value="${escapeHtml(v||'')}"></div>`).join('')}</div>`;
+     box.querySelectorAll('input[data-f]').forEach(inp=>inp.addEventListener('input',()=>{schedEditRows[idx][inp.dataset.f]=inp.value;}));
+     box.querySelector('.danger').onclick=async()=>{
+       if(!confirm(`${r.lesson_no}-сабақты өшіру керек пе?`))return;
+       if(r.id){ const {error}=await sb.from('lesson_schedule').delete().eq('id',r.id); if(error){toast('Өшіру кезінде қате шықты.','error');return;} }
+       schedEditRows.splice(idx,1); await loadSchedule(); toast('Сабақ өшірілді.');
+     };
+     aSchedEditor.appendChild(box);
+   });
+   if(!schedEditRows.length)aSchedEditor.innerHTML='<p class="admin-empty">Бұл сыныпта сабақ жоқ. «+ Сабақ қосу» басыңыз.</p>';
+ }
+ aSchedClass?.addEventListener('change',loadSchedEditor);
+ document.getElementById('a-sched-add')?.addEventListener('click',()=>{
+   const c=aSchedClass?.value; if(!c)return;
+   const next=schedEditRows.reduce((m,r)=>Math.max(m,r.lesson_no),0)+1;
+   schedEditRows.push({class_name:c,lesson_no:next,time_text:'',break_text:'',d1:'',d2:'',d3:'',d4:'',d5:''});
+   drawSchedEditor();
+ });
+ document.getElementById('a-sched-save')?.addEventListener('click',async()=>{
+   const c=aSchedClass?.value; if(!c||!schedEditRows.length)return;
+   const btn=document.getElementById('a-sched-save');
+   const payload=schedEditRows.map(r=>({class_name:c,lesson_no:r.lesson_no,time_text:(r.time_text||'').trim(),break_text:(r.break_text||'').trim(),d1:(r.d1||'').trim(),d2:(r.d2||'').trim(),d3:(r.d3||'').trim(),d4:(r.d4||'').trim(),d5:(r.d5||'').trim()}));
+   setBusy(btn,true,'Кестені сақтау');
+   const {error}=await sb.from('lesson_schedule').upsert(payload,{onConflict:'class_name,lesson_no'});
+   setBusy(btn,false,'Кестені сақтау');
+   if(error){toast('Кестені сақтау кезінде қате шықты.','error');return;}
+   await loadSchedule(); toast('Кесте сақталды!');
+ });
+ async function loadSchedule(){
+   const {data,error}=await sb.from('lesson_schedule').select('*').order('lesson_no',{ascending:true});
+   scheduleData={};
+   if(!error)(data||[]).forEach(r=>{(scheduleData[r.class_name]=scheduleData[r.class_name]||[]).push(r);});
+   renderPublicSchedule(); renderAdminSchedule();
+ }
+
  async function refreshAdminLists(){
    const newsBox=document.getElementById('a-news-admin-list');
    const achBox=document.getElementById('a-ach-admin-list');
@@ -995,7 +1135,7 @@ if(questAddCard)questAddCard.onclick=()=>addQuestCard(); if(questBulkList&&!ques
      }
    }
 
-   const testBox=document.getElementById('a-test-admin-list');
+   const testBox=document.getElementById('a-test-admin-list'); loadTestResults();
    if(testBox){const t=await sb.from('school_tests').select('*').order('created_at',{ascending:false});testBox.innerHTML='';if(!t.data?.length)testBox.innerHTML='<p class="admin-empty">Әзірге тест жоқ.</p>';else t.data.forEach(item=>{const row=document.createElement('div');row.className='admin-list-item';row.innerHTML=`<div class="ali-info"><strong>📝 ${escapeHtml(item.title)}</strong><small>${escapeHtml(item.description||'Мектеп тесті')}</small></div><div class="ali-actions"><button class="icon-btn danger">🗑</button></div>`;row.querySelector('.danger').onclick=async()=>{if(!confirm('Тестті өшіру керек пе?'))return;const {error}=await sb.from('school_tests').delete().eq('id',item.id);if(error)toast('Тестті өшіру қатесі.','error');else{await refreshAdminLists();await loadSchoolTests();toast('Тест өшірілді.');}};testBox.appendChild(row);});}
 
    const rewardBox=document.getElementById('a-reward-admin-list');
@@ -1013,5 +1153,5 @@ if(questAddCard)questAddCard.onclick=()=>addQuestCard(); if(questBulkList&&!ques
    }
  }
 
- await loadPublic(); await loadQuestBookOptions(); await loadFolderOptions();
+ await loadPublic(); await loadQuestBookOptions(); await loadFolderOptions(); await loadSchedule();
 })();
