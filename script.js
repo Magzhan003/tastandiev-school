@@ -466,6 +466,52 @@ function toast(message,type='success'){
 if(questAddCard)questAddCard.onclick=()=>addQuestCard(); if(questBulkList&&!questBulkList.children.length){for(let i=0;i<10;i++)addQuestCard();}
  if(questBulkSave)questBulkSave.onclick=async()=>{const title=questTitleI?.value.trim(),description=questDescI?.value.trim(),bookId=questBookI?.value?Number(questBookI.value):null;const cards=[...(questBulkList?.querySelectorAll('.quiz-admin-card')||[])];if(!title){toast('Квест атауын енгізіңіз.','error');return;}if(!cards.length){toast('Кемінде бір сұрақ қосыңыз.','error');return;}const questions=cards.map(card=>({question:card.querySelector('.q-question').value.trim(),option_a:card.querySelector('.q-a').value.trim(),option_b:card.querySelector('.q-b').value.trim(),option_c:card.querySelector('.q-c').value.trim(),option_d:card.querySelector('.q-d').value.trim(),correct_option:card.querySelector('.q-correct').value}));if(questions.some(q=>!q.question||!q.option_a||!q.option_b||!q.option_c||!q.option_d)){toast('Барлық сұрақ пен 4 нұсқаны толтырыңыз.','error');return;}setBusy(questBulkSave,true,'Квестті жариялау');const {error}=await sb.rpc('create_quest_batch',{p_title:title,p_description:description,p_book_id:bookId,p_questions:questions});setBusy(questBulkSave,false,'Квестті жариялау');if(error){toast('Квестті сақтау кезінде қате шықты.','error');return;}if(questTitleI)questTitleI.value='';if(questDescI)questDescI.value='';if(questBulkList){questBulkList.innerHTML='';questCardCount=0;for(let i=0;i<10;i++)addQuestCard();}await refreshAdminLists();await loadQuestBookOptions();toast('Квест жарияланды!');};
 
+/* ---------- KITAPVERSE: bulk quest import from kitapverse-quests.json ----------
+   Each quest is matched to a library book by grade + normalized title, so the same
+   book in two grades (e.g. Гауһартас in 8 and 9) gets its own separate quest.
+   Books that already have a quest are skipped, so running it twice never duplicates. */
+const qImportFile=document.getElementById('a-quest-import-file'), qImportBtn=document.getElementById('a-quest-import-btn'), qImportCheck=document.getElementById('a-quest-import-check'), qImportLog=document.getElementById('a-quest-import-log');
+const KV_TITLE_ALIASES={'Я — Малала':'Мен — Малаламын','Суровые дни':'Қаһарлы күндер','Путешествия Гулливера':'Гулливердің саяхаттары','Властелин колец: Братство кольца':'Сақиналар әміршісі: сақина бауырластығы','Кочевники: заговорённый меч':'Көшпенділер: Алмас қылыш','Стрела Махамбета':'Махамбеттің жебесі','Как завоевать друзей и оказывать влияние на людей':'Дос табу және адамдарға ықпал ету өнері','Истина и легенда':'Ақиқат пен аңыз','Белый пароход':'Ақ кеме'};
+function kvNormTitle(s){return String(s||'').toLowerCase().replace(/ё/g,'е').replace(/[«»"“”'’.,:;!?—–\-]/g,' ').replace(/\s+/g,' ').trim();}
+async function importQuestsFromJson(dry){
+  const file=qImportFile?.files?.[0];
+  if(!file){toast('Алдымен JSON файлын таңдаңыз.','error');return;}
+  let list;
+  try{list=JSON.parse(await file.text());}catch(e){toast('Файл оқылмады: JSON дұрыс емес.','error');return;}
+  if(!Array.isArray(list)||!list.length||list.some(x=>!x||!x.title||!x.grade||!Array.isArray(x.questions)||!x.questions.length)){toast('Файл форматы дұрыс емес.','error');return;}
+  const btn=dry?qImportCheck:qImportBtn, idle=dry?'Алдымен тексеру':'Квесттерді жүктеу';
+  if(qImportBtn)qImportBtn.disabled=true; if(qImportCheck)qImportCheck.disabled=true;
+  if(btn)btn.textContent='Жүктелуде...';
+  try{
+    const [bk,qs]=await Promise.all([sb.from('library_books').select('id,title,grade,quest_id').order('id',{ascending:true}),sb.from('quests').select('id,book_id')]);
+    if(bk.error||qs.error){toast('Кітаптар тізімін оқу кезінде қате шықты.','error');return;}
+    const books=bk.data||[];
+    const used=new Set([...(qs.data||[]).filter(q=>q.book_id!=null).map(q=>String(q.book_id)),...books.filter(b=>b.quest_id!=null).map(b=>String(b.id))]);
+    const res={done:0,skipped:[],missing:[],failed:[]};
+    for(let i=0;i<list.length;i++){
+      const item=list[i], label=item.grade+' сынып · '+item.title;
+      const keys=[kvNormTitle(item.title)]; if(KV_TITLE_ALIASES[item.title])keys.push(kvNormTitle(KV_TITLE_ALIASES[item.title]));
+      const cands=books.filter(b=>Number(b.grade)===Number(item.grade)&&keys.includes(kvNormTitle(b.title)));
+      if(!cands.length){res.missing.push(label);continue;}
+      const free=cands.find(b=>!used.has(String(b.id)));
+      if(!free){res.skipped.push(label);continue;}
+      if(!dry){
+        if(btn)btn.textContent=`Жүктелуде ${i+1}/${list.length}...`;
+        const {error}=await sb.rpc('create_quest_batch',{p_title:item.title,p_description:`«${item.title}» кітабы бойынша оқу квесті. ${item.questions.length} сұрақ, 4 жауап нұсқасы.`,p_book_id:free.id,p_questions:item.questions});
+        if(error){res.failed.push(label);continue;}
+      }
+      used.add(String(free.id)); res.done++;
+    }
+    const part=(t,a)=>a.length?`<br><b>${t} (${a.length}):</b> ${a.slice(0,12).map(escapeHtml).join('; ')}${a.length>12?' …':''}`:'';
+    qImportLog.innerHTML=`${dry?'<b>Тексеру нәтижесі (ештеңе қосылған жоқ):</b>':'<b>Жүктеу аяқталды:</b>'} ${dry?'қосылатын':'қосылды'} — ${res.done} квест, файлда — ${list.length}.`+part('Кітапханада табылмады',res.missing)+part('Квесті бар немесе бос кітап қалмады',res.skipped)+part('Қате шықты',res.failed);
+    if(!dry){await refreshAdminLists();await loadQuestBookOptions();toast(`${res.done} квест жарияланды!`);}
+  }finally{
+    if(btn)btn.textContent=idle; if(qImportBtn)qImportBtn.disabled=false; if(qImportCheck)qImportCheck.disabled=false;
+  }
+}
+if(qImportBtn)qImportBtn.onclick=()=>importQuestsFromJson(false);
+if(qImportCheck)qImportCheck.onclick=()=>importQuestsFromJson(true);
+
  /* ---------- KITAPVERSE: Daily quiz batches (10 questions / 24h each) ---------- */
  const quizBulkList=document.getElementById('a-quiz-bulk-list');
  const quizStartAt=document.getElementById('a-quiz-start-at');

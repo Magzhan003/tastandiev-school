@@ -213,6 +213,16 @@
         </div>
         <p class="admin-hint">Google Forms қажет емес. Бір квестке қалағаныңызша сұрақ қосуға болады. Оқушы квестті бір рет тапсырады; әр дұрыс жауапқа +1 ұпай.</p>
       </div>
+      <div class="admin-form" id="a-quest-import-form">
+        <h3>📥 Квесттерді жаппай жүктеу (6–10 сынып)</h3>
+        <input id="a-quest-import-file" type="file" accept=".json,application/json">
+        <div class="admin-actions">
+          <button class="btn btn-light" id="a-quest-import-check" type="button">Алдымен тексеру</button>
+          <button class="btn btn-primary" id="a-quest-import-btn" type="button">Квесттерді жүктеу</button>
+        </div>
+        <div id="a-quest-import-log" class="admin-hint"></div>
+        <p class="admin-hint">kitapverse-quests.json файлын таңдаңыз. Әр квест кітапқа «сынып + атауы» бойынша байланыстырылады, сондықтан бір кітап 8 және 9 сыныпта болса, әр сыныпқа бөлек квест жасалады. Квесті бар кітаптар өткізіліп жіберіледі, қайталанбайды.</p>
+      </div>
       <div class="admin-section-title">Жарияланған квесттер</div>
       <div class="admin-list" id="a-quest-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
 
