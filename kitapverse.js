@@ -197,7 +197,22 @@ function normalizeClassList(s){
    const {data,error}=await sb.from('quests').select('id,title,description,created_at,book_id').eq('published',true).order('created_at',{ascending:false});
    allQuests=(!error&&data)?data:[];
    if(error||!data?.length){questListBox.innerHTML='<p class="kv-empty">Жаңа квесттер жақында қосылады.</p>';allQuestCards=[];renderQuestToggle();renderBooks();return;}
-   allQuestCards=data.map(q=>{const card=document.createElement('div');card.className='kv-quest-card';card.id=`kv-quest-${q.id}`;const linkedBook=allBooks.find(b=>String(b.quest_id)===String(q.id)||String(b.id)===String(q.book_id));const locked=!!linkedBook && !currentProgress.has(String(linkedBook.id)) && !openedQuests.has(String(q.id));card.innerHTML=`<b>🎮</b><h3>${escapeHtml(q.title)}</h3><p>${escapeHtml(q.description||'Оқу квесті')}</p>${q.book_id?`<span class="kv-quest-lock">${locked?'🔒 Кітапты оқып «Мен оқыдым» басыңыз':'🔓 Квест ашық'}</span>`:''}<button class="btn btn-primary" ${locked?'disabled':''}>${locked?'🔒 Құлыпталған':'🧩 Квестті бастау →'}</button>`;if(!locked)card.querySelector('button').onclick=()=>renderQuest(card,q);return card;});
+   // A quest linked to a book stays HIDDEN until the student presses «Мен оқыдым» on that book
+   // (openedQuests) or has already finished it (book is in currentProgress).
+   // Standalone quests (not linked to any book) are always shown.
+   const openedOrder=[...openedQuests].map(String).reverse();
+   allQuestCards=data.map(q=>{
+     const linkedBook=allBooks.find(b=>String(b.quest_id)===String(q.id)||String(b.id)===String(q.book_id));
+     const isBookQuest=!!q.book_id||!!linkedBook;
+     const opened=openedQuests.has(String(q.id));
+     const done=!!linkedBook&&currentProgress.has(String(linkedBook.id));
+     if(isBookQuest&&!opened&&!done)return null;
+     const card=document.createElement('div');card.className='kv-quest-card';card.id=`kv-quest-${q.id}`;
+     card.dataset.rank=String(opened&&!done?openedOrder.indexOf(String(q.id)):(done?1000:500));
+     card.innerHTML=`<b>🎮</b><h3>${escapeHtml(q.title)}</h3><p>${escapeHtml(q.description||'Оқу квесті')}</p>${isBookQuest?`<span class="kv-quest-lock">${done?'✅ Квест тапсырылды':'🔓 Квест ашық'}</span>`:''}<button class="btn btn-primary" ${done?'disabled':''}>${done?'✅ Тапсырылды':'🧩 Квестті бастау →'}</button>`;
+     if(!done)card.querySelector('button').onclick=()=>renderQuest(card,q);
+     return card;
+   }).filter(Boolean).sort((a,b)=>Number(a.dataset.rank)-Number(b.dataset.rank));
    renderQuestList();
    // Re-render the library so book cards immediately reflect quests linked via quest.book_id.
    renderBooks();
@@ -205,6 +220,11 @@ function normalizeClassList(s){
  function renderQuestList(){
    if(!questListBox)return;
    questListBox.innerHTML='';
+   if(!allQuestCards.length){
+     questListBox.innerHTML='<p class="kv-empty">🧩 Квест осында ашылады. Кітапханадан кітап таңдап, оқып болған соң «Мен оқыдым» түймесін басыңыз.</p>';
+     renderQuestToggle();
+     return;
+   }
    const visible=questsExpanded?allQuestCards:allQuestCards.slice(0,QUEST_PAGE_SIZE);
    visible.forEach(card=>questListBox.appendChild(card));
    renderQuestToggle();
