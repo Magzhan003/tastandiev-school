@@ -1044,3 +1044,39 @@ body.kv-page .kv-cabinet .kv-stat-grid{grid-template-columns:1fr 1fr;gap:10px}
 }
 body.kv-page .kv-cabinet .kv-student-bar,body.kv-page .kv-cabinet #kv-auth-guest,body.kv-page .kv-cabinet #kv-auth-user{min-height:0!important;height:auto}
 body.kv-page .kv-cabinet .kv-login-box p{clear:both;padding-top:10px}
+
+/* KITAPVERSE hero: бес плитка бірдей ені мен биіктікте, басуға болатын сілтеме */
+body.kv-page .kv-flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:stretch;justify-content:stretch;flex-wrap:nowrap;width:100%;max-width:640px;margin:42px auto 0}
+body.kv-page .kv-flow-step{display:block;min-width:0;padding:0;margin:0;text-decoration:none;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+body.kv-page .kv-flow-step>div{height:100%;min-height:92px;padding:12px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07)}
+body.kv-page .kv-flow-step b{font-size:12px;line-height:1.2;overflow-wrap:anywhere}
+body.kv-page .kv-flow-step:focus-visible{outline:2px solid #76dfff;outline-offset:3px;border-radius:18px}
+body.kv-page .kv-flow-step:active{transform:scale(.97)}
+body.kv-page section[id]{scroll-margin-top:92px}
+@media(max-width:560px){
+  body.kv-page .kv-flow{grid-template-columns:repeat(6,1fr);gap:8px}
+  body.kv-page .kv-flow-step{grid-column:span 2}
+  body.kv-page .kv-flow-step:nth-child(4){grid-column:2/span 2}
+  body.kv-page .kv-flow-step:nth-child(5){grid-column:4/span 2}
+  body.kv-page .kv-flow-step>div{min-height:84px}
+}
+
+/* KITAPVERSE: звездопад canvas + жартылай мөлдір оқушы карточкасы */
+body.kv-page .kv-starfall{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+body.kv-page .kv-cabinet{
+  background:linear-gradient(145deg,rgba(30,37,106,.58),rgba(18,18,70,.62) 58%,rgba(62,27,99,.58));
+  -webkit-backdrop-filter:blur(1.5px) saturate(1.15);backdrop-filter:blur(1.5px) saturate(1.15);
+  border-color:rgba(151,170,255,.28);
+  text-shadow:0 1px 3px rgba(4,7,30,.6)}
+/* мөлдір фонда жазулар анық болуы үшін: ішкі плиткалар қараңғылау, ұсақ мәтін ашығырақ */
+body.kv-page .kv-cabinet .kv-stat{background:linear-gradient(145deg,rgba(8,12,48,.55),rgba(8,12,48,.38));border-color:rgba(182,198,255,.18)}
+body.kv-page .kv-cabinet .kv-level-badge{background:rgba(8,12,48,.5);border-color:rgba(182,198,255,.22)}
+body.kv-page .kv-cabinet .kv-stat small{color:#c3ccf0}
+body.kv-page .kv-cabinet .kv-level-row{color:#d2d9f6;opacity:1}
+body.kv-page .kv-cabinet .kv-reading-summary span{color:#c3ccf0}
+body.kv-page .kv-cabinet .kv-profile-main>span:last-child{color:#cdd5f4}
+body.kv-page .kv-cabinet .kv-profile-main .kv-eyebrow,body.kv-page .kv-cabinet .kv-level-badge span{color:#9fe6ff}
+body.kv-page .kv-cabinet #kv-auth-guest span,body.kv-page .kv-cabinet .kv-login-box p{color:#ccd4f4}
+body.kv-page .kv-cabinet .kv-level-track,body.kv-page .kv-cabinet .kv-mini-track{background:rgba(255,255,255,.16)}
+body.kv-page .kv-cabinet input{text-shadow:none}
+@media(prefers-reduced-motion:reduce){body.kv-page .kv-starfall{opacity:.8}}
