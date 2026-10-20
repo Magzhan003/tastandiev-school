@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://magzhan003.github.io/tastandiev-school/sitemap.xml
