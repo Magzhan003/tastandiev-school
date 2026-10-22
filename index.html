@@ -209,6 +209,14 @@
       <div class="admin-list" id="a-xp-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
 
       <div class="admin-form" id="a-class-limit-form"><h3>👥 Сыныптар және лимиттер</h3><p class="admin-hint">Әр сыныпқа оқушылар санын нақты көрсетіңіз. Бұл лимит тек Викторина мен Battle үшін қолданылады. Бір қате атымен жіберілген әрекет те бір мүмкіндік ретінде есептеледі.</p><div id="a-class-limit-list"></div><div class="admin-actions"><button class="btn btn-light" id="a-class-add" type="button">+ Сынып қосу</button><button class="btn btn-primary" id="a-class-save" type="button">Сынып лимиттерін сақтау</button></div></div>
+      <div class="admin-form" id="a-students-form">
+        <h3>🎓 Жаңа оқушыларды қосу</h3>
+        <p class="admin-hint">Әр жолға бір оқушы: <b>Аты-жөні; сынып; ИИН; пароль</b> (пароль міндетті емес — бос қалдырсаңыз, автоматты жасалады). Excel-ден көшіріп қоюға болады. Реті маңызды емес. Сынып: 6А, 10Б т.б.</p>
+        <textarea id="a-students-text" rows="8" placeholder="Алайдар Інжу Бауржанқызы; 6А; 150313601425; Kitap101&#10;Абдулла Нұрсезім; 10Б; 150112603359"></textarea>
+        <label class="a-check"><input type="checkbox" id="a-students-reset"> Бар оқушылардың парольдерін де жаңарту (әдетте қажет емес)</label>
+        <div class="admin-actions"><button class="btn btn-primary" id="a-students-add" type="button">Оқушыларды қосу</button></div>
+        <div id="a-students-result"></div>
+      </div>
       <div class="admin-form" id="a-teachers-form">
         <h3>👩‍🏫 Сынып жетекшілері</h3>
         <p class="admin-hint">Әр сыныптың жетекшісінің аты-жөнін жазыңыз. «Сыныптар белсенділігі» бөлімінде сынып картасында көрсетіледі. Бос қалдырсаңыз — көрсетілмейді.</p>

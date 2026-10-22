@@ -1045,7 +1045,54 @@ if(qImportCheck)qImportCheck.onclick=()=>importQuestsFromJson(true);
    renderPublicSchedule(); renderAdminSchedule();
  }
 
- /* ---------- KITAPVERSE: сынып жетекшілері (admin) ---------- */
+ /* ---------- KITAPVERSE: жаңа оқушыларды қосу (admin) ---------- */
+const KV_CLASS_RE=/^\d{1,2}[A-Za-zА-Яа-яӘәІіҢңҒғҮүҰұҚқӨөҺһ]$/;
+function kvParseStudents(text){
+  return String(text||'').split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map((line,idx)=>{
+    const toks=line.split(/[\t;,|]+/).map(t=>t.trim()).filter(Boolean);
+    const r={line:idx+1,iin:'',class_name:'',full_name:'',password:'',errors:[]};
+    const rest=[];
+    toks.forEach(t=>{
+      const compact=t.replace(/\s/g,'');
+      if(!r.iin&&/^\d{12}$/.test(compact))r.iin=compact;
+      else if(!r.class_name&&KV_CLASS_RE.test(compact))r.class_name=compact;
+      else rest.push(t);
+    });
+    if(rest.length){r.full_name=rest[0].replace(/\s+/g,' ');if(rest[1])r.password=rest[1];}
+    if(rest.length>2)r.errors.push('артық баған');
+    if(!r.iin)r.errors.push('ИИН (12 сан) жоқ');
+    if(!r.class_name)r.errors.push('сынып жоқ');
+    if(!r.full_name)r.errors.push('аты-жөні жоқ');
+    if(r.password&&r.password.length<6)r.errors.push('пароль кемінде 6 таңба');
+    return r;
+  });
+}
+window.kvParseStudents=kvParseStudents;
+let kvLastStudentResult=[];
+document.getElementById('a-students-add')?.addEventListener('click',async e=>{
+  const btn=e.currentTarget,box=document.getElementById('a-students-result');
+  const rows=kvParseStudents(document.getElementById('a-students-text').value);
+  if(!rows.length){toast('Алдымен оқушылар тізімін жазыңыз.','error');return;}
+  const iins=rows.map(r=>r.iin).filter(Boolean);const dup=iins.find((x,i)=>iins.indexOf(x)!==i);
+  const bad=rows.filter(r=>r.errors.length);
+  if(bad.length){toast(`${bad[0].line}-жолда қате: ${bad[0].errors.join(', ')}. Алдын ала қарауды тексеріңіз.`,'error');return;}
+  if(dup){toast('Тізімде бір ИИН екі рет кездеседі: '+dup,'error');return;}
+  const reset=document.getElementById('a-students-reset').checked;
+  if(!confirm(`${rows.length} оқушыны қосуға сенімдісіз бе?${reset?'\nБар оқушылардың парольдері жаңартылады!':''}`))return;
+  setBusy(btn,true,'Оқушыларды қосу');
+  const {data,error}=await sb.rpc('kv_add_students',{p_students:rows.map(r=>({iin:r.iin,full_name:r.full_name,class_name:r.class_name,password:r.password||null})),p_reset_password:reset});
+  setBusy(btn,false,'Оқушыларды қосу');
+  if(error){toast('Қосу кезінде қате шықты: '+(error.message||''),'error');return;}
+  kvLastStudentResult=data||[];
+  const okN=kvLastStudentResult.filter(r=>!String(r.status).startsWith('қате')).length;
+  box.innerHTML=`<div class="a-st-result"><p><b>${okN} / ${kvLastStudentResult.length}</b> оқушы сақталды. ⚠️ Парольдер тек қазір көрсетіледі — көшіріп алыңыз немесе CSV жүктеңіз, оқушыларға беріңіз.</p><div class="a-st-table-wrap"><table class="a-st-table"><thead><tr><th>Аты-жөні</th><th>Сынып</th><th>Логин (ИИН)</th><th>Пароль</th><th>Нәтиже</th></tr></thead><tbody>${kvLastStudentResult.map(r=>`<tr class="${String(r.status).startsWith('қате')?'bad':''}"><td>${escapeHtml(r.full_name||'')}</td><td>${escapeHtml(r.class_name||'')}</td><td>${escapeHtml(r.iin||'')}</td><td><code>${escapeHtml(r.password||'—')}</code></td><td>${escapeHtml(r.status||'')}</td></tr>`).join('')}</tbody></table></div><div class="admin-actions"><button class="btn btn-light" id="a-students-copy" type="button">📋 Көшіру</button><button class="btn btn-primary" id="a-students-csv" type="button">⬇ CSV жүктеу</button></div></div>`;
+  document.getElementById('a-students-copy').onclick=async()=>{const t=kvLastStudentResult.filter(r=>r.password).map(r=>`${r.full_name}\t${r.class_name}\t${r.iin}\t${r.password}`).join('\n');try{await navigator.clipboard.writeText(t);toast('Көшірілді!');}catch(e){window.prompt('Көшіріңіз:',t);}};
+  document.getElementById('a-students-csv').onclick=()=>{const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';const csv='﻿'+['full_name,class_name,iin_login,password,email,status'].concat(kvLastStudentResult.map(r=>[r.full_name,r.class_name,r.iin,r.password||'',r.iin+'@students.kitapverse.local',r.status].map(q).join(','))).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='new-students.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);};
+  if(okN)toast(`${okN} оқушы қосылды!`);
+  if(okN<kvLastStudentResult.length)toast('Кейбір жолдарда қате бар — кестені қараңыз.','error');
+});
+
+/* ---------- KITAPVERSE: сынып жетекшілері (admin) ---------- */
 async function loadTeachers(){
   const box=document.getElementById('a-teachers-list');if(!box)return;
   const classes=['6А','6Б','7А','8А','8Б','9А','9Б','10А','10Б'];

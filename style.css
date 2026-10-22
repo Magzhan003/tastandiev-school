@@ -1319,3 +1319,14 @@ body.kv-page .kv-bar-xp{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 .pv-teacher{margin:4px 0 10px;font-size:12.5px;color:#aeb8e2}.pv-teacher b{color:#fff}
 .pv-line{display:grid;grid-template-columns:100px 1fr 40px;gap:8px;align-items:center;font-size:12.5px}
 .pv-line i{display:block;height:8px;border-radius:6px;background:rgba(255,255,255,.12);overflow:hidden}.pv-line u{display:block;height:100%;background:linear-gradient(90deg,#34d399,#22c55e)}
+
+.a-check{display:flex;gap:8px;align-items:center;margin:8px 0;font-size:14px;color:#44526b}
+.a-check input{width:auto!important;margin:0!important}
+.a-st-result{margin-top:14px;padding:14px;border-radius:14px;background:#fff;border:1px solid #cfe3d6}
+.a-st-table-wrap,.pv-table-wrap{overflow:auto;max-height:340px}
+.a-st-table,.pv-table{width:100%;border-collapse:collapse;font-size:13px}
+.a-st-table th,.a-st-table td,.pv-table th,.pv-table td{padding:6px 8px;border-bottom:1px solid #e5eaf1;text-align:left;vertical-align:top}
+.a-st-table code{background:#eef2ff;padding:2px 6px;border-radius:6px;font-weight:700}
+.a-st-table tr.bad td,.pv-table tr.bad td{background:#fff1f1}
+.pv-table tr.err td{color:#c0272d;font-size:12px;border:0;padding-top:0}
+.pv-bad{color:#c0272d;font-weight:700}

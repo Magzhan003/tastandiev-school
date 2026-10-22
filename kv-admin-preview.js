@@ -51,6 +51,12 @@
   {form:'a-league-form',dark:true,title:'Лига туры (KITAPVERSE)',render(){
     const dur=val('a-league-duration');
     return `<div class="pv-league"><small class="pv-eyebrow">${esc(val('a-league-title'))||'1-тур'}</small><h3>${esc(val('a-league-school-a'))||empty('1-мектеп')} <i>vs</i> ${esc(val('a-league-school-b'))||empty('2-мектеп')}</h3><p>📖 ${esc(val('a-league-book'))||empty('кітап')} · ${fmtDate(val('a-league-date'),true)||empty('күні')} · ${esc(dur||'30')} мин</p><span class="pv-badge">Жақында</span>${qHtml(questions($('a-league-questions')),2)}</div>`;}},
+  {form:'a-students-form',title:'Оқушылар тізімі (қосылар алдында)',render(){
+    const f=window.kvParseStudents;if(!f)return empty('Алдын ала қарау қолжетімсіз');
+    const rows=f(val('a-students-text'));
+    if(!rows.length)return empty('Оқушылар тізімін жазсаңыз, осында кесте болып көрінеді');
+    const bad=rows.filter(r=>r.errors.length).length;
+    return `<p class="pv-count">Барлығы: <b>${rows.length}</b> · дайын: <b>${rows.length-bad}</b>${bad?` · <span class="pv-bad">қате: ${bad}</span>`:''}</p><div class="pv-table-wrap"><table class="pv-table"><thead><tr><th>#</th><th>Аты-жөні</th><th>Сынып</th><th>ИИН</th><th>Пароль</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.errors.length?'bad':''}"><td>${r.line}</td><td>${esc(r.full_name)||'—'}</td><td>${esc(r.class_name)||'—'}</td><td>${esc(r.iin)||'—'}</td><td>${r.password?esc(r.password):'<i>авто</i>'}</td></tr>${r.errors.length?`<tr class="err"><td></td><td colspan="4">⚠ ${esc(r.errors.join(', '))}</td></tr>`:''}`).join('')}</tbody></table></div>`;}},
   {form:'a-teachers-form',dark:true,title:'Сыныптар белсенділігі картасы',render(){
     const rows=[...document.querySelectorAll('#a-teachers-list input[data-class]')].filter(i=>i.value.trim()).slice(0,3);
     if(!rows.length)return empty('Жетекшінің атын жазсаңыз, сынып картасында осылай көрінеді');
