@@ -1234,3 +1234,23 @@ body.kv-page #kv-stats .kv-section-head{display:flex;justify-content:space-betwe
 .a-chip input:focus-visible+span{outline:3px solid #8fb0ff}
 .a-bgroup .bg-book{width:100%;margin:0 0 6px}
 .a-bgroup .bg-add-q{margin-top:6px}
+
+/* ===== Rating: breakdown + rules ===== */
+.kv-bar-mid{min-width:0}
+.kv-bar-calc{margin-top:5px;font-size:12px;color:#aeb8dd;line-height:1.35}
+.kv-bar-calc b{color:#fff}
+body.kv-page .kv-rules{margin:14px 0 18px;border:1px solid rgba(175,186,255,.22);border-radius:14px;background:rgba(255,255,255,.04)}
+body.kv-page .kv-rules summary{cursor:pointer;padding:13px 16px;font-weight:800;color:#dfe5ff;list-style:none;min-height:44px;display:flex;align-items:center}
+body.kv-page .kv-rules summary::-webkit-details-marker{display:none}
+body.kv-page .kv-rules[open] summary{border-bottom:1px solid rgba(175,186,255,.15)}
+body.kv-page .kv-rules-body{padding:6px 16px 16px;color:#cdd5f5;font-size:14px;line-height:1.55}
+body.kv-page .kv-rules-body h4{margin:14px 0 6px;color:#fff;font-size:15px}
+body.kv-page .kv-rules-body p,body.kv-page .kv-rules-body ul{margin:0 0 6px}
+body.kv-page .kv-rules-body ul{padding-left:18px}
+body.kv-page .kv-rules-body li{margin-bottom:4px}
+body.kv-page .kv-rules-ex{background:rgba(94,105,255,.14);border-radius:10px;padding:10px 12px}
+body.kv-page .kv-rules-body b{color:#fff}
+@media(max-width:850px){.kv-bar-calc{font-size:11px}}
+
+body.kv-page .kv-bar-xp{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.kv-bar-calc{white-space:nowrap}

@@ -324,7 +324,7 @@ function normalizeClassList(s){
    rows.forEach((item,i)=>{
      const row=document.createElement('div'); row.className='kv-bar-row';
      const pct=max>0?Math.max(item.avg>0?4:0,Math.round((item.avg/max)*100)):0;
-     row.innerHTML=`<div class="kv-bar-rank">${medals[i]||(i+1)}</div><div class="kv-bar-class">${escapeHtml(item.cls)}<small>${item.total} оқушы</small></div><div class="kv-bar-track"><div class="kv-bar-fill${i===0&&item.avg>0?' gold':''}" data-pct="${pct}"></div><span class="kv-bar-xp">${item.avg.toFixed(1)} ұпай/оқушы</span></div><div class="kv-bar-battle" title="${item.participants} / ${item.total} оқушы белсенді"><b>${Math.round(item.pct)}%</b><small>${item.participants}/${item.total}</small></div>`;
+     row.innerHTML=`<div class="kv-bar-rank">${medals[i]||(i+1)}</div><div class="kv-bar-class">${escapeHtml(item.cls)}<small>${item.total} оқушы</small></div><div class="kv-bar-mid"><div class="kv-bar-track"><div class="kv-bar-fill${i===0&&item.avg>0?' gold':''}" data-pct="${pct}"></div><span class="kv-bar-xp">${item.avg.toFixed(1)}</span></div><div class="kv-bar-calc"><b>${item.xp}</b> балл ÷ <b>${item.total}</b> оқушы</div></div><div class="kv-bar-battle" title="${item.participants} / ${item.total} оқушы белсенді"><b>${Math.round(item.pct)}%</b><small>${item.participants}/${item.total}</small></div>`;
      barsBox.appendChild(row);
    });
    requestAnimationFrame(()=>{ barsBox.querySelectorAll('.kv-bar-fill').forEach(el=>{ el.style.width=el.dataset.pct+'%'; }); });
