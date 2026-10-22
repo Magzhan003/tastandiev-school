@@ -1254,3 +1254,5 @@ body.kv-page .kv-rules-body b{color:#fff}
 
 body.kv-page .kv-bar-xp{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 .kv-bar-calc{white-space:nowrap}
+
+.a-field-label{display:block;margin:10px 0 4px;font-size:13px;font-weight:700;color:#44526b}
