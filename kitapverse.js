@@ -747,7 +747,7 @@ function normalizeClassList(s){
 
  /* ---- Сыныптар белсенділігі: оқушы саны / бүгін кірген / квест / викторина (барлығына ашық) ---- */
  const statsBox=document.getElementById('kv-class-stats');
- let statsMode='today', statsCache=null;
+ let statsMode='today', statsCache=null, teachersMap={};
  function classSortKey(c){const m=/^(\d+)(.*)$/.exec(c||'');return m?[parseInt(m[1],10),m[2]]:[999,c||''];}
  function renderClassStats(){
    if(!statsBox)return;
@@ -756,11 +756,12 @@ function normalizeClassList(s){
    const t=rows.reduce((o,r)=>({total:o.total+r.total,login:o.login+r.logged_today,quest:o.quest+(statsMode==='today'?r.quest_today:r.quest_all),quiz:o.quiz+(statsMode==='today'?r.quiz_today:r.quiz_all)}),{total:0,login:0,quest:0,quiz:0});
    const bar=(label,cls,n,total)=>{const p=total>0?Math.min(100,Math.round(n/total*100)):0;return `<div class="kv-st-line"><span class="kv-st-label">${label}</span><div class="kv-st-track"><i class="${cls}" data-w="${p}"></i></div><b>${n}<small>/${total}</small></b></div>`;};
    const modeTxt=statsMode==='today'?'бүгін':'барлығы';
-   statsBox.innerHTML=`<div class="kv-st-summary"><div><b>${t.total}</b><span>оқушы</span></div><div><b>${t.login}</b><span>бүгін кірді</span></div><div><b>${t.quest}</b><span>квест (${modeTxt})</span></div><div><b>${t.quiz}</b><span>викторина (${modeTxt})</span></div></div><div class="kv-st-grid">${rows.map(r=>{const q=statsMode==='today'?r.quest_today:r.quest_all,z=statsMode==='today'?r.quiz_today:r.quiz_all;return `<div class="kv-st-card"><div class="kv-st-head"><h3>${escapeHtml(r.class_name)}</h3><span>${r.total} оқушы</span></div>${bar('🟢 Бүгін кірді','login',r.logged_today,r.total)}${bar('🧩 Квест','quest',q,r.total)}${bar('🧠 Викторина','quiz',z,r.total)}</div>`;}).join('')}</div>`;
+   statsBox.innerHTML=`<div class="kv-st-summary"><div><b>${t.total}</b><span>оқушы</span></div><div><b>${t.login}</b><span>бүгін кірді</span></div><div><b>${t.quest}</b><span>квест (${modeTxt})</span></div><div><b>${t.quiz}</b><span>викторина (${modeTxt})</span></div></div><div class="kv-st-grid">${rows.map(r=>{const q=statsMode==='today'?r.quest_today:r.quest_all,z=statsMode==='today'?r.quiz_today:r.quiz_all;return `<div class="kv-st-card"><div class="kv-st-head"><h3>${escapeHtml(r.class_name)}</h3><span>${r.total} оқушы</span></div>${teachersMap[r.class_name]?`<div class="kv-st-teacher">👩‍🏫 Сынып жетекшісі: <b>${escapeHtml(teachersMap[r.class_name])}</b></div>`:''}${bar('🟢 Бүгін кірді','login',r.logged_today,r.total)}${bar('🧩 Квест','quest',q,r.total)}${bar('🧠 Викторина','quiz',z,r.total)}</div>`;}).join('')}</div>`;
    requestAnimationFrame(()=>statsBox.querySelectorAll('.kv-st-track i').forEach(el=>{el.style.width=el.dataset.w+'%';}));
  }
  async function loadClassStats(){
    if(!statsBox)return;
+   try{const t=await sb.from('class_teachers').select('*');if(!t.error)teachersMap=Object.fromEntries((t.data||[]).map(x=>[x.class_name,x.teacher_name]));}catch(e){}
    try{const {data,error}=await sb.rpc('kv_class_stats');if(error)throw error;statsCache=(data||[]).map(r=>({class_name:r.class_name,total:Number(r.total)||0,logged_today:Number(r.logged_today)||0,quest_today:Number(r.quest_today)||0,quest_all:Number(r.quest_all)||0,quiz_today:Number(r.quiz_today)||0,quiz_all:Number(r.quiz_all)||0}));}
    catch(e){statsCache=null;if(!statsBox.dataset.ok)statsBox.innerHTML='<p class="kv-empty">Статистика жақында қосылады.</p>';return;}
    statsBox.dataset.ok='1';renderClassStats();

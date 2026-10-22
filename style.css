@@ -1256,3 +1256,66 @@ body.kv-page .kv-bar-xp{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 .kv-bar-calc{white-space:nowrap}
 
 .a-field-label{display:block;margin:10px 0 4px;font-size:13px;font-weight:700;color:#44526b}
+
+.kv-st-teacher{margin:-4px 0 10px;font-size:12.5px;color:#aeb8e2}
+.kv-st-teacher b{color:#fff;font-weight:700}
+.a-teachers-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 14px}
+.a-teacher-row{display:grid;grid-template-columns:44px 1fr;align-items:center;gap:8px}
+.a-teacher-row b{font-size:15px}
+
+/* ===== Admin: full page + live previews ===== */
+.admin-overlay{padding:0!important;align-items:stretch!important;justify-content:stretch!important;background:#eef2f8!important;backdrop-filter:none!important}
+.admin-panel{width:100%!important;max-width:none!important;height:100%;max-height:none!important;border-radius:0!important;box-shadow:none!important;padding:22px clamp(14px,3vw,48px) 60px!important;animation:none!important}
+.admin-close{position:fixed!important;right:18px;top:10px;z-index:20;background:#fff!important;border-radius:50%;width:44px;height:44px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+#admin-content{max-width:1560px;margin:0 auto}
+#admin-login{max-width:420px;margin:12vh auto 0}
+.admin-tabs{padding-right:60px}
+.admin-form.has-preview{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:24px;align-items:start}
+.admin-form-fields{min-width:0}
+.admin-preview{position:sticky;top:78px;background:#fff;border:1px dashed #b5c2d9;border-radius:16px;padding:14px;min-width:0;max-height:calc(100vh - 100px);overflow:auto}
+.admin-preview-label{font-size:12px;font-weight:800;color:#667085;letter-spacing:.3px;margin-bottom:10px}
+.admin-preview.pv-dark{background:linear-gradient(145deg,#1b1e63,#0d0f3a);border-color:#4a54b8;color:#e8ecff}
+.pv-dark .admin-preview-label{color:#aeb8e2}
+.pv-ph{color:#98a2b3;font-style:italic;font-weight:400}
+.pv-dark .pv-ph{color:#8f9ad0}
+@media(max-width:1000px){.admin-form.has-preview{grid-template-columns:1fr}.admin-preview{position:static;max-height:none}}
+/* news */
+.pv-news{border:1px solid #e5eaf1;border-radius:16px;overflow:hidden;background:#fff;color:#172033}
+.pv-news-img{height:150px;background:linear-gradient(135deg,#165dff,#7fa8ff);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:2px}
+.pv-news-img img{width:100%;height:100%;object-fit:cover;display:block}
+.pv-body{padding:14px}.pv-body h3{margin:6px 0;font-size:18px}.pv-body p{margin:0 0 10px;color:#475467;font-size:14px;line-height:1.5}
+.pv-date{font-size:12px;color:#667085;font-weight:700}
+.pv-btn{display:inline-block;padding:7px 14px;border-radius:999px;background:#165dff;color:#fff;font-size:13px;font-weight:700}
+.pv-btn.ghost{background:transparent;border:1px solid #6f7cff;color:#cfd6ff}
+/* achievement + test */
+.pv-ach{padding:18px;border:1px solid #e5eaf1;border-radius:16px;background:#fff;color:#172033;text-align:center}
+.pv-ach b{font-size:38px;display:block}.pv-ach h3{margin:8px 0 4px}.pv-ach p{margin:0;color:#475467;font-size:14px}
+.pv-test h3{margin:0 0 4px;font-size:17px}.pv-test p{margin:0 0 8px;color:#475467;font-size:14px}
+.pv-count{margin:6px 0;font-size:13px;color:#667085}.pv-dark .pv-count{color:#aeb8e2}
+.pv-q{margin:10px 0;padding:10px 12px;border-radius:12px;background:#f2f5fa;color:#172033;font-size:13.5px}
+.pv-dark .pv-q{background:rgba(255,255,255,.07);color:#e8ecff}
+.pv-opt{display:flex;gap:8px;margin-top:5px;padding:4px 8px;border-radius:8px}
+.pv-opt i{font-style:normal;font-weight:800;opacity:.7}
+.pv-opt.ok{background:rgba(34,197,94,.18);outline:1px solid rgba(34,197,94,.5)}
+.pv-more{margin:6px 0 0;font-size:12px;color:#98a2b3}
+/* kv: book / quest / battle / league */
+.pv-book{display:flex;gap:14px;align-items:flex-start}
+.pv-book-icon{font-size:44px;line-height:1;padding:10px;border-radius:14px;background:rgba(255,255,255,.08)}
+.pv-book h3,.pv-quest h3,.pv-battle h3,.pv-league h3{margin:0 0 4px;color:#fff;font-size:19px}
+.pv-book small,.pv-quest small{color:#aeb8e2}.pv-book p,.pv-quest p,.pv-league p{margin:8px 0;color:#cdd5f5;font-size:14px;line-height:1.5}
+.pv-book-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.pv-eyebrow{display:inline-block;font-size:11px;font-weight:800;letter-spacing:1px;color:#ffb27a;margin-bottom:4px}
+.pv-groups{list-style:none;padding:0;margin:10px 0;display:grid;gap:6px}
+.pv-groups li{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.08);font-size:13.5px}
+.pv-timer{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.pv-timer div{padding:10px 4px;border-radius:12px;text-align:center;background:rgba(255,255,255,.08)}
+.pv-timer b{display:block;font-size:22px;color:#fff}.pv-timer small{font-size:11px;color:#aeb8e2}
+.pv-when{color:#ffd48a!important;font-weight:700}
+.pv-league h3 i{color:#ff9f6b;font-style:normal;font-size:.8em}
+.pv-badge{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.14);font-size:12px;font-weight:700}
+/* class stats card */
+.pv-stcard{padding:14px;border-radius:16px;background:rgba(255,255,255,.07);margin-bottom:10px}
+.pv-sthead{display:flex;justify-content:space-between;align-items:baseline}.pv-sthead h3{margin:0;color:#fff;font-size:20px}.pv-sthead span{font-size:12px;color:#aeb8e2}
+.pv-teacher{margin:4px 0 10px;font-size:12.5px;color:#aeb8e2}.pv-teacher b{color:#fff}
+.pv-line{display:grid;grid-template-columns:100px 1fr 40px;gap:8px;align-items:center;font-size:12.5px}
+.pv-line i{display:block;height:8px;border-radius:6px;background:rgba(255,255,255,.12);overflow:hidden}.pv-line u{display:block;height:100%;background:linear-gradient(90deg,#34d399,#22c55e)}

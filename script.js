@@ -1045,7 +1045,27 @@ if(qImportCheck)qImportCheck.onclick=()=>importQuestsFromJson(true);
    renderPublicSchedule(); renderAdminSchedule();
  }
 
- async function refreshAdminLists(){
+ /* ---------- KITAPVERSE: сынып жетекшілері (admin) ---------- */
+async function loadTeachers(){
+  const box=document.getElementById('a-teachers-list');if(!box)return;
+  const classes=['6А','6Б','7А','8А','8Б','9А','9Б','10А','10Б'];
+  const {data}=await sb.from('class_teachers').select('*');
+  const map={};(data||[]).forEach(r=>{map[r.class_name]=r.teacher_name;});
+  const cur={};box.querySelectorAll('input[data-class]').forEach(i=>{cur[i.dataset.class]=i.value;});
+  box.innerHTML=classes.map(c=>`<label class="a-teacher-row"><b>${c}</b><input data-class="${c}" placeholder="Жетекшінің аты-жөні" maxlength="120" value="${escapeHtml(cur[c]!==undefined?cur[c]:(map[c]||''))}"></label>`).join('');
+  box.dispatchEvent(new Event('input',{bubbles:true}));
+}
+document.getElementById('a-teachers-save')?.addEventListener('click',async e=>{
+  const btn=e.currentTarget;const inputs=[...document.querySelectorAll('#a-teachers-list input[data-class]')];
+  setBusy(btn,true,'Жетекшілерді сақтау');
+  const res=await Promise.all(inputs.map(i=>sb.rpc('kv_set_class_teacher',{p_class:i.dataset.class,p_name:i.value.trim()})));
+  setBusy(btn,false,'Жетекшілерді сақтау');
+  const err=res.find(r=>r.error);
+  if(err){toast('Сақтау кезінде қате шықты: '+(err.error.message||''),'error');return;}
+  toast('Сынып жетекшілері сақталды!');
+});
+async function refreshAdminLists(){
+  loadTeachers().catch(()=>{});
    const newsBox=document.getElementById('a-news-admin-list');
    const achBox=document.getElementById('a-ach-admin-list');
    const docBox=document.getElementById('a-doc-admin-list');

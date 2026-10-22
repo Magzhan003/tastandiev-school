@@ -209,6 +209,12 @@
       <div class="admin-list" id="a-xp-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
 
       <div class="admin-form" id="a-class-limit-form"><h3>👥 Сыныптар және лимиттер</h3><p class="admin-hint">Әр сыныпқа оқушылар санын нақты көрсетіңіз. Бұл лимит тек Викторина мен Battle үшін қолданылады. Бір қате атымен жіберілген әрекет те бір мүмкіндік ретінде есептеледі.</p><div id="a-class-limit-list"></div><div class="admin-actions"><button class="btn btn-light" id="a-class-add" type="button">+ Сынып қосу</button><button class="btn btn-primary" id="a-class-save" type="button">Сынып лимиттерін сақтау</button></div></div>
+      <div class="admin-form" id="a-teachers-form">
+        <h3>👩‍🏫 Сынып жетекшілері</h3>
+        <p class="admin-hint">Әр сыныптың жетекшісінің аты-жөнін жазыңыз. «Сыныптар белсенділігі» бөлімінде сынып картасында көрсетіледі. Бос қалдырсаңыз — көрсетілмейді.</p>
+        <div id="a-teachers-list" class="a-teachers-list"></div>
+        <div class="admin-actions"><button class="btn btn-primary" id="a-teachers-save" type="button">Жетекшілерді сақтау</button></div>
+      </div>
       <div class="admin-form" id="a-quest-form">
         <h3>🎮 Жаңа оқу квесті</h3>
         <input id="a-quest-title" placeholder="Квест атауы (мысалы: Абай әлемі)">
@@ -331,4 +337,5 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="script.js"></script>
+<script src="kv-admin-preview.js"></script>
 </body></html>
