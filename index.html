@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>№11 Тайыр Тастандиев атындағы орта мектеп</title>
-  <meta name="description" content="№11 Тайыр Тастандиев атындағы орта мектептің ресми сайты. Жуалы ауданы, Жамбыл облысы.">
+  <title>№11 Тайыр Тастандиев атындағы орта мектеп — Жуалы ауданы | Школа №11 имени Тайыра Тастандиева</title>
+  <meta name="description" content="№11 Тайыр Тастандиев атындағы орта мектептің ресми сайты: жаңалықтар, жетістіктер, құжаттар. Жуалы ауданы, Жамбыл облысы. Средняя школа №11 имени Тайыра Тастандиева, Жуалынский район.">
   <link rel="canonical" href="https://magzhan003.github.io/tastandiev-school/">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="kk_KZ">
@@ -83,7 +83,7 @@
 <div id="school-tests-list" class="test-grid"></div><div id="school-test-workspace"></div></div></section>
 <section id="contacts" class="section contact-section"><div class="container contact-grid"><div><span class="section-label">БАЙЛАНЫС</span><h2>Бізбен байланысыңыз</h2><p>Мектеп бойынша сұрақтарыңыз болса, ресми байланыс арналары арқылы хабарласа аласыз.</p></div><div class="contact-box"><div><span>📍</span><div><small>Мекенжай</small><strong>Жуалы ауданы, Жамбыл облысы</strong></div></div><div><span>✉️</span><div><small>E-mail</small><strong><a href="mailto:juali-tastandiev-om@mail.kz">juali-tastandiev-om@mail.kz</a></strong></div></div><div><span>📞</span><div><small>Қабылдау бөлмесі / бухгалтерия</small><strong><a href="tel:+77263526425">+7 (726) 35-2-64-25</a></strong></div></div></div></div></section>
 </main>
-<footer><div class="container footer-wrap"><div><strong>№11 Тайыр Тастандиев атындағы орта мектеп</strong><small>Ресми мектеп сайты</small></div><span>© 2026 Барлық құқықтар қорғалған</span></div></footer>
+<footer><div class="container footer-wrap"><div><strong>№11 Тайыр Тастандиев атындағы орта мектеп</strong><small>Ресми мектеп сайты · Средняя школа №11 имени Тайыра Тастандиева, Жуалынский район, Жамбылская область</small></div><span>© 2026 Барлық құқықтар қорғалған</span></div></footer>
 <div class="modal" id="news-modal" aria-hidden="true"><div class="modal-card"><button class="modal-close" aria-label="Жабу">×</button><span class="section-label">ЖАҢАЛЫҚ</span><h2 id="modal-title"></h2><p id="modal-text"></p><button class="btn btn-primary" id="modal-back">Жаңалықтарға оралу</button></div></div>
 
 <!-- Document folder modal: shows a folder's documents, or a password gate if locked -->
@@ -236,40 +236,34 @@
       <div class="admin-list" id="a-quest-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
 
       <div class="admin-form" id="a-battle-form">
-        <h3><span id="a-battle-form-title">⚔️ Battle құру</span></h3>
-        <input id="a-battle-title" placeholder="Battle атауы (мысалы: 8А vs 9Б)">
-        <input id="a-battle-classes" placeholder="Қатысатын сыныптар (мысалы: 8А, 9Б)">
+        <h3>⚔️ Battle құру (бірнеше сынып, кітап топтары)</h3>
+        <input id="a-battle-title" placeholder="Battle атауы (мысалы: Көксерек батлы)">
         <input id="a-battle-date" type="datetime-local">
+        <div id="a-battle-groups"></div>
+        <button class="btn btn-light" id="a-battle-add-group" type="button">➕ Тағы топ қосу (басқа кітап немесе басқа тіл)</button>
         <div class="admin-actions">
-          <button class="btn btn-primary" id="a-battle-add">Battle-ды жариялау</button>
-          <button class="btn btn-light cancel-edit" id="a-battle-cancel">Болдырмау</button>
+          <button class="btn btn-primary" id="a-battle-save" type="button">Battle-ды жариялау</button>
         </div>
-        <p class="admin-hint">KITAPVERSE бетінде осы күнге дейін таймер көрсетіледі. Уақыты келгенде төмендегі сұрақтар автоматты түрде викторина ретінде ашылады.</p>
+        <p class="admin-hint">Топ — бір кітапқа арналған сыныптар тобы. Мысалы: 1-топ: 6А, 6Б, 7А — «Көксерек»; 2-топ: 6Б — орысша сұрақтар «Серый лютый». Бір сынып тек бір топта болады. Әр топқа 5 сұрақ дайын тұр, «Сұрақ қосу» арқылы көбейтуге болады. Battle басталғанда таймер бітеді де, әр сынып өз тобының сұрақтарын көреді.</p>
       </div>
       <div class="admin-section-title">Жарияланған battle-дар</div>
       <div class="admin-list" id="a-battle-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
 
-      <div class="admin-form" id="a-battle-q-form">
-        <h3><span id="a-battle-q-form-title">🧠 Battle сұрағын қосу</span></h3>
-        <select id="a-battle-q-battle"><option value="">Battle таңдаңыз</option></select>
-        <input id="a-battle-q-q" placeholder="Сұрақ мәтіні">
-        <input id="a-battle-q-a" placeholder="A нұсқасы">
-        <input id="a-battle-q-b" placeholder="B нұсқасы">
-        <input id="a-battle-q-c" placeholder="C нұсқасы">
-        <input id="a-battle-q-d" placeholder="D нұсқасы">
-        <select id="a-battle-q-correct">
-          <option value="a">Дұрыс жауап: A</option>
-          <option value="b">Дұрыс жауап: B</option>
-          <option value="c">Дұрыс жауап: C</option>
-          <option value="d">Дұрыс жауап: D</option>
-        </select>
-        <div class="admin-actions">
-          <button class="btn btn-primary" id="a-battle-q-add">Сұрақты қосу</button>
-          <button class="btn btn-light cancel-edit" id="a-battle-q-cancel">Болдырмау</button>
-        </div>
+      <div class="admin-form" id="a-league-form">
+        <h3>🏟️ Мектептер лигасы — жаңа тур</h3>
+        <input id="a-league-title" placeholder="Тур атауы (бос қалдырсаңыз: 1-тур, 2-тур…)">
+        <input id="a-league-school-a" placeholder="1-мектеп атауы" value="№11 Тайыр Тастандиев атындағы орта мектеп">
+        <input id="a-league-school-b" placeholder="2-мектеп атауы (мысалы: №26 Жаңаталап орта мектебі)">
+        <input id="a-league-book" placeholder="Кітап атауы">
+        <input id="a-league-date" type="datetime-local">
+        <input id="a-league-duration" type="number" min="5" max="180" value="30" placeholder="Ұзақтығы (минут)">
+        <div id="a-league-questions"></div>
+        <button class="btn btn-light" id="a-league-add-q" type="button">➕ Сұрақ қосу</button>
+        <div class="admin-actions"><button class="btn btn-primary" id="a-league-save" type="button">Турды жариялау</button></div>
+        <p class="admin-hint">Басқа мектеп оқушыларына тур сілтемесін жіберіңіз (төмендегі тізімдегі 🔗 батырмасы). Оларға аккаунт керек емес — аты-жөнін жазып қатысады. Тур нәтижесі қатысушылардың орташа пайызымен анықталады: жеңіс — 3, тең — 1, жеңіліс — 0 ұпай.</p>
       </div>
-      <div class="admin-section-title">Battle сұрақтары</div>
-      <div class="admin-list" id="a-battle-q-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
+      <div class="admin-section-title">Лига турлары</div>
+      <div class="admin-list" id="a-league-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
 
       <div class="admin-form" id="a-quiz-form">
         <h3>🧠 Күнделікті викторина пакеті</h3>

@@ -355,98 +355,122 @@ function toast(message,type='success'){
    toast('Сынып рейтингтен өшірілді.');
  }
 
- /* ---------- KITAPVERSE: Battle (create/edit/delete + its own quiz questions) ---------- */
- let editingBattleId=null, editingBattleQId=null;
- const battleForm=document.getElementById('a-battle-form');
- const battleTitleI=document.getElementById('a-battle-title'), battleClassesI=document.getElementById('a-battle-classes'), battleDateI=document.getElementById('a-battle-date');
- const battleAddBtn=document.getElementById('a-battle-add'), battleCancelBtn=document.getElementById('a-battle-cancel'), battleFormTitle=document.getElementById('a-battle-form-title');
-
- function startEditBattle(item){
-   editingBattleId=item.id; battleForm.classList.add('editing');
-   battleFormTitle.textContent='✏️ Battle-ды өңдеу'; battleAddBtn.textContent='Өзгерісті сақтау';
-   battleTitleI.value=item.title||''; battleClassesI.value=item.classes||'';
-   battleDateI.value=item.battle_date?new Date(item.battle_date).toISOString().slice(0,16):'';
-   battleForm.scrollIntoView({behavior:'smooth',block:'center'});
+ /* ---------- KITAPVERSE: Battle (бірнеше сынып + кітап топтары, әр топтың өз сұрақтары) ---------- */
+ const BATTLE_CLASSES=['6А','6Б','7А','8А','8Б','9А','9Б','10А','10Б'];
+ const battleGroupsBox=document.getElementById('a-battle-groups');
+ function questionCardHtml(n,values={}){
+   return `<div class="quiz-admin-card-head"><strong>${n}-сұрақ</strong><button type="button" class="icon-btn danger q-remove" title="Өшіру">🗑</button></div><input class="q-question" placeholder="Сұрақ мәтіні" value="${escapeHtml(values.question||'')}"><div class="quiz-admin-options"><input class="q-a" placeholder="A нұсқасы" value="${escapeHtml(values.option_a||'')}"><input class="q-b" placeholder="B нұсқасы" value="${escapeHtml(values.option_b||'')}"><input class="q-c" placeholder="C нұсқасы" value="${escapeHtml(values.option_c||'')}"><input class="q-d" placeholder="D нұсқасы" value="${escapeHtml(values.option_d||'')}"></div><select class="q-correct"><option value="a">Дұрыс жауап: A</option><option value="b">Дұрыс жауап: B</option><option value="c">Дұрыс жауап: C</option><option value="d">Дұрыс жауап: D</option></select>`;
  }
- function stopEditBattle(){
-   editingBattleId=null; battleForm.classList.remove('editing');
-   battleFormTitle.textContent='⚔️ Battle құру'; battleAddBtn.textContent='Battle-ды жариялау';
-   battleTitleI.value='';battleClassesI.value='';battleDateI.value='';
+ function addQuestionCard(list,values){
+   const card=document.createElement('div');card.className='quiz-admin-card';
+   card.innerHTML=questionCardHtml(list.children.length+1,values);
+   card.querySelector('.q-correct').value=(values&&values.correct_option)||'a';
+   card.querySelector('.q-remove').onclick=()=>{card.remove();[...list.children].forEach((c,i)=>c.querySelector('.quiz-admin-card-head strong').textContent=`${i+1}-сұрақ`);};
+   list.appendChild(card);
  }
- battleCancelBtn.onclick=stopEditBattle;
-
- battleAddBtn.onclick=async()=>{
-   const title=battleTitleI.value.trim(), classes=battleClassesI.value.trim(), battle_date=battleDateI.value;
-   if(!title||!classes||!battle_date){toast('Атауын, сыныптарды және күнін толтырыңыз.','error');return;}
-   setBusy(battleAddBtn,true,editingBattleId?'Өзгерісті сақтау':'Battle-ды жариялау');
-   const iso=new Date(battle_date).toISOString();
-   let error;
-   if(editingBattleId){
-     ({error}=await sb.from('battles').update({title,classes,battle_date:iso}).eq('id',editingBattleId));
-   } else {
-     ({error}=await sb.from('battles').insert({title,classes,battle_date:iso}));
+ function readQuestions(list){
+   const out=[];let bad=false;
+   [...list.querySelectorAll('.quiz-admin-card')].forEach(c=>{
+     const q={question:c.querySelector('.q-question').value.trim(),option_a:c.querySelector('.q-a').value.trim(),option_b:c.querySelector('.q-b').value.trim(),option_c:c.querySelector('.q-c').value.trim(),option_d:c.querySelector('.q-d').value.trim(),correct_option:c.querySelector('.q-correct').value};
+     const filled=Object.entries(q).filter(([k,v])=>k!=='correct_option'&&v).length;
+     if(filled===0)return;            // бос карточка өткізіледі
+     if(filled<5){bad=true;return;}
+     out.push(q);
+   });
+   return {questions:out,bad};
+ }
+ function addBattleGroup(){
+   if(!battleGroupsBox)return;
+   const card=document.createElement('div');card.className='a-bgroup';
+   const n=battleGroupsBox.children.length+1;
+   card.innerHTML=`<div class="a-bgroup-head"><h4>${n}-топ</h4><button type="button" class="icon-btn danger bg-remove" title="Топты өшіру">🗑</button></div><div class="a-bgroup-classes">${BATTLE_CLASSES.map(c=>`<label class="a-chip"><input type="checkbox" value="${c}"><span>${c}</span></label>`).join('')}</div><input class="bg-book" placeholder="Осы топтың кітап атауы (орыс сыныпқа — орысша)"><div class="bg-questions"></div><button type="button" class="btn btn-light bg-add-q">➕ Сұрақ қосу</button>`;
+   const qs=card.querySelector('.bg-questions');
+   for(let i=0;i<5;i++)addQuestionCard(qs);
+   card.querySelector('.bg-add-q').onclick=()=>addQuestionCard(qs);
+   card.querySelector('.bg-remove').onclick=()=>{card.remove();[...battleGroupsBox.children].forEach((c,i)=>c.querySelector('h4').textContent=`${i+1}-топ`);};
+   battleGroupsBox.appendChild(card);
+ }
+ if(battleGroupsBox){
+   addBattleGroup();
+   document.getElementById('a-battle-add-group').onclick=addBattleGroup;
+ }
+ const battleSaveBtn=document.getElementById('a-battle-save');
+ if(battleSaveBtn)battleSaveBtn.onclick=async()=>{
+   const title=document.getElementById('a-battle-title').value.trim(), dateV=document.getElementById('a-battle-date').value;
+   if(!title||!dateV){toast('Атауын және басталу күнін толтырыңыз.','error');return;}
+   const groups=[];const used=new Set();
+   const cards=[...battleGroupsBox.querySelectorAll('.a-bgroup')];
+   for(let i=0;i<cards.length;i++){
+     const c=cards[i];
+     const classes=[...c.querySelectorAll('.a-bgroup-classes input:checked')].map(x=>x.value);
+     const book=c.querySelector('.bg-book').value.trim();
+     const {questions,bad}=readQuestions(c.querySelector('.bg-questions'));
+     if(!classes.length){toast(`${i+1}-топ: кемінде бір сынып таңдаңыз.`,'error');return;}
+     if(classes.some(x=>used.has(x))){toast(`${i+1}-топ: бір сынып екі топта болмайды.`,'error');return;}
+     classes.forEach(x=>used.add(x));
+     if(!book){toast(`${i+1}-топ: кітап атауын жазыңыз.`,'error');return;}
+     if(bad){toast(`${i+1}-топ: сұрақтың барлық өрісін (сұрақ + 4 нұсқа) толтырыңыз.`,'error');return;}
+     if(!questions.length){toast(`${i+1}-топ: кемінде бір сұрақ қосыңыз.`,'error');return;}
+     groups.push({classes,book_title:book,questions});
    }
-   setBusy(battleAddBtn,false,editingBattleId?'Өзгерісті сақтау':'Battle-ды жариялау');
-   if(error){toast('Battle сақтау кезінде қате шықты.','error');return;}
-   const wasEditing=!!editingBattleId; stopEditBattle();
+   if(!groups.length){toast('Кемінде бір топ қосыңыз.','error');return;}
+   setBusy(battleSaveBtn,true,'Battle-ды жариялау');
+   const {error}=await sb.rpc('create_battle_full',{p_title:title,p_date:new Date(dateV).toISOString(),p_groups:groups});
+   setBusy(battleSaveBtn,false,'Battle-ды жариялау');
+   if(error){toast('Battle сақтау кезінде қате шықты: '+(error.message||''),'error');return;}
+   document.getElementById('a-battle-title').value='';document.getElementById('a-battle-date').value='';
+   battleGroupsBox.innerHTML='';addBattleGroup();
    await refreshAdminLists();
-   toast(wasEditing?'Battle жаңартылды!':'Battle жарияланды!');
+   toast('Battle жарияланды!');
  };
 
  async function deleteBattle(id){
    if(!confirm('Бұл battle-ды және оның барлық сұрақтары мен нәтижелерін өшіруге сенімдісіз бе?'))return;
    const {error}=await sb.from('battles').delete().eq('id',id);
    if(error){toast('Өшіру кезінде қате шықты.','error');return;}
-   if(editingBattleId===id)stopEditBattle();
    await refreshAdminLists();
    toast('Battle өшірілді.');
  }
-
- /* ---- Battle questions (tied to a battle_id) ---- */
- const battleQForm=document.getElementById('a-battle-q-form');
- const battleQBattleI=document.getElementById('a-battle-q-battle');
- const battleQQI=document.getElementById('a-battle-q-q'), battleQAI=document.getElementById('a-battle-q-a'), battleQBI=document.getElementById('a-battle-q-b'), battleQCI=document.getElementById('a-battle-q-c'), battleQDI=document.getElementById('a-battle-q-d'), battleQCorrectI=document.getElementById('a-battle-q-correct');
- const battleQAddBtn=document.getElementById('a-battle-q-add'), battleQCancelBtn=document.getElementById('a-battle-q-cancel'), battleQFormTitle=document.getElementById('a-battle-q-form-title');
-
- function startEditBattleQ(item){
-   editingBattleQId=item.id; battleQForm.classList.add('editing');
-   battleQFormTitle.textContent='✏️ Battle сұрағын өңдеу'; battleQAddBtn.textContent='Өзгерісті сақтау';
-   battleQBattleI.value=item.battle_id; battleQQI.value=item.question||''; battleQAI.value=item.option_a||''; battleQBI.value=item.option_b||''; battleQCI.value=item.option_c||''; battleQDI.value=item.option_d||''; battleQCorrectI.value=item.correct_option||'a';
-   battleQForm.scrollIntoView({behavior:'smooth',block:'center'});
+ async function rescheduleBattle(item){
+   const cur=new Date(item.battle_date);const p=n=>String(n).padStart(2,'0');
+   const def=`${cur.getFullYear()}-${p(cur.getMonth()+1)}-${p(cur.getDate())} ${p(cur.getHours())}:${p(cur.getMinutes())}`;
+   const v=prompt('Жаңа басталу уақыты (ЖЖЖЖ-АА-КК СС:ММ):',def);if(!v)return;
+   const d=new Date(v.trim().replace(' ','T'));
+   if(isNaN(d.getTime())){toast('Уақыт форматы қате.','error');return;}
+   const {error}=await sb.from('battles').update({battle_date:d.toISOString()}).eq('id',item.id);
+   if(error){toast('Уақытты сақтау кезінде қате шықты.','error');return;}
+   await refreshAdminLists();toast('Уақыт жаңартылды.');
  }
- function stopEditBattleQ(){
-   editingBattleQId=null; battleQForm.classList.remove('editing');
-   battleQFormTitle.textContent='🧠 Battle сұрағын қосу'; battleQAddBtn.textContent='Сұрақты қосу';
-   battleQQI.value='';battleQAI.value='';battleQBI.value='';battleQCI.value='';battleQDI.value='';battleQCorrectI.value='a';
- }
- battleQCancelBtn.onclick=stopEditBattleQ;
 
- battleQAddBtn.onclick=async()=>{
-   const battle_id=parseInt(battleQBattleI.value,10);
-   const question=battleQQI.value.trim(), option_a=battleQAI.value.trim(), option_b=battleQBI.value.trim(), option_c=battleQCI.value.trim(), option_d=battleQDI.value.trim(), correct_option=battleQCorrectI.value;
-   if(!battle_id){toast('Алдымен Battle таңдаңыз.','error');return;}
-   if(!question||!option_a||!option_b||!option_c||!option_d){toast('Сұрақ пен барлық 4 нұсқаны толтырыңыз.','error');return;}
-   setBusy(battleQAddBtn,true,editingBattleQId?'Өзгерісті сақтау':'Сұрақты қосу');
-   let error;
-   if(editingBattleQId){
-     ({error}=await sb.from('battle_questions').update({battle_id,question,option_a,option_b,option_c,option_d,correct_option}).eq('id',editingBattleQId));
-   } else {
-     ({error}=await sb.from('battle_questions').insert({battle_id,question,option_a,option_b,option_c,option_d,correct_option}));
-   }
-   setBusy(battleQAddBtn,false,editingBattleQId?'Өзгерісті сақтау':'Сұрақты қосу');
-   if(error){toast('Сұрақты сақтау кезінде қате шықты.','error');return;}
-   const wasEditing=!!editingBattleQId; stopEditBattleQ();
-   await refreshAdminLists();
-   toast(wasEditing?'Сұрақ жаңартылды!':'Battle сұрағы қосылды!');
+ /* ---------- KITAPVERSE: Мектептер лигасы (admin) ---------- */
+ const leagueQBox=document.getElementById('a-league-questions');
+ if(leagueQBox){for(let i=0;i<5;i++)addQuestionCard(leagueQBox);document.getElementById('a-league-add-q').onclick=()=>addQuestionCard(leagueQBox);}
+ const leagueSaveBtn=document.getElementById('a-league-save');
+ if(leagueSaveBtn)leagueSaveBtn.onclick=async()=>{
+   const g=id=>document.getElementById(id).value.trim();
+   const a=g('a-league-school-a'),b=g('a-league-school-b'),book=g('a-league-book'),dateV=document.getElementById('a-league-date').value,dur=parseInt(g('a-league-duration'),10)||30;
+   if(!a||!b||!book||!dateV){toast('Екі мектеп атауын, кітапты және басталу уақытын толтырыңыз.','error');return;}
+   if(a.toLowerCase()===b.toLowerCase()){toast('Мектеп атаулары әртүрлі болуы керек.','error');return;}
+   const {questions,bad}=readQuestions(leagueQBox);
+   if(bad){toast('Сұрақтың барлық өрісін (сұрақ + 4 нұсқа) толтырыңыз.','error');return;}
+   if(!questions.length){toast('Кемінде бір сұрақ қосыңыз.','error');return;}
+   setBusy(leagueSaveBtn,true,'Турды жариялау');
+   const {error}=await sb.rpc('create_league_round',{p_title:g('a-league-title'),p_school_a:a,p_school_b:b,p_book:book,p_starts:new Date(dateV).toISOString(),p_duration:dur,p_questions:questions});
+   setBusy(leagueSaveBtn,false,'Турды жариялау');
+   if(error){toast('Турды сақтау кезінде қате шықты: '+(error.message||''),'error');return;}
+   ['a-league-title','a-league-book','a-league-date'].forEach(id=>{document.getElementById(id).value='';});
+   leagueQBox.innerHTML='';for(let i=0;i<5;i++)addQuestionCard(leagueQBox);
+   await refreshAdminLists();toast('Тур жарияланды!');
  };
-
- async function deleteBattleQ(id){
-   if(!confirm('Бұл сұрақты өшіруге сенімдісіз бе?'))return;
-   const {error}=await sb.from('battle_questions').delete().eq('id',id);
+ async function deleteLeagueRound(id){
+   if(!confirm('Бұл турды, сұрақтарды және барлық нәтижелерді өшіруге сенімдісіз бе?'))return;
+   const {error}=await sb.from('league_rounds').delete().eq('id',id);
    if(error){toast('Өшіру кезінде қате шықты.','error');return;}
-   if(editingBattleQId===id)stopEditBattleQ();
-   await refreshAdminLists();
-   toast('Сұрақ өшірілді.');
+   await refreshAdminLists();toast('Тур өшірілді.');
+ }
+ async function copyLeagueLink(id){
+   const url=location.origin+location.pathname.replace(/[^/]*$/,'')+'league.html?round='+id;
+   try{await navigator.clipboard.writeText(url);toast('Сілтеме көшірілді!');}catch(e){window.prompt('Сілтемені көшіріңіз:',url);}
  }
 
  function battleCountdownLabel(iso){
@@ -1118,41 +1142,37 @@ if(qImportCheck)qImportCheck.onclick=()=>importQuestsFromJson(true);
    }
 
    const battleBox=document.getElementById('a-battle-admin-list');
-   let battlesData=[];
    if(battleBox){
-     const bt=await sb.from('battles').select('*').order('battle_date',{ascending:true});
-     battlesData=bt.data||[];
+     const [bt,bg,bq]=await Promise.all([sb.from('battles').select('*').order('battle_date',{ascending:true}),sb.from('battle_groups').select('*').order('id'),sb.from('battle_questions').select('id,battle_id,group_id')]);
+     const battlesData=bt.data||[];
      battleBox.innerHTML='';
      if(!battlesData.length){ battleBox.innerHTML='<p class="admin-empty">Әзірге battle жарияланған жоқ.</p>'; }
      else battlesData.forEach(item=>{
        const row=document.createElement('div'); row.className='admin-list-item';
        const when=new Date(item.battle_date).toLocaleString('kk-KZ',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-       row.innerHTML=`<div class="ali-info"><strong>⚔️ ${escapeHtml(item.title)}</strong><small>${escapeHtml(item.classes)} · ${when} · ${battleCountdownLabel(item.battle_date)}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
-       row.querySelector('.icon-btn:not(.danger)').onclick=()=>startEditBattle(item);
+       const groups=(bg.data||[]).filter(g=>g.battle_id===item.id);
+       const qcount=g=>(bq.data||[]).filter(q=>q.group_id===g.id).length;
+       const gtxt=groups.length?groups.map(g=>`${g.classes} — «${g.book_title}» (${qcount(g)} сұрақ)`).join(' · '):`${item.classes} (ескі формат)`;
+       row.innerHTML=`<div class="ali-info"><strong>⚔️ ${escapeHtml(item.title)}</strong><small>${escapeHtml(gtxt)}</small><small>${when} · ${battleCountdownLabel(item.battle_date)}</small></div><div class="ali-actions"><button class="icon-btn" title="Уақытын өзгерту" aria-label="Уақытын өзгерту">🕒</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
+       row.querySelector('.icon-btn:not(.danger)').onclick=()=>rescheduleBattle(item);
        row.querySelector('.icon-btn.danger').onclick=()=>deleteBattle(item.id);
        battleBox.appendChild(row);
      });
    }
 
-   const battleQSelect=document.getElementById('a-battle-q-battle');
-   if(battleQSelect){
-     const prev=battleQSelect.value;
-     battleQSelect.innerHTML='<option value="">Battle таңдаңыз</option>'+battlesData.map(b=>`<option value="${b.id}">${escapeHtml(b.title)}</option>`).join('');
-     if(prev)battleQSelect.value=prev;
-   }
-
-   const battleQBox=document.getElementById('a-battle-q-admin-list');
-   if(battleQBox){
-     const bq=await sb.from('battle_questions').select('*').order('created_at',{ascending:false});
-     battleQBox.innerHTML='';
-     if(!bq.data || !bq.data.length){ battleQBox.innerHTML='<p class="admin-empty">Әзірге battle сұрағы жоқ.</p>'; }
-     else bq.data.forEach(item=>{
-       const battleTitle=(battlesData.find(b=>b.id===item.battle_id)||{}).title||'—';
+   const leagueBox=document.getElementById('a-league-admin-list');
+   if(leagueBox){
+     const lr=await sb.from('league_rounds').select('*').order('starts_at',{ascending:false});
+     leagueBox.innerHTML='';
+     if(lr.error){leagueBox.innerHTML='<p class="admin-empty">Лига кестелері әлі құрылмаған (KITAPVERSE-V4-SETUP.sql іске қосылмаған).</p>';}
+     else if(!(lr.data||[]).length){leagueBox.innerHTML='<p class="admin-empty">Әзірге тур жоқ.</p>';}
+     else lr.data.forEach(item=>{
        const row=document.createElement('div'); row.className='admin-list-item';
-       row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(item.question)}</strong><small>${escapeHtml(battleTitle)} · Дұрыс жауап: ${item.correct_option.toUpperCase()}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
-       row.querySelector('.icon-btn:not(.danger)').onclick=()=>startEditBattleQ(item);
-       row.querySelector('.icon-btn.danger').onclick=()=>deleteBattleQ(item.id);
-       battleQBox.appendChild(row);
+       const when=new Date(item.starts_at).toLocaleString('kk-KZ',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+       row.innerHTML=`<div class="ali-info"><strong>🏟️ ${escapeHtml(item.title)}: ${escapeHtml(item.school_a)} vs ${escapeHtml(item.school_b)}</strong><small>📖 ${escapeHtml(item.book_title)} · ${when} · ${item.duration_min} мин</small></div><div class="ali-actions"><button class="icon-btn" title="Сілтемені көшіру" aria-label="Сілтемені көшіру">🔗</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
+       row.querySelector('.icon-btn:not(.danger)').onclick=()=>copyLeagueLink(item.id);
+       row.querySelector('.icon-btn.danger').onclick=()=>deleteLeagueRound(item.id);
+       leagueBox.appendChild(row);
      });
    }
 

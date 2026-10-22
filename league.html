@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta name="robots" content="noindex">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мектептер лигасы — KITAPVERSE</title>
+  <meta name="description" content="KITAPVERSE мектептер лигасы: екі мектеп арасындағы кітап бойынша сайыс.">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="kv-page">
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="index.html" aria-label="Басты бет">
+      <span class="brand-mark">11</span><span><strong>№11 Тайыр Тастандиев</strong><small>атындағы орта мектеп</small></span>
+    </a>
+    <button class="menu-toggle" aria-label="Мәзірді ашу" aria-expanded="false">☰</button>
+    <nav class="nav" aria-label="Негізгі мәзір">
+      <a href="index.html">Басты бет</a><a href="index.html#news">Жаңалықтар</a><a href="index.html#achievements">Жетістіктер</a><a href="index.html#documents">Құжаттар</a><a href="index.html#tests">Тесттер</a><a href="kitapverse.html" class="kv-nav-active">KITAPVERSE</a><a href="index.html#contacts">Байланыс</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="kv-section" style="padding-top:34px">
+  <div class="container">
+    <div class="kv-section-head"><div><span class="kv-badge kv-badge-fire">🏟️ ЛИГА</span><h1 style="margin:10px 0 0;font-size:clamp(1.8rem,5vw,2.6rem)">Мектептер лигасы</h1></div></div>
+    <p class="lead">Екі мектеп кітап бойынша сайысады. Қатысу үшін аккаунт керек емес: тур басталғанда «Қатысу» батырмасын басып, мектебіңізді таңдап, аты-жөніңізді жазыңыз.</p>
+    <div id="kv-league-root"><p class="kv-empty">Жүктелуде...</p></div>
+  </div>
+</section>
+</main>
+<footer><div class="container footer-wrap"><div><strong>№11 Тайыр Тастандиев атындағы орта мектеп</strong><small>KITAPVERSE — оқу ғаламы</small></div><span>© 2026 Барлық құқықтар қорғалған</span></div></footer>
+
+<div class="toast-container" id="toast-container" aria-live="polite"></div>
+<script>window.KV_STANDALONE=true;</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="kv-league.js"></script>
+</body>
+</html>

@@ -146,9 +146,29 @@
     <div class="kv-board">
       <div class="kv-board-title"><span class="section-label">БҮГІНГІ КІТАП</span><h2>Сыныптар рейтингі</h2></div>
       <div class="kv-board-gap" id="kv-gap"></div>
-      <div class="kv-bar-head"><span></span><span></span><span>Жалпы балл</span><span>Battle ұпайы</span></div>
+      <p class="kv-board-note">Рейтинг <b>1 оқушыға шаққандағы орташа балл</b> бойынша есептеледі, сондықтан оқушысы аз сынып та тең жағдайда. Оң жақта — белсенді оқушылардың пайызы.</p>
+      <div class="kv-bar-head"><span></span><span></span><span>Орташа балл (1 оқушыға)</span><span>Қатысу</span></div>
       <div id="kv-bars"><p class="kv-empty">Жүктелуде...</p></div>
     </div>
+  </div>
+</section>
+
+<!-- 📊 Class activity chart -->
+<section id="kv-stats" class="kv-section alt">
+  <div class="container">
+    <div class="kv-section-head"><div><span class="kv-badge">📊 СТАТИСТИКА</span><h2 style="margin:10px 0 0">Сыныптар белсенділігі</h2></div>
+      <div class="kv-seg" role="group" aria-label="Кезең"><button type="button" class="active" data-stats-mode="today">Бүгін</button><button type="button" data-stats-mode="all">Барлығы</button></div></div>
+    <p class="lead">Әр сыныпта қанша оқушы бар, олардың қаншасы бүгін сайтқа кірді, қаншасы квест пен викторина тапсырды.</p>
+    <div id="kv-class-stats" class="kv-class-stats"><p class="kv-empty">Жүктелуде...</p></div>
+  </div>
+</section>
+
+<!-- 🏟️ Schools league -->
+<section id="kv-league" class="kv-section">
+  <div class="container">
+    <div class="kv-section-head"><div><span class="kv-badge kv-badge-fire">🏟️ ЛИГА</span><h2 style="margin:10px 0 0">Мектептер лигасы</h2></div></div>
+    <p class="lead">Мектептер кітап бойынша сайысады. Жеңіс — 3 ұпай, тең — 1, жеңіліс — 0. Тур нәтижесі қатысушылардың орташа пайызымен анықталады.</p>
+    <div id="kv-league-root"><p class="kv-empty">Жүктелуде...</p></div>
   </div>
 </section>
 
@@ -163,11 +183,11 @@
 
 <section class="kv-section">
   <div class="container">
-    <div class="kv-section-head"><div><span class="kv-badge">ЖАҚЫНДА</span><h2 style="margin:10px 0 0">Шығармашылық тапсырмалар</h2></div></div>
-    <div class="kv-grid">
-      <div class="kv-soon reveal"><b>🎬</b><h3>Бейне-шолу</h3><p>Оқыған кітабың туралы қысқа видео түсіру.</p><span class="status">Жақында қосылады</span></div>
-      <div class="kv-soon reveal"><b>🎨</b><h3>Иллюстрация</h3><p>Кітаптағы сүйікті сәтіңді суретпен бейнелеу.</p><span class="status">Жақында қосылады</span></div>
-      <div class="kv-soon reveal"><b>✍️</b><h3>Өз жалғасың</h3><p>Кітаптың соңын өзгертіп, жаңа аяқталу жазу.</p><span class="status">Жақында қосылады</span></div>
+    <div class="kv-section-head"><div><span class="kv-badge" id="kv-creative-badge">ЖАҚЫНДА</span><h2 style="margin:10px 0 0">Шығармашылық тапсырмалар</h2></div></div>
+    <div class="kv-grid" id="kv-creative">
+      <div class="kv-soon kv-creative-card reveal" data-task="video"><b>🎬</b><h3>Бейне-шолу</h3><p>Оқыған кітабың туралы қысқа бейне түсіріп жүктеу. Басқалардың бейнесін көру.</p><small class="kv-creative-hint">Тек бейне · ең көбі 100 МБ</small><span class="status">Жақында қосылады</span></div>
+      <div class="kv-soon kv-creative-card reveal" data-task="illustration"><b>🎨</b><h3>Иллюстрация</h3><p>Кітаптағы сүйікті сәтіңді салып, суретке түсіріп жүктеу.</p><small class="kv-creative-hint">Тек сурет (фото) · ең көбі 15 МБ</small><span class="status">Жақында қосылады</span></div>
+      <div class="kv-soon kv-creative-card reveal" data-task="continuation"><b>✍️</b><h3>Өз жалғасың</h3><p>Кітаптың жаңа аяқталуын немесе жалғасын өзің жаз.</p><small class="kv-creative-hint">Тек мәтін · ең көбі 4000 таңба</small><span class="status">Жақында қосылады</span></div>
     </div>
   </div>
 </section>
@@ -178,7 +198,9 @@
 <div class="toast-container" id="toast-container" aria-live="polite"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script src="kv-upload-config.js"></script>
 <script src="kitapverse.js"></script>
+<script src="kv-league.js"></script>
 <script>
 /* KITAPVERSE: ғарыштық звездопад — hero фонындағы canvas (жеңіл, көрінбей қалса тоқтайды) */
 (function(){
