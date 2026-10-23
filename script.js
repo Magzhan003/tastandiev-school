@@ -1434,11 +1434,30 @@ async function refreshAdminLists(){
    const {data,error}=await sb.rpc('kv_admin_reviewers');
    if(error){box.innerHTML='<p class="admin-empty">Қате: V6 SQL орындалғанын тексеріңіз.</p>';return;}
    if(!data||!data.length){box.innerHTML='<p class="admin-empty">Мұғалім әлі қосылмаған.</p>';return;}
+   let rows=pgRows;
+   if(!rows||!rows.length){const o=await sb.rpc('kv_admin_students_overview');rows=o.data||[];}
+   const allClasses=[...new Set(rows.map(r=>r.class_name))].sort((a,b)=>(parseInt(a)||0)-(parseInt(b)||0)||a.localeCompare(b));
    box.innerHTML='';
    data.forEach(r=>{
-     const row=document.createElement('div');row.className='admin-list-item';
-     row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(r.name||r.email)}</strong><small>${escapeHtml(r.email||'')} · ${r.classes&&r.classes.length?escapeHtml(r.classes.join(', ')):'барлық сынып'}</small></div><div class="ali-actions"><button class="icon-btn danger" title="Өшіру">🗑</button></div>`;
-     row.querySelector('.icon-btn').onclick=async()=>{if(!confirm('Бұл мұғалімнің тексеру рұқсаты өшірілсін бе?'))return;await sb.rpc('kv_admin_remove_reviewer',{p_uid:r.uid});loadReviewers();};
+     const cur=new Set((r.classes||[]).map(x=>String(x).replace(/\s+/g,'').toUpperCase()));
+     const row=document.createElement('div');row.className='admin-list-item';row.style.cssText='display:block';
+     const label=()=>cur.size?[...cur].join(', '):'барлық сынып';
+     row.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div class="ali-info"><strong>${escapeHtml(r.name||r.email)}</strong><small>${escapeHtml(r.email||'')} · <b class="rv-cur">${escapeHtml(label())}</b></small></div><div class="ali-actions"><button class="btn btn-light rv-edit" type="button">🏫 Сыныптар</button><button class="icon-btn danger" title="Өшіру">🗑</button></div></div><div class="rv-chips" hidden style="margin-top:10px"><div class="rv-chip-row" style="display:flex;flex-wrap:wrap;gap:8px"></div><p class="admin-hint">Ештеңе таңдалмаса — мұғалім барлық сыныпты көреді.</p><div class="admin-actions"><button class="btn btn-primary rv-save" type="button">Сақтау</button></div></div>`;
+     const chips=row.querySelector('.rv-chip-row');
+     allClasses.forEach(c=>{
+       const key=c.replace(/\s+/g,'').toUpperCase();
+       const b=document.createElement('button');b.type='button';b.textContent=c;b.style.cssText='padding:7px 13px;border-radius:99px;border:1px solid #c9d1e6;background:#fff;cursor:pointer;font-weight:700';
+       const paint=()=>{const on=cur.has(key);b.style.background=on?'#4a5df0':'#fff';b.style.color=on?'#fff':'#1a2033';b.style.borderColor=on?'#4a5df0':'#c9d1e6';};
+       b.onclick=()=>{cur.has(key)?cur.delete(key):cur.add(key);paint();row.querySelector('.rv-cur').textContent=label();};
+       paint();chips.appendChild(b);
+     });
+     row.querySelector('.rv-edit').onclick=()=>{const p=row.querySelector('.rv-chips');p.hidden=!p.hidden;};
+     row.querySelector('.rv-save').onclick=async()=>{
+       const {data:d,error:e}=await sb.rpc('kv_admin_add_reviewer',{p_email:r.email,p_name:r.name||'',p_classes:[...cur].join(',')});
+       if(e||!d||!d.ok){toast('Сақтау қатесі.','error');return;}
+       toast('Сыныптар сақталды.');loadReviewers();
+     };
+     row.querySelector('.icon-btn.danger').onclick=async()=>{if(!confirm('Бұл мұғалімнің тексеру рұқсаты өшірілсін бе?'))return;await sb.rpc('kv_admin_remove_reviewer',{p_uid:r.uid});loadReviewers();};
      box.appendChild(row);
    });
  }
