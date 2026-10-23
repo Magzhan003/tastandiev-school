@@ -113,7 +113,7 @@
       <p class="admin-hint">Бұл жасырын бөлім. Кәдімгі келушілер оны көрмейді.</p>
     </div>
     <div id="admin-content" hidden>
-      <div class="admin-tabs" role="tablist"><button class="admin-tab active" data-admin-tab="site">🌐 Сайт</button><button class="admin-tab" data-admin-tab="kitap">📚 KITAPVERSE</button></div>
+      <div class="admin-tabs" role="tablist"><button class="admin-tab active" data-admin-tab="site">🌐 Сайт</button><button class="admin-tab" data-admin-tab="kitap">📚 KITAPVERSE</button><button class="admin-tab" data-admin-tab="progress">👥 Оқушылар</button></div>
       <div class="admin-tab-panel active" data-admin-panel="site"><span class="section-label">САЙТТЫ БАСҚАРУ</span><h2>Жаңалықтар, жетістіктер, құжаттар және тесттер</h2>
 
       <div class="admin-form" id="a-news-form">
@@ -187,6 +187,7 @@
         </select>
         <textarea id="a-book-text" placeholder="Қысқаша сипаттама (міндетті емес)"></textarea>
         <input id="a-book-drive" type="url" placeholder="Google Drive PDF сілтемесі">
+        <label class="admin-check"><input type="checkbox" id="a-book-bonus"> 🎁 Бонус кітап (кітаптардың төменінде бөлек көрсетіледі, апталық шектеуге кірмейді)</label>
         <p class="admin-hint" id="a-book-pdf-hint">PDF-ті Google Drive-қа жүктеп, «Anyone with the link» режимін қосып, осы жерге сілтемесін қойыңыз. Supabase Storage қолданылмайды.</p>
         <div class="admin-actions">
           <button class="btn btn-primary" id="a-book-add">Кітапты қосу</button>
@@ -335,6 +336,36 @@
       <div class="admin-section-title">Жарияланған құжаттар</div>
       <div class="admin-list" id="a-doc-admin-list"><p class="admin-empty">Жүктелуде...</p></div>
 
+      </div>
+      <div class="admin-tab-panel" data-admin-panel="progress"><span class="section-label">ОҚУШЫЛАР</span><h2>Оқушылар прогресі: кітаптар, квесттер, тесттер</h2>
+        <div class="admin-form" id="a-pg-settings">
+          <h3>⚙️ Апталық квест баптаулары</h3>
+          <label class="admin-hint">Айына неше кітап/квест (бір оқушыға)</label><input id="a-pg-perweek" type="number" min="1" max="20" value="4">
+          <label class="admin-hint">Бір квеске уақыт (минут)</label><input id="a-pg-limit" type="number" min="3" max="120" value="20">
+          <div class="admin-actions"><button class="btn btn-primary" id="a-pg-save-settings" type="button">Сақтау</button></div>
+          <p class="admin-hint">Әр оқушыға айына осынша кітап беріледі: алдымен өз сыныбының кітаптары (кітаптар тізіміндегі ↑↓ тәртібімен), олар біткенде — жақын сыныптардікі. Дедлайн — айдың соңы.</p>
+        </div>
+        <div class="admin-form">
+          <h3>👥 Оқушылар тізімі</h3>
+          <select id="a-pg-class"><option value="">Барлық сыныптар</option></select>
+          <input id="a-pg-search" placeholder="Аты бойынша іздеу">
+          <div class="admin-list" id="a-pg-list"><p class="admin-empty">Бұл қойындыны ашқанда жүктеледі...</p></div>
+        </div>
+        <div class="admin-form" id="a-pg-detail" hidden></div>
+        <div class="admin-form" id="a-rv-form">
+          <h3>🧑‍🏫 Тексеруші мұғалімдер</h3>
+          <p class="admin-hint">1) Supabase → Authentication → Users → Add user: мұғалімнің поштасы мен құпиясөзін жасаңыз. 2) Сол поштаны осында қосыңыз. Мұғалім <b>teacher.html</b> бетінен кіреді (мысалы: сайт-адресі/teacher.html).</p>
+          <input id="a-rv-email" type="email" placeholder="Мұғалімнің поштасы (Supabase-те жасалған)">
+          <input id="a-rv-name" placeholder="Аты-жөні">
+          <input id="a-rv-classes" placeholder="Сыныптар (үтірмен: 6А, 6Б). Бос қалдырсаңыз — барлық сынып">
+          <div class="admin-actions"><button class="btn btn-primary" id="a-rv-add" type="button">Мұғалімді қосу</button></div>
+          <div class="admin-list" id="a-rv-list"></div>
+        </div>
+        <div class="admin-form" id="a-reset-form">
+          <h3>⚠️ Барлық оқушылардың нәтижесін нөлдеу</h3>
+          <p class="admin-hint"><b>Квесттерді нөлдеу:</b> барлық квест нәтижесі, оқылған кітаптар және ай кестесі өшеді, квесттен келген ұпайлар рейтингтен алынады. Мазмұндама, тест, викторина, battle сақталады.<br><b>Толық нөлдеу:</b> жоғарыдағының бәрі + мазмұндама, тест, викторина, battle нәтижелері және сынып ұпайлары (0). Қайтару мүмкін емес.</p>
+          <div class="admin-actions"><button class="btn btn-light" id="a-reset-quests" type="button" style="color:#c0392b">🗑 Квесттерді нөлдеу</button><button class="btn btn-light" id="a-reset-full" type="button" style="color:#c0392b">☢️ Толық нөлдеу</button></div>
+        </div>
       </div><!-- /kitap admin -->
       <div class="admin-actions"><button class="btn btn-light" id="a-logout">Шығу</button></div>
       <p class="admin-hint">Өзгерістер бірден барлық келушілерге көрінеді (ортақ бұлттық сақтау арқылы).</p>

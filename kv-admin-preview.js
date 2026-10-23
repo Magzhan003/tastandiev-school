@@ -37,7 +37,7 @@
     return `<div class="pv-test"><h3>📝 ${esc(val('a-test-title'))||empty('Тест атауы')}</h3><p>${nl(val('a-test-description'))||''}</p>${qHtml(questions($('a-test-bulk-list')),3)}</div>`;}},
   {form:'a-book-form',dark:true,title:'Кітап карточкасы (KITAPVERSE)',render(){
     const g=val('a-book-grade');
-    return `<div class="pv-book"><div class="pv-book-icon">${esc(val('a-book-icon'))||'📕'}</div><div><h3>${esc(val('a-book-title'))||empty('Кітап атауы')}</h3><small>${esc(val('a-book-author'))||empty('Авторы')} · ${g?g+' сынып':empty('сынып')}</small><p>${nl(val('a-book-text'))}</p><div class="pv-book-actions"><span class="pv-btn">✅ Мен оқыдым</span>${val('a-book-drive')?'<span class="pv-btn ghost">📄 Оқу (PDF)</span>':''}</div></div></div>`;}},
+    return `<div class="pv-book"><div class="pv-book-icon">${esc(val('a-book-icon'))||'📕'}</div><div><h3>${esc(val('a-book-title'))||empty('Кітап атауы')}</h3><small>${esc(val('a-book-author'))||empty('Авторы')} · ${g?g+' сынып':empty('сынып')}</small><p>${nl(val('a-book-text'))}</p><div class="pv-book-actions">${$('a-book-bonus')&&$('a-book-bonus').checked?'<span class="pv-btn">🎁 Бонус кітап</span>':''}${val('a-book-drive')?'<span class="pv-btn ghost">📄 Оқу (PDF)</span>':''}</div></div></div>`;}},
   {form:'a-quest-form',dark:true,title:'Квест (KITAPVERSE)',render(){
     const sel=$('a-quest-book');const book=sel&&sel.value?sel.options[sel.selectedIndex].text:'';
     return `<div class="pv-quest"><span class="pv-eyebrow">🎮 КВЕСТ</span><h3>${esc(val('a-quest-title'))||empty('Квест атауы')}</h3>${book?`<small>📖 ${esc(book)}</small>`:''}<p>${nl(val('a-quest-description'))}</p>${qHtml(questions($('a-quest-bulk-list')),3)}</div>`;}},

@@ -261,6 +261,7 @@ function toast(message,type='success'){
  let editingBookId=null;
  const bookForm=document.getElementById('a-book-form');
  const bookIconI=document.getElementById('a-book-icon'), bookTitleI=document.getElementById('a-book-title'), bookAuthorI=document.getElementById('a-book-author'), bookTextI=document.getElementById('a-book-text'), bookGradeI=document.getElementById('a-book-grade');
+ const bookBonusI=document.getElementById('a-book-bonus');
  const bookDriveI=document.getElementById('a-book-drive'), bookPdfHint=document.getElementById('a-book-pdf-hint');
  const bookAddBtn=document.getElementById('a-book-add'), bookCancelBtn=document.getElementById('a-book-cancel'), bookFormTitle=document.getElementById('a-book-form-title');
 
@@ -269,13 +270,13 @@ function toast(message,type='success'){
    bookFormTitle.textContent='✏️ Кітапты өңдеу';
    bookAddBtn.textContent='Өзгерісті сақтау';
    bookIconI.value=item.icon||''; bookTitleI.value=item.title||''; bookAuthorI.value=item.author||''; bookTextI.value=item.description||''; bookGradeI.value=item.grade||'';
-   bookDriveI.value=item.drive_url||item.pdf_url||''; bookPdfHint.hidden=false;
+   bookDriveI.value=item.drive_url||item.pdf_url||''; if(bookBonusI)bookBonusI.checked=!!item.is_bonus; bookPdfHint.hidden=false;
    bookForm.scrollIntoView({behavior:'smooth',block:'center'});
  }
  function stopEditBook(){
    editingBookId=null; bookForm.classList.remove('editing');
    bookFormTitle.textContent='📖 Кітапханаға кітап қосу'; bookAddBtn.textContent='Кітапты қосу';
-   bookIconI.value='';bookTitleI.value='';bookAuthorI.value='';bookTextI.value='';bookGradeI.value=''; bookDriveI.value=''; bookPdfHint.hidden=true;
+   bookIconI.value='';bookTitleI.value='';bookAuthorI.value='';bookTextI.value='';bookGradeI.value=''; bookDriveI.value=''; if(bookBonusI)bookBonusI.checked=false; bookPdfHint.hidden=true;
  }
  bookCancelBtn.onclick=stopEditBook;
 
@@ -286,11 +287,13 @@ function toast(message,type='success'){
    if(!drive_url){toast('Google Drive сілтемесін енгізіңіз.','error');return;}
    setBusy(bookAddBtn,true,editingBookId?'Өзгерісті сақтау':'Кітапты қосу');
    try{
-     const payload={icon,title,author,description,grade,drive_url};
+     const payload={icon,title,author,description,grade,drive_url,is_bonus:!!bookBonusI?.checked};
      let error;
      if(editingBookId){
        ({error}=await sb.from('library_books').update(payload).eq('id',editingBookId));
      } else {
+       const last=await sb.from('library_books').select('sort_order').eq('grade',grade).order('sort_order',{ascending:false}).limit(1);
+       payload.sort_order=((last.data&&last.data[0]&&last.data[0].sort_order)||0)+1;
        ({error}=await sb.from('library_books').insert(payload));
      }
      if(error)throw error;
@@ -304,6 +307,13 @@ function toast(message,type='success'){
    }
  };
 
+async function moveBook(list,pos,dir){
+   const arr=[...list],to=pos+dir;if(to<0||to>=arr.length)return;
+   [arr[pos],arr[to]]=[arr[to],arr[pos]];
+   const res=await Promise.all(arr.map((x,i)=>sb.from('library_books').update({sort_order:i+1}).eq('id',x.id)));
+   if(res.some(r=>r&&r.error)){toast('Тәртіпті сақтау қатесі.','error');return;}
+   await refreshAdminLists();
+ }
  async function deleteBook(id){
    if(!confirm('Бұл кітапты өшіруге сенімдісіз бе?'))return;
    const {error}=await sb.from('library_books').delete().eq('id',id);
@@ -1182,13 +1192,16 @@ async function refreshAdminLists(){
 
    const bookBox=document.getElementById('a-book-admin-list');
    if(bookBox){
-     const b=await sb.from('library_books').select('*').order('grade',{ascending:true}).order('created_at',{ascending:false});
+     const b=await sb.from('library_books').select('*').order('grade',{ascending:true}).order('sort_order',{ascending:true}).order('created_at',{ascending:true});
      bookBox.innerHTML='';
      if(!b.data || !b.data.length){ bookBox.innerHTML='<p class="admin-empty">Әзірге кітап жоқ.</p>'; }
-     else b.data.forEach(item=>{
+     else b.data.forEach((item,idx)=>{
+       const same=b.data.filter(x=>x.grade===item.grade),pos=same.findIndex(x=>x.id===item.id);
        const row=document.createElement('div'); row.className='admin-list-item';
-       row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(item.icon||'📕')} ${escapeHtml(item.title)}</strong><small>${item.grade?item.grade+' сынып · ':''}${escapeHtml(item.author||'')}</small></div><div class="ali-actions"><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
-       row.querySelector('.icon-btn:not(.danger)').onclick=()=>startEditBook(item);
+       row.innerHTML=`<div class="ali-info"><strong>${item.is_bonus?'🎁':'№'+(pos+1)} ${escapeHtml(item.icon||'📕')} ${escapeHtml(item.title)}</strong><small>${item.grade?item.grade+' сынып · ':''}${escapeHtml(item.author||'')}</small></div><div class="ali-actions"><button class="icon-btn up" title="Жоғары (ертерек беріледі)" ${pos===0?'disabled':''}>↑</button><button class="icon-btn down" title="Төмен (кейінірек беріледі)" ${pos===same.length-1?'disabled':''}>↓</button><button class="icon-btn" title="Өңдеу" aria-label="Өңдеу">✎</button><button class="icon-btn danger" title="Өшіру" aria-label="Өшіру">🗑</button></div>`;
+       row.querySelector('.up').onclick=()=>moveBook(same,pos,-1);
+       row.querySelector('.down').onclick=()=>moveBook(same,pos,1);
+       row.querySelector('.icon-btn:not(.danger):not(.up):not(.down)').onclick=()=>startEditBook(item);
        row.querySelector('.icon-btn.danger').onclick=()=>deleteBook(item.id);
        bookBox.appendChild(row);
      });
@@ -1285,6 +1298,118 @@ async function refreshAdminLists(){
      });
    }
  }
+
+
+ /* ---------- KITAPVERSE: оқушылар прогресі (кітаптар, квесттер, тесттер) ---------- */
+ const PG_STATUS={done:'✅ өтті',pending:'⏳ тексеруде',failed:'❌ өтпеді',violation:'⛔ ереже бұзылды',started:'⏳ үзілген',zeroed:'0️⃣ нөлденген',open:'⬜ әлі жоқ'};
+ const PG_REASON={tab:'басқа қойынды',blur:'басқа терезе',unload:'бетті жапты',reopened:'бетті жаңартты',timeout:'уақыт бітті',hidden:'басқа қойынды',left:'шықты'};
+ const pgFmt=d=>d?new Date(d).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+ let pgRows=[], pgOpenId=null;
+ async function loadPgSettings(){
+   const {data}=await sb.from('kv_quest_settings').select('*').eq('id',1).maybeSingle();
+   if(data){document.getElementById('a-pg-perweek').value=data.per_week;document.getElementById('a-pg-limit').value=data.time_limit_min;}
+ }
+ document.getElementById('a-pg-save-settings')?.addEventListener('click',async()=>{
+   const per=parseInt(document.getElementById('a-pg-perweek').value,10),lim=parseInt(document.getElementById('a-pg-limit').value,10);
+   if(!(per>=1&&per<=10&&lim>=3&&lim<=120)){toast('Мәндерді тексеріңіз.','error');return;}
+   const {error}=await sb.from('kv_quest_settings').update({per_week:per,time_limit_min:lim}).eq('id',1);
+   toast(error?'Сақтау қатесі.':'Баптаулар сақталды.',error?'error':'success');
+ });
+ async function loadStudentProgress(){
+   const box=document.getElementById('a-pg-list');if(!box)return;
+   box.innerHTML='<p class="admin-empty">Жүктелуде...</p>';
+   loadPgSettings();loadReviewers();
+   const {data,error}=await sb.rpc('kv_admin_students_overview');
+   if(error){box.innerHTML='<p class="admin-empty">Қате: KITAPVERSE-V5-QUESTS.sql Supabase-те орындалғанын тексеріңіз.</p>';return;}
+   pgRows=data||[];
+   const sel=document.getElementById('a-pg-class'),cur=sel.value;
+   const classes=[...new Set(pgRows.map(r=>r.class_name))];
+   sel.innerHTML='<option value="">Барлық сыныптар</option>'+classes.map(c=>`<option>${escapeHtml(c)}</option>`).join('');sel.value=classes.includes(cur)?cur:'';
+   renderPgList();
+ }
+ function renderPgList(){
+   const box=document.getElementById('a-pg-list'),cls=document.getElementById('a-pg-class').value,q=document.getElementById('a-pg-search').value.trim().toLowerCase();
+   const rows=pgRows.filter(r=>(!cls||r.class_name===cls)&&(!q||r.full_name.toLowerCase().includes(q)));
+   if(!rows.length){box.innerHTML='<p class="admin-empty">Оқушы табылмады.</p>';return;}
+   box.innerHTML='';
+   rows.forEach(r=>{
+     const row=document.createElement('div');row.className='admin-list-item';row.style.cursor='pointer';
+     row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(r.full_name)} · ${escapeHtml(r.class_name)}</strong><small>📚 ${r.books_read} кітап · ✅ ${r.quests_done} квест (${r.quest_points} ұпай) · ⏳ ${r.quests_pending} тексеруде · ⛔ ${r.quests_bad} · 🧪 ${r.tests} тест · 📝 ${r.retellings} мазмұндама</small></div><div class="ali-actions"><button class="icon-btn" title="Ашу">›</button></div>`;
+     row.onclick=()=>openPgDetail(r.student_id);box.appendChild(row);
+   });
+ }
+ document.getElementById('a-pg-class')?.addEventListener('change',renderPgList);
+ document.getElementById('a-pg-search')?.addEventListener('input',renderPgList);
+ document.querySelector('[data-admin-tab="progress"]')?.addEventListener('click',loadStudentProgress);
+ async function openPgDetail(id){
+   pgOpenId=id;const box=document.getElementById('a-pg-detail');box.hidden=false;box.innerHTML='<p class="admin-empty">Жүктелуде...</p>';
+   const {data,error}=await sb.rpc('kv_admin_student_detail',{p_student_id:id});
+   if(error||!data){box.innerHTML='<p class="admin-empty">Деректер жүктелмеді.</p>';return;}
+   const e=escapeHtml,st=s=>PG_STATUS[s]||s;
+   const list=(arr,fn,empty)=>arr&&arr.length?arr.map(fn).join(''):`<p class="admin-empty">${empty}</p>`;
+   box.innerHTML=`<h3>👤 ${e(data.student.full_name)} · ${e(data.student.class_name)}</h3>
+   <div class="admin-actions"><button class="btn btn-light" data-pg="reroll">🎲 Аптаны қайта таңдау</button><button class="btn btn-light" data-pg="reset" style="color:#c0392b">🗑 Барлық квест нәтижесін нөлдеу</button><button class="btn btn-light" data-pg="close">Жабу</button></div>
+   <h4>📅 Осы кезең (${e(String(data.period.start).slice(5))} – ${e(String(data.period.end).slice(5))})</h4>
+   ${list(data.schedule,s=>`<div class="admin-list-item"><div class="ali-info"><strong>${e(s.book||s.quest)}</strong><small>${s.grade?s.grade+' сынып · ':''}дедлайн ${e(String(s.deadline).slice(5))} · ${st(s.state)}</small></div></div>`,'Әзірге жоқ')}
+   <h4>🧩 Квесттер тарихы</h4>
+   ${list(data.quests,x=>`<div class="admin-list-item"><div class="ali-info"><strong>${e(x.book||x.quest)}</strong><small>${st(x.status)}${x.reason?' ('+e(PG_REASON[x.reason]||x.reason)+')':''} · ${x.score}/${x.total} · ${pgFmt(x.at)}${x.video_url&&/^https?:\/\//i.test(x.video_url)?` · <a href="${e(x.video_url)}" target="_blank" rel="noopener">🎥 видео</a>`:''}${x.comment?' · «'+e(x.comment)+'»':''}</small></div><div class="ali-actions"><button class="btn btn-light" data-pg="chance" data-id="${x.attempt_id}" title="Квестті қайта өтуге рұқсат">🔁 Мүмкіндік</button>${x.status==='done'&&x.score>0?`<button class="btn btn-light" data-pg="zero" data-id="${x.attempt_id}">0️⃣ Нөлдеу</button>`:''}</div></div>`,'Квест өтпеген')}
+   <h4>📚 Оқыған кітаптар (${data.books.length})</h4>
+   ${list(data.books,b=>`<div class="admin-list-item"><div class="ali-info"><strong>${e(b.title)}${b.bonus?' 🎁':''}</strong><small>${b.grade?b.grade+' сынып · ':''}${pgFmt(b.read_at)}</small></div></div>`,'Әзірге жоқ')}
+   <h4>🧪 Тесттер</h4>
+   ${list(data.tests,t=>`<div class="admin-list-item"><div class="ali-info"><strong>${e(t.test)}</strong><small>${t.score}/${t.total} · ${pgFmt(t.at)}</small></div><div class="ali-actions"><button class="btn btn-light" data-pg="tchance" data-id="${t.attempt_id}">🔁 Мүмкіндік</button></div></div>`,'Тест тапсырмаған')}
+   <p class="admin-hint">🧠 Викторина: ${data.quiz.count} жауап, ${data.quiz.points} ұпай · ⚔️ Battle: ${data.battles.count} қатысу, ${data.battles.points} ұпай</p>
+   <h4>📝 Мазмұндамалар (${data.retellings.length})</h4>
+   ${list(data.retellings,r=>`<details class="admin-list-item" style="display:block"><summary><strong>${e(r.book)}</strong> <small>${pgFmt(r.at)}</small></summary><p style="white-space:pre-wrap;margin:10px 0 0">${e(r.body)}</p></details>`,'Жоқ')}`;
+   box.scrollIntoView({behavior:'smooth',block:'start'});
+ }
+ document.getElementById('a-pg-detail')?.addEventListener('click',async ev=>{
+   const b=ev.target.closest('[data-pg]');if(!b)return;
+   const act=b.dataset.pg,id=Number(b.dataset.id||0);
+   const call=async(fn,args,msg)=>{const {error}=await sb.rpc(fn,args);if(error){toast('Қате шықты.','error');return false;}toast(msg);await openPgDetail(pgOpenId);loadStudentProgress();return true;};
+   if(act==='close'){document.getElementById('a-pg-detail').hidden=true;return;}
+   if(act==='chance'){if(confirm('Оқушыға бұл квесті қайта өтуге мүмкіндік берілсін бе? Ұпай қайтарылады.'))await call('kv_admin_quest_chance',{p_attempt_id:id},'Мүмкіндік берілді.');}
+   else if(act==='zero'){if(confirm('Бұл квесттің нәтижесін нөлдейміз бе? Ұпай рейтингтен алынады.'))await call('kv_admin_quest_zero',{p_attempt_id:id},'Нәтиже нөлденді.');}
+   else if(act==='tchance'){if(confirm('Оқушы бұл тестті қайта тапсыра алсын ба?'))await call('kv_admin_test_chance',{p_attempt_id:id},'Мүмкіндік берілді.');}
+   else if(act==='reset'){if(confirm('БАРЛЫҚ квест нәтижелері, оқыған кітаптар және апталық кесте өшіріледі, ұпайлар рейтингтен алынады. Жалғастырасыз ба?'))await call('kv_admin_reset_student',{p_student_id:pgOpenId},'Оқушының нәтижелері нөлденді.');}
+   else if(act==='reroll'){await call('kv_admin_reroll_week',{p_student_id:pgOpenId},'Апта қайта таңдалды.');}
+ });
+
+ /* ---------- Тексеруші мұғалімдер + толық нөлдеу ---------- */
+ async function loadReviewers(){
+   const box=document.getElementById('a-rv-list');if(!box)return;
+   const {data,error}=await sb.rpc('kv_admin_reviewers');
+   if(error){box.innerHTML='<p class="admin-empty">Қате: V6 SQL орындалғанын тексеріңіз.</p>';return;}
+   if(!data||!data.length){box.innerHTML='<p class="admin-empty">Мұғалім әлі қосылмаған.</p>';return;}
+   box.innerHTML='';
+   data.forEach(r=>{
+     const row=document.createElement('div');row.className='admin-list-item';
+     row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(r.name||r.email)}</strong><small>${escapeHtml(r.email||'')} · ${r.classes&&r.classes.length?escapeHtml(r.classes.join(', ')):'барлық сынып'}</small></div><div class="ali-actions"><button class="icon-btn danger" title="Өшіру">🗑</button></div>`;
+     row.querySelector('.icon-btn').onclick=async()=>{if(!confirm('Бұл мұғалімнің тексеру рұқсаты өшірілсін бе?'))return;await sb.rpc('kv_admin_remove_reviewer',{p_uid:r.uid});loadReviewers();};
+     box.appendChild(row);
+   });
+ }
+ document.getElementById('a-rv-add')?.addEventListener('click',async()=>{
+   const email=document.getElementById('a-rv-email').value.trim(),name=document.getElementById('a-rv-name').value.trim(),classes=document.getElementById('a-rv-classes').value.trim();
+   if(!email){toast('Поштаны енгізіңіз.','error');return;}
+   const {data,error}=await sb.rpc('kv_admin_add_reviewer',{p_email:email,p_name:name,p_classes:classes});
+   if(error||!data||!data.ok){toast(data&&data.error==='no_user'?'Бұл пошта Supabase → Authentication → Users ішінде жоқ. Алдымен сол жерде аккаунт жасаңыз.':'Қате шықты.','error');return;}
+   ['a-rv-email','a-rv-name','a-rv-classes'].forEach(i=>document.getElementById(i).value='');
+   toast('Мұғалім қосылды.');loadReviewers();
+ });
+ async function resetAll(full){
+   const {data,error}=await sb.rpc('kv_admin_reset_all',{p_full:full});
+   if(error||!data||!data.ok){toast('Нөлдеу кезінде қате шықты.','error');return;}
+   toast(`Нөлденді: ${data.attempts} квест нәтижесі, ${data.books} оқылған кітап.`);
+   document.getElementById('a-pg-detail').hidden=true;loadStudentProgress();refreshAdminLists();
+ }
+ document.getElementById('a-reset-quests')?.addEventListener('click',()=>{
+   if(confirm('Барлық оқушының квест нәтижелері, оқылған кітаптары және ай кестесі нөлденеді. Бәрі қайтадан басталады. Жалғастырасыз ба?'))resetAll(false);
+ });
+ document.getElementById('a-reset-full')?.addEventListener('click',()=>{
+   if(!confirm('ТОЛЫҚ нөлдеу: квесттер, мазмұндамалар, тест, викторина, battle және сынып ұпайлары. Қайтару мүмкін емес!'))return;
+   if((prompt('Растау үшін НӨЛДЕУ деп жазыңыз')||'').trim().toUpperCase()!=='НӨЛДЕУ'){toast('Бас тартылды.','error');return;}
+   resetAll(true);
+ });
 
  await loadPublic(); await loadQuestBookOptions(); await loadFolderOptions(); await loadSchedule();
 })();

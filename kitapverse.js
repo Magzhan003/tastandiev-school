@@ -107,6 +107,8 @@ function normalizeClassList(s){
      const av=document.getElementById('kv-profile-avatar');if(av)av.textContent=initials||'11';
    }
    renderBooks();
+   if(logged){const g=parseInt(currentStudent.class_name,10);if(g)selectGrade(g);renderBooks();}
+   renderRetelling();
  }
  async function loadStudentStats(){
    if(!currentStudent)return;
@@ -146,137 +148,221 @@ function normalizeClassList(s){
  loginBtn?.addEventListener('click',()=>{loginBox.hidden=!loginBox.hidden;if(!loginBox.hidden)loginIin?.focus();});
  loginSubmit?.addEventListener('click',loginStudent);
  [loginIin,loginPassword].forEach(x=>x?.addEventListener('keydown',e=>{if(e.key==='Enter')loginStudent();}));
- logoutBtn?.addEventListener('click',async()=>{await sb.auth.signOut();currentStudent=null;currentProgress=new Set();if(loginIin)loginIin.value='';if(loginPassword)loginPassword.value='';if(loginBox)loginBox.hidden=true;renderStudentBar();toast('Профильден шықтыңыз.');});
- async function markBookRead(book){
-   if(!currentStudent){loginBox.hidden=false;loginIin?.focus();toast('Алдымен оқушы аккаунтымен кіріңіз.','error');return;}
-   const questId=questIdForBook(book);
-   if(currentProgress.has(String(book.id))){
-     if(questId){document.getElementById(`kv-quest-${questId}`)?.scrollIntoView({behavior:'smooth',block:'center'});}
-     else toast('Бұл кітап бұрын расталған.','success');
-     return;
-   }
-   if(!questId){
-     toast('Бұл кітапқа квест әлі қосылмаған. Әкімшілік квестті байланыстырады.','error');
-     return;
-   }
-   // "Мен оқыдым" does NOT mark the book as read. It only opens its quest.
-   openedQuests.add(String(questId));
-   await loadQuests();
-   const card=document.getElementById(`kv-quest-${questId}`);
-   if(card){card.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>card.querySelector('button')?.click(),250);}
-   toast('🧩 Квест ашылды. Өткізіп болғаннан кейін кітап расталады!');
+ logoutBtn?.addEventListener('click',async()=>{await sb.auth.signOut();currentStudent=null;currentProgress=new Set();if(loginIin)loginIin.value='';if(loginPassword)loginPassword.value='';if(loginBox)loginBox.hidden=true;renderStudentBar();loadQuests();toast('Профильден шықтыңыз.');});
+ /* ---- Weekly quests (all rules are enforced on the server) ---- */
+ let weeklyQ=[], bonusQ=[], questPeriod=null, activeRun=null;
+ const KV_REASONS={tab:'басқа қойындыға өтті',blur:'басқа терезеге өтті',unload:'бетті жапты/жаңартты',reopened:'бетті жаңартты',timeout:'уақыт бітті',hidden:'басқа қойындыға өтті',left:'тесттен шықты'};
+ function fmtDate(s){if(!s)return '';const p=String(s).slice(0,10).split('-');return `${p[2]}.${p[1]}`;}
+ function loginPromptHtml(text){return `<div class="kv-login-required"><span>🔐</span><div><b>${text}</b><small>Квесттер әр оқушыға жеке беріледі.</small></div><button class="btn btn-primary" onclick="document.getElementById('kv-login-btn')?.click()">Кіру →</button></div>`;}
+ function questCard(q,kind){
+   const el=document.createElement('div');
+   const bad=['violation','started','zeroed','failed'].includes(q.state);
+   el.className=`kv-quest-card kv-wq state-${bad?'bad':q.state}`;el.id=`kv-quest-${q.quest_id}`;
+   const book=q.book_title?`<p class="kv-wq-book">${escapeHtml(q.book_icon||'📕')} ${escapeHtml(q.book_title)}${q.grade?` · ${q.grade} сынып`:''}</p>`:`<p>${escapeHtml(q.description||'Оқу квесті')}</p>`;
+   const meta=kind==='week'?`<span class="kv-quest-deadline">📅 Дедлайн: ${fmtDate(q.deadline)}</span>`:`<span class="kv-quest-deadline bonus">🎁 Бонус · мерзімсіз</span>`;
+   const link=q.drive_url?`<a class="kv-book-pdf" href="${escapeHtml(q.drive_url)}" target="_blank" rel="noopener">📖 Кітапты оқу <span>↗</span></a>`:'';
+   let action;
+   if(q.state==='open')action='<button class="btn btn-primary kv-q-start">🧩 Квестті бастау →</button>';
+   else if(q.state==='done')action=`<button class="btn btn-light" disabled>✅ Өтті · ${q.score}/${q.total}</button>`;
+   else if(q.state==='pending')action=`<button class="btn btn-light" disabled>⏳ Мұғалім тексеруде · авто ${q.score}/${q.total}</button><button class="btn btn-light kv-q-video">🎥 ${q.video_url?'Видео есепті өзгерту':'Видео есеп қосу'}</button>`;
+   else if(q.state==='failed')action=`<button class="btn btn-light" disabled>❌ Өтпеді · 0 ұпай</button>${q.comment?`<small class="kv-wq-hint">Мұғалім: ${escapeHtml(q.comment)}</small>`:''}`;
+   else if(q.state==='zeroed')action='<button class="btn btn-light" disabled>0️⃣ Нәтиже нөлденді</button>';
+   else action='<button class="btn btn-light" disabled>⛔ Тоқтатылды · 0 ұпай</button><small class="kv-wq-hint">Ереже бұзылды. Мұғалім қосымша мүмкіндік бере алады.</small>';
+   el.innerHTML=`<b>🎮</b><h3>${escapeHtml(q.title)}</h3>${book}${meta}<div class="kv-wq-actions">${link}${action}</div>`;
+   el.querySelector('.kv-q-start')?.addEventListener('click',()=>startQuestFlow(q,kind));
+   el.querySelector('.kv-q-video')?.addEventListener('click',()=>videoModal(q));
+   return el;
  }
- /* ---- Native quests ---- */
- async function submitQuestAttempt(questId,name,cls,answers){
-   const {data,error}=await sb.rpc('submit_quest_attempt',{p_quest_id:questId,p_student_name:name,p_class_name:cls,p_answers:answers});
-   if(error)throw error; return Array.isArray(data)?data[0]:data;
- }
- async function renderQuest(box,quest){
-   const {data:questions,error}=await sb.from('quest_questions_public').select('*').eq('quest_id',quest.id).order('sequence_no',{ascending:true});
-   if(error||!questions?.length){box.innerHTML='<p class="kv-empty">Бұл квесттің сұрақтары әлі дайын емес.</p>';return;}
-   if(!currentStudent){box.innerHTML='<div class="kv-login-required"><span>🔐</span><div><b>Квестке қатысу үшін кіріңіз</b><small>Профиль арқылы нәтижеңіз бен XP дұрыс есептеледі.</small></div><button class="btn btn-primary" onclick="document.getElementById(\'kv-login-btn\')?.click()">Кіру →</button></div>';return;}
-   box.innerHTML=`<div class="kv-quest-card kv-quest-wide"><div class="kv-quest-headline"><b>🎮</b><div><span class="kv-eyebrow">СЕНІҢ КВЕСТІҢ</span><h3>${escapeHtml(quest.title)}</h3></div><span class="kv-quest-player">👤 ${escapeHtml(currentStudent.full_name)}</span></div><p>${escapeHtml(quest.description||'Оқу квестін орындаңыз.')}</p><div class="kv-quest-questions"></div><button class="btn btn-primary quest-submit">Квестті аяқтау →</button><p class="kv-battle-note" style="margin-top:12px">⚠️ Бір оқушыға бір ғана мүмкіндік беріледі.</p></div>`;
-   const qbox=box.querySelector('.kv-quest-questions');
-   questions.forEach((q,i)=>{const card=document.createElement('div');card.className='kv-quest-question-card';card.innerHTML=`<div class="kv-quiz-progress">СҰРАҚ ${i+1} / ${questions.length}</div><div class="kv-quiz-question">${escapeHtml(q.question)}</div><label><input type="radio" name="qq-${q.id}" value="a"> ${escapeHtml(q.option_a)}</label><label><input type="radio" name="qq-${q.id}" value="b"> ${escapeHtml(q.option_b)}</label><label><input type="radio" name="qq-${q.id}" value="c"> ${escapeHtml(q.option_c)}</label><label><input type="radio" name="qq-${q.id}" value="d"> ${escapeHtml(q.option_d)}</label>`;qbox.appendChild(card);});
-   box.querySelector('.quest-submit').onclick=async()=>{const name=currentStudent.full_name,cls=currentStudent.class_name;const answers=questions.map(q=>{const x=box.querySelector(`input[name="qq-${q.id}"]:checked`);return {question_id:q.id,answer:x?x.value:null};});const btn=box.querySelector('.quest-submit');btn.disabled=true;try{const r=await submitQuestAttempt(quest.id,name,cls,answers);
-     // Only a successfully submitted quest confirms the linked book as read.
-     const linkedBook=allBooks.find(b=>String(b.quest_id)===String(quest.id)||String(b.id)===String(quest.book_id));
-     let bookConfirmed=false;
-     if(linkedBook && !currentProgress.has(String(linkedBook.id))){
-       const {error:progressError}=await sb.from('book_progress').upsert({student_id:currentStudent.id,book_id:linkedBook.id},{onConflict:'student_id,book_id'});
-       if(!progressError){currentProgress.add(String(linkedBook.id));bookConfirmed=true;}
-     } else if(linkedBook){bookConfirmed=true;}
-     openedQuests.delete(String(quest.id));
-     box.innerHTML=`<div class="kv-quiz-result"><p>🎉 Квест аяқталды!</p><div class="score">${r.score} / ${r.total}</div><p>${bookConfirmed?'📚 Кітап расталды. Нәтиже рейтингке қосылды.':'Нәтиже рейтингке қосылды. Кітап прогресін сақтау кезінде қайта байқап көріңіз.'}</p></div>`;
-     await loadStudentStats();await loadBooks();await loadQuests();await loadRating();await loadStudents();}catch(err){btn.disabled=false;const m=String(err?.message||'');if(m.includes('already submitted'))toast('Бұл квест бұрын тапсырылған.','error');else toast('Квест нәтижесін сақтау кезінде қате шықты.','error');}};
- }
- let allQuestCards=[];
- let questsExpanded=false;
- const QUEST_PAGE_SIZE=3;
  async function loadQuests(){
    if(!questListBox)return;
-   const {data,error}=await sb.from('quests').select('id,title,description,created_at,book_id').eq('published',true).order('created_at',{ascending:false});
-   allQuests=(!error&&data)?data:[];
-   if(error||!data?.length){questListBox.innerHTML='<p class="kv-empty">Жаңа квесттер жақында қосылады.</p>';allQuestCards=[];renderQuestToggle();renderBooks();return;}
-   // A quest linked to a book stays HIDDEN until the student presses «Мен оқыдым» on that book
-   // (openedQuests) or has already finished it (book is in currentProgress).
-   // Standalone quests (not linked to any book) are always shown.
-   const openedOrder=[...openedQuests].map(String).reverse();
-   allQuestCards=data.map(q=>{
-     const linkedBook=allBooks.find(b=>String(b.quest_id)===String(q.id)||String(b.id)===String(q.book_id));
-     const isBookQuest=!!q.book_id||!!linkedBook;
-     const opened=openedQuests.has(String(q.id));
-     const done=!!linkedBook&&currentProgress.has(String(linkedBook.id));
-     if(isBookQuest&&!opened&&!done)return null;
-     const card=document.createElement('div');card.className='kv-quest-card';card.id=`kv-quest-${q.id}`;
-     card.dataset.rank=String(opened&&!done?openedOrder.indexOf(String(q.id)):(done?1000:500));
-     card.innerHTML=`<b>🎮</b><h3>${escapeHtml(q.title)}</h3><p>${escapeHtml(q.description||'Оқу квесті')}</p>${isBookQuest?`<span class="kv-quest-lock">${done?'✅ Квест тапсырылды':'🔓 Квест ашық'}</span>`:''}<button class="btn btn-primary" ${done?'disabled':''}>${done?'✅ Тапсырылды':'🧩 Квестті бастау →'}</button>`;
-     if(!done)card.querySelector('button').onclick=()=>renderQuest(card,q);
-     return card;
-   }).filter(Boolean).sort((a,b)=>Number(a.dataset.rank)-Number(b.dataset.rank));
-   renderQuestList();
-   // Re-render the library so book cards immediately reflect quests linked via quest.book_id.
-   renderBooks();
- }
- function renderQuestList(){
-   if(!questListBox)return;
+   document.getElementById('kv-quest-toggle')?.remove();
+   const info=document.getElementById('kv-week-info');
+   if(!currentStudent){
+     weeklyQ=[];bonusQ=[];questPeriod=null;if(info)info.innerHTML='';
+     questListBox.innerHTML=loginPromptHtml('Апталық квестіңізді көру үшін кіріңіз');
+     renderBonus();renderBooks();return;
+   }
+   const {data,error}=await sb.rpc('kv_my_quests');
+   if(error||!data||!data.ok){
+     weeklyQ=[];bonusQ=[];questPeriod=null;if(info)info.innerHTML='';
+     questListBox.innerHTML='<p class="kv-empty">Квесттер жүктелмеді. Кейінірек қайта көріңіз.</p>';
+     renderBonus();renderBooks();return;
+   }
+   weeklyQ=data.weekly||[];bonusQ=data.bonus||[];questPeriod=data.period;
+   if(info)info.innerHTML=`<div class="kv-week-chip">📅 <b>${fmtDate(questPeriod.start)} – ${fmtDate(questPeriod.end)}</b> кезеңі</div><div class="kv-week-chip">🧩 Орындалды: <b>${questPeriod.done} / ${questPeriod.per_week}</b></div><div class="kv-week-chip">⏱ Бір квеске: <b>${questPeriod.time_limit_min} мин</b></div>`;
    questListBox.innerHTML='';
-   if(!allQuestCards.length){
-     questListBox.innerHTML='<p class="kv-empty">🧩 Квест осында ашылады. Кітапханадан кітап таңдап, оқып болған соң «Мен оқыдым» түймесін басыңыз.</p>';
-     renderQuestToggle();
-     return;
-   }
-   const visible=questsExpanded?allQuestCards:allQuestCards.slice(0,QUEST_PAGE_SIZE);
-   visible.forEach(card=>questListBox.appendChild(card));
-   renderQuestToggle();
+   if(!weeklyQ.length)questListBox.innerHTML='<p class="kv-empty">🎉 Қазір барлық кітаптардың квесттері өтілген немесе жаңа кітап қосылуын күтіңіз. Жаңа квесттер келесі айда ашылады.</p>';
+   weeklyQ.forEach(q=>questListBox.appendChild(questCard(q,'week')));
+   renderBonus();renderBooks();
  }
- function renderQuestToggle(){
-   let toggle=document.getElementById('kv-quest-toggle');
-   if(allQuestCards.length<=QUEST_PAGE_SIZE){toggle?.remove();return;}
-   if(!toggle){
-     toggle=document.createElement('button');
-     toggle.id='kv-quest-toggle';
-     toggle.className='btn btn-light kv-toggle-more';
-     questListBox.insertAdjacentElement('afterend',toggle);
-     toggle.onclick=()=>{questsExpanded=!questsExpanded;renderQuestList();};
+ function kvModal(html){
+   const ov=document.createElement('div');ov.className='kv-q-overlay';ov.innerHTML=`<div class="kv-q-modal">${html}</div>`;
+   document.body.appendChild(ov);document.body.classList.add('kv-q-lock');return ov;
+ }
+ function kvCloseModal(ov){ov.remove();if(!document.querySelector('.kv-q-overlay'))document.body.classList.remove('kv-q-lock');}
+ function startQuestFlow(q,kind){
+   if(!currentStudent){loginBox.hidden=false;loginIin?.focus();toast('Алдымен оқушы аккаунтымен кіріңіз.','error');return;}
+   if(activeRun)return;
+   const limit=questPeriod?.time_limit_min||20;
+   const ov=kvModal(`<div class="kv-q-warn"><div class="kv-q-warn-ico">⚠️</div><h3>Назар аударыңыз!</h3><ul><li>Квест кезінде <b>басқа қойындыны ашуға</b>, басқа терезеге немесе қосымшаға <b>өтуге болмайды</b>.</li><li>Тесттен шығуға, бетті жаңартуға немесе жабуға болмайды.</li><li>Ереже бұзылса, квест <b>бірден жабылады</b> және нәтиже <b>0</b> болады.</li><li>Бір квеске бір ғана мүмкіндік беріледі. Уақыт: <b>${limit} минут</b>.</li></ul><div class="kv-q-actions"><button class="btn btn-light" data-x>Болдырмау</button><button class="btn btn-primary" data-go>Түсіндім</button></div></div>`);
+   ov.querySelector('[data-x]').onclick=()=>kvCloseModal(ov);
+   const go=ov.querySelector('[data-go]');
+   go.onclick=async()=>{
+     go.disabled=true;go.textContent='Жүктелуде...';
+     const {data,error}=await sb.rpc('kv_quest_begin',{p_quest_id:q.quest_id});
+     if(error||!data||!data.ok){
+       const code=data?.error||'server';
+       const msg={violation:'Бұл квест бұрын үзілген. Мұғалімге хабарласыңыз.',already_done:'Бұл квест бұрын тапсырылған.',not_scheduled:'Бұл квест осы аптада сізге берілмеген.',inactive:'Квест әзірге дайын емес.',not_logged_in:'Қайта кіріңіз.'}[code]||'Квестті ашу кезінде қате шықты.';
+       kvCloseModal(ov);toast(msg,'error');await loadQuests();return;
+     }
+     runQuest(ov,q,kind,data);
+   };
+ }
+ async function runQuest(ov,q,kind,data){
+   const modal=ov.querySelector('.kv-q-modal');modal.classList.add('wide');
+   const qs=data.questions||[];let secs=Number(data.time_limit_seconds)||1200;
+   modal.innerHTML=`<div class="kv-q-top"><div><span class="kv-eyebrow">${kind==='week'?'АЙЛЫҚ КВЕСТ':'БОНУС КВЕСТ'}</span><h3>${escapeHtml(q.title)}</h3></div><div class="kv-q-timer">--:--</div></div><div class="kv-q-note">🔒 Басқа қойындыға немесе терезеге өтпеңіз — квест жабылады!</div><div class="kv-quest-questions"></div><button class="btn btn-primary quest-submit">Мұғалімге жіберу →</button>`;
+   const qbox=modal.querySelector('.kv-quest-questions');
+   qs.forEach((x,i)=>{const c=document.createElement('div');c.className='kv-quest-question-card';c.innerHTML=`<div class="kv-quiz-progress">СҰРАҚ ${i+1} / ${qs.length}</div><div class="kv-quiz-question">${escapeHtml(x.question)}</div>${['a','b','c','d'].map(k=>`<label><input type="radio" name="qq-${x.id}" value="${k}"> ${escapeHtml(x[k])}</label>`).join('')}`;qbox.appendChild(c);});
+   const {data:{session}}=await sb.auth.getSession();const token=session?.access_token||'';
+   let finished=false;const armedAt=Date.now()+1500;const timerEl=modal.querySelector('.kv-q-timer');
+   const fmt=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+   const tick=()=>{timerEl.textContent='⏱ '+fmt(Math.max(0,secs));timerEl.classList.toggle('low',secs<=60);if(secs<=0){submit();return;}secs--;};
+   let timer=null;
+   function detach(){clearInterval(timer);document.removeEventListener('visibilitychange',onVis);window.removeEventListener('blur',onBlur);window.removeEventListener('pagehide',onHide);activeRun=null;}
+   function sendAbort(reason){try{fetch(`${window.SUPABASE_URL}/rest/v1/rpc/kv_quest_abort`,{method:'POST',keepalive:true,headers:{apikey:window.SUPABASE_ANON_KEY,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({p_quest_id:q.quest_id,p_reason:reason})});}catch(e){}}
+   function violate(reason){
+     if(finished)return;finished=true;detach();sendAbort(reason);
+     modal.classList.remove('wide');
+     modal.innerHTML=`<div class="kv-q-warn bad"><div class="kv-q-warn-ico">⛔</div><h3>Квест тоқтатылды</h3><p>Сіз басқа қойындыға (терезеге) өттіңіз — бұл <b>тыйым салынған</b>. Квест жабылды, нәтиже <b>0 ұпай</b>.</p><p class="kv-q-sub">Қажет болса, мұғалім қосымша мүмкіндік береді.</p><div class="kv-q-actions"><button class="btn btn-primary" data-ok>Түсіндім</button></div></div>`;
+     modal.querySelector('[data-ok]').onclick=async()=>{kvCloseModal(ov);await loadQuests();};
    }
-   toggle.textContent=questsExpanded?'▲ Жасыру':`▼ Барлық квесттер (${allQuestCards.length})`;
+   function onVis(){if(document.hidden)violate('tab');}
+   function onBlur(){if(Date.now()>armedAt)violate('blur');}
+   function onHide(){if(!finished){finished=true;sendAbort('unload');}}
+   async function submit(){
+     if(finished)return;finished=true;detach();
+     const btn=modal.querySelector('.quest-submit');if(btn){btn.disabled=true;btn.textContent='Жіберілуде...';}
+     const answers=qs.map(x=>{const c=modal.querySelector(`input[name="qq-${x.id}"]:checked`);return {question_id:x.id,answer:c?c.value:null};});
+     const {data:r,error}=await sb.rpc('kv_quest_submit',{p_quest_id:q.quest_id,p_answers:answers});
+     if(error||!r||!r.ok){
+       modal.classList.remove('wide');
+       const m=r?.error==='timeout'?'Уақыт бітті — нәтиже 0.':'Нәтижені сақтау кезінде қате шықты.';
+       modal.innerHTML=`<div class="kv-q-warn bad"><div class="kv-q-warn-ico">⛔</div><h3>${m}</h3><div class="kv-q-actions"><button class="btn btn-primary" data-ok>Жабу</button></div></div>`;
+       modal.querySelector('[data-ok]').onclick=async()=>{kvCloseModal(ov);await loadQuests();};return;
+     }
+     modal.classList.remove('wide');
+     modal.innerHTML=`<div class="kv-quiz-result"><p>📨 Жауаптар мұғалімге жіберілді!</p><div class="score">${r.score} / ${r.total}</div><p>Бұл автоматты тексеру нәтижесі. Ұпай мұғалім «Өтті» белгілегеннен кейін ғана қосылады.</p><div class="kv-q-actions"><button class="btn btn-light" data-video>🎥 Видео есеп қосу</button><button class="btn btn-primary" data-ok>Жабу</button></div></div>`;
+     modal.querySelector('[data-ok]').onclick=()=>kvCloseModal(ov);
+     modal.querySelector('[data-video]').onclick=()=>videoModal({quest_id:q.quest_id,book_title:q.book_title,title:q.title});
+     await currentProgressReload();await loadStudentStats();await loadBooks();await loadQuests();await loadRating();await loadStudents();
+   }
+   modal.querySelector('.quest-submit').onclick=submit;
+   activeRun={q};
+   document.addEventListener('visibilitychange',onVis);window.addEventListener('blur',onBlur);window.addEventListener('pagehide',onHide);
+   tick();timer=setInterval(tick,1000);
+ }
+ function videoModal(q){
+   const canUp=!!String(window.KV_UPLOAD_URL||'').trim();
+   const ov=kvModal(`<div class="kv-q-warn"><div class="kv-q-warn-ico">🎥</div><h3>Видео есеп</h3><p>Міндетті емес. Кітап туралы қысқа видео түсіріп, мұғалімге жіберіңіз.${canUp?' Видео бірден сайтқа жүктеледі (ең көбі 100 МБ).':''}</p>${canUp?'<label class="kv-vid-pick"><input type="file" id="kv-video-file" accept="video/*"><span>🎥 Бейнені таңдау</span></label><div class="kv-vid-name" id="kv-video-name"></div><div class="kv-vid-bar" hidden><i></i></div><div class="kv-vid-status" id="kv-video-status"></div>':'<p class="kv-q-sub">Видео жүктеу әлі қосылмаған — сілтемені төменге қойыңыз.</p>'}<details class="kv-vid-link"${canUp&&!q.video_url?'':' open'}><summary>${canUp?'немесе видеоға сілтеме қою':'Видеоға сілтеме'}</summary><input class="kv-rt-select" id="kv-video-url" placeholder="https://..." value="${escapeHtml(q.video_url||'')}"></details><div class="kv-q-actions"><button class="btn btn-light" data-x>Жабу</button><button class="btn btn-primary" data-save>Жіберу</button></div></div>`);
+   const $=s=>ov.querySelector(s);let busy=false,file=null;
+   const status=(t,c)=>{const e=$('#kv-video-status');if(e){e.textContent=t||'';e.className='kv-vid-status'+(c?' '+c:'');}};
+   $('[data-x]').onclick=()=>{if(!busy)kvCloseModal(ov);};
+   const fi=$('#kv-video-file');
+   if(fi)fi.onchange=()=>{
+     file=null;status('');$('#kv-video-name').textContent='';
+     const f=fi.files&&fi.files[0];if(!f)return;
+     if(kvFileKind(f)!=='video'){status('Тек бейне файлын таңдаңыз.','error');fi.value='';return;}
+     if(f.size>100*1024*1024){status(`Файл тым үлкен: ${(f.size/1048576).toFixed(0)} МБ. Ең көбі — 100 МБ (телефонда 720p сапасын таңдаңыз).`,'error');fi.value='';return;}
+     file=f;$('#kv-video-name').textContent=`${f.name} · ${(f.size/1048576).toFixed(1)} МБ`;
+   };
+   $('[data-save]').onclick=async()=>{
+     if(busy)return;
+     const link=$('#kv-video-url').value.trim();
+     if(!file&&!/^https?:\/\//i.test(link)){toast(canUp?'Бейнені таңдаңыз немесе сілтеме қойыңыз.':'Дұрыс сілтеме енгізіңіз (https://...).','error');return;}
+     busy=true;const btn=$('[data-save]');btn.disabled=true;
+     const onBU=e=>{e.preventDefault();e.returnValue='';};window.addEventListener('beforeunload',onBU);
+     try{
+       let url=link;
+       if(file){
+         const bar=$('.kv-vid-bar');bar.hidden=false;status('Жүктелуде… 0%. Бетті жаппаңыз.');
+         const r=await kvUploadFile('report',file,q.book_title||q.title||'Квест','Квест видео есебі',p=>{const pc=Math.round(p*100);bar.firstElementChild.style.width=pc+'%';status(`Жүктелуде… ${pc}%. Бетті жаппаңыз.`);});
+         url='https://drive.google.com/file/d/'+r.fileId+'/view';
+       }
+       const {data,error}=await sb.rpc('kv_quest_video',{p_quest_id:q.quest_id,p_url:url});
+       if(error||!data||!data.ok)throw new Error('save');
+       toast('Видео мұғалімге жіберілді!');busy=false;kvCloseModal(ov);await loadQuests();
+     }catch(err){
+       busy=false;btn.disabled=false;
+       status('❌ '+(KV_UP_ERR[err&&err.kv]||'Жіберу кезінде қате шықты. Қайталап көріңіз.'),'error');
+     }finally{window.removeEventListener('beforeunload',onBU);}
+   };
+ }
+ async function currentProgressReload(){
+   if(!currentStudent)return;
+   const {data:prog}=await sb.from('book_progress').select('book_id').eq('student_id',currentStudent.id);
+   currentProgress=new Set((prog||[]).map(x=>String(x.book_id)));
+ }
+ function renderBonus(){
+   const wrap=document.getElementById('kv-bonus'),box=document.getElementById('kv-bonus-books');if(!wrap||!box)return;
+   const books=allBooks.filter(b=>b.is_bonus),extras=bonusQ.filter(x=>!x.book_id);
+   wrap.hidden=!books.length&&!extras.length;if(wrap.hidden)return;
+   box.innerHTML='';
+   books.forEach(b=>{
+     const st=bonusQ.find(x=>String(x.book_id)===String(b.id));const link=b.drive_url||b.pdf_url;
+     const el=document.createElement('article');el.className='kv-book card-in kv-bonus-book';
+     let act='';
+     if(st&&st.state==='open')act='<button class="btn btn-primary kv-bonus-q">🧩 Бонус квест →</button>';
+     else if(st&&st.state==='done')act=`<button class="btn btn-light" disabled>✅ Тапсырылды · ${st.score}/${st.total}</button>`;
+     else if(st&&st.state==='pending')act='<button class="btn btn-light" disabled>⏳ Мұғалім тексеруде</button>';
+     else if(st&&st.state==='failed')act='<button class="btn btn-light" disabled>❌ Өтпеді</button>';
+     else if(st)act='<button class="btn btn-light" disabled>⛔ Тоқтатылды · 0 ұпай</button>';
+     el.innerHTML=`<div class="kv-book-cover"><span>${escapeHtml(b.icon||'🎁')}</span></div><div class="kv-book-content"><div class="kv-book-meta"><span>🎁 БОНУС</span>${currentProgress.has(String(b.id))?'<b>ОҚЫЛДЫ</b>':''}</div><h3>${escapeHtml(b.title)}</h3><div class="kv-book-actions">${link?`<a class="kv-book-pdf" href="${escapeHtml(link)}" target="_blank" rel="noopener">📖 Кітапты оқу <span>↗</span></a>`:''}${act}</div>${st?'':'<small class="kv-book-quest">Бонус квест әзірге жоқ.</small>'}${!currentStudent&&st?'<small class="kv-book-quest">Квест үшін профильге кіріңіз.</small>':''}</div>`;
+     el.querySelector('.kv-bonus-q')?.addEventListener('click',()=>startQuestFlow(st,'bonus'));
+     box.appendChild(el);
+   });
+   extras.forEach(q=>box.appendChild(questCard(q,'bonus')));
  }
  /* ---- Library, grouped by grade ---- */
  let allBooks=[];
  let allQuests=[];
  let booksExpanded=false;
  const BOOK_PAGE_SIZE=3;
- /* A quest can be linked to a book from either side: book.quest_id,
-    or quest.book_id (this is what the admin panel actually sets when
-    you pick a book while creating a quest). Always resolve both ways
-    so the link never silently breaks. */
- function questIdForBook(book){
-   if(book?.quest_id)return book.quest_id;
-   const q=allQuests.find(q=>String(q.book_id)===String(book?.id));
-   return q?q.id:null;
- }
  let selectedGrade='6';
+ function selectGrade(g){
+   g=String(g);if(!document.querySelector(`.kv-grade-tab[data-grade="${g}"]`))return;
+   selectedGrade=g;document.querySelectorAll('.kv-grade-tab').forEach(b=>b.classList.toggle('selected',b.dataset.grade===g));
+ }
  function renderBooks(){
    if(!booksBox)return;
    const query=bookSearchText.toLowerCase();
+   const weekOf=b=>weeklyQ.find(w=>String(w.book_id)===String(b.id));
    const list=allBooks.filter(b=>{
+     if(b.is_bonus)return false;
      if(String(b.grade)!==selectedGrade)return false;
      const read=currentProgress.has(String(b.id));
      if(bookFilter==='read'&&!read)return false;
-     if(bookFilter==='unread'&&read)return false;
+     if(bookFilter==='week'&&!weekOf(b))return false;
      if(query&&!`${b.title||''} ${b.author||''} ${b.description||''}`.toLowerCase().includes(query))return false;
      return true;
-   });
+   }).map((b,i)=>({b,i,r:(weekOf(b)&&weekOf(b).state==='open')?0:(weekOf(b)?1:2)})).sort((x,y)=>x.r-y.r||x.i-y.i).map(x=>x.b);
    const bookToggle=document.getElementById('kv-book-toggle');
    if(!list.length){booksBox.innerHTML=`<div class="kv-empty kv-empty-rich"><span>📚</span><b>Бұл сүзгіде кітап табылмады</b><small>Басқа сыныпты немесе іздеу сөзін көріңіз.</small></div>`;bookToggle?.remove();return;}
    const visibleList=booksExpanded?list:list.slice(0,BOOK_PAGE_SIZE);
    booksBox.innerHTML='';
    visibleList.forEach(x=>{
-     const el=document.createElement('article');el.className=`kv-book card-in ${currentProgress.has(String(x.id))?'is-read':''}`;
-     const read=currentProgress.has(String(x.id));const questId=questIdForBook(x);const link=x.drive_url||x.pdf_url;
-     el.innerHTML=`<div class="kv-book-cover"><span>${escapeHtml(x.icon||'📕')}</span>${read?'<i>✓</i>':''}</div><div class="kv-book-content"><div class="kv-book-meta"><span>${String(x.grade||'')} СЫНЫП</span>${read?'<b>ОҚЫЛДЫ</b>':''}</div><h3>${escapeHtml(x.title)}</h3><div class="kv-book-actions">${link?`<a class="kv-book-pdf" href="${escapeHtml(link)}" target="_blank" rel="noopener">📖 Кітапты оқу <span>↗</span></a>`:''}<button class="btn ${read?'btn-light':'btn-primary'} kv-book-read" ${read?'disabled':''}>${read?'✓ Оқылды':'Мен оқыдым'}</button></div>${questId?`<small class="kv-book-quest">${read?'🧩 Квест дайын — төменге түсіңіз':'🔒 Кітапты оқып, «Мен оқыдым» басыңыз'}</small>`:''}</div>`;
-     el.querySelector('.kv-book-read')?.addEventListener('click',()=>markBookRead(x));booksBox.appendChild(el);
+     const read=currentProgress.has(String(x.id));const w=weekOf(x);const link=x.drive_url||x.pdf_url;
+     const el=document.createElement('article');el.className=`kv-book card-in ${read?'is-read':''} ${w&&w.state==='open'?'is-week':''}`;
+     let note,btn='';
+     if(w&&w.state==='open'){note=`<small class="kv-book-quest week">📅 Осы айдың квесті · дедлайн <b>${fmtDate(w.deadline)}</b></small>`;btn='<button class="btn btn-primary kv-book-go">Квестке өту ↓</button>';}
+     else if(read||(w&&w.state==='done')){note='<small class="kv-book-quest">✅ Квест тапсырылды</small>';}
+     else if(w&&w.state==='pending'){note='<small class="kv-book-quest">⏳ Мұғалім тексеруде</small>';}
+     else if(w&&w.state==='failed'){note='<small class="kv-book-quest">❌ Квест өтпеді</small>';}
+     else if(w){note='<small class="kv-book-quest">⛔ Квест тоқтатылды</small>';}
+     else note='<small class="kv-book-quest">🔓 Кітап ашық — оқи беріңіз. Квесті кезегімен ашылады.</small>';
+     el.innerHTML=`<div class="kv-book-cover"><span>${escapeHtml(x.icon||'📕')}</span>${read?'<i>✓</i>':''}</div><div class="kv-book-content"><div class="kv-book-meta"><span>${String(x.grade||'')} СЫНЫП</span>${read?'<b>ОҚЫЛДЫ</b>':''}</div><h3>${escapeHtml(x.title)}</h3><div class="kv-book-actions">${link?`<a class="kv-book-pdf" href="${escapeHtml(link)}" target="_blank" rel="noopener">📖 Кітапты оқу <span>↗</span></a>`:''}${btn}</div>${note}</div>`;
+     el.querySelector('.kv-book-go')?.addEventListener('click',()=>document.getElementById(`kv-quest-${w.quest_id}`)?.scrollIntoView({behavior:'smooth',block:'center'}));
+     booksBox.appendChild(el);
    });
    renderBookToggle(list.length);
  }
@@ -768,6 +854,35 @@ function normalizeClassList(s){
  }
  document.querySelectorAll('[data-stats-mode]').forEach(btn=>btn.addEventListener('click',()=>{statsMode=btn.dataset.statsMode;document.querySelectorAll('[data-stats-mode]').forEach(b=>b.classList.toggle('active',b===btn));renderClassStats();}));
  setInterval(()=>{if(!document.hidden)loadClassStats();},90000);
+ /* ---- Мазмұндама (retelling) ---- */
+ var myRetellings=[];
+ function rtEls(){return {guest:document.getElementById('kv-rt-guest'),box:document.getElementById('kv-rt-box'),sel:document.getElementById('kv-rt-book'),txt:document.getElementById('kv-rt-text'),cnt:document.getElementById('kv-rt-count'),save:document.getElementById('kv-rt-save'),list:document.getElementById('kv-rt-list')};}
+ async function renderRetelling(){
+   const e=rtEls();if(!e.box)return;
+   e.guest.hidden=!!currentStudent;e.box.hidden=!currentStudent;
+   if(!currentStudent)return;
+   const {data}=await sb.from('book_retellings').select('*').order('updated_at',{ascending:false});
+   myRetellings=data||[];
+   const prev=e.sel.value;
+   e.sel.innerHTML='<option value="">— Кітапты таңдаңыз —</option>'+[...allBooks].sort((a,b)=>(a.grade||0)-(b.grade||0)||String(a.title).localeCompare(String(b.title))).map(b=>`<option value="${b.id}">${myRetellings.some(r=>String(r.book_id)===String(b.id))?'✓ ':''}${b.grade?b.grade+' сынып · ':''}${escapeHtml(b.title)}</option>`).join('');
+   if(prev)e.sel.value=prev;
+   e.list.innerHTML=myRetellings.length?myRetellings.map(r=>`<details class="kv-rt-item"><summary><b>📝 ${escapeHtml(r.book_title)}</b><small>${new Date(r.updated_at).toLocaleDateString('ru-RU')}</small></summary><p>${escapeHtml(r.body).replace(/\n/g,'<br>')}</p></details>`).join(''):'<p class="kv-empty">Әзірге мазмұндама жоқ.</p>';
+ }
+ (function initRetellingUi(){
+   const e=rtEls();if(!e.box)return;
+   const upd=()=>{e.cnt.textContent=`${e.txt.value.length} / 8000 · кемінде 150`;};
+   e.txt.addEventListener('input',upd);upd();
+   e.sel.addEventListener('change',()=>{const r=myRetellings.find(x=>String(x.book_id)===e.sel.value);e.txt.value=r?r.body:'';upd();});
+   e.save.addEventListener('click',async()=>{
+     if(!e.sel.value){toast('Кітапты таңдаңыз.','error');return;}
+     if(e.txt.value.trim().length<150){toast('Мазмұндама тым қысқа (кемінде 150 таңба).','error');return;}
+     setBusy(e.save,true,'Сақтау');
+     const {data,error}=await sb.rpc('kv_save_retelling',{p_book_id:Number(e.sel.value),p_body:e.txt.value});
+     setBusy(e.save,false,'Сақтау');
+     if(error||!data||!data.ok){toast('Сақтау кезінде қате шықты.','error');return;}
+     toast('Мазмұндама сақталды!');await renderRetelling();
+   });
+ })();
  window.KV={sb,toast,escapeHtml,student:()=>currentStudent,formatDuration};
  document.dispatchEvent(new Event('kv-ready'));
 

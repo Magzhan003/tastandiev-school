@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Мұғалім — квестті тексеру</title>
+<style>
+:root{--bg:#f3f5fb;--card:#fff;--text:#1a2033;--muted:#6b7590;--line:#e1e6f2;--brand:#4a5df0;--ok:#1f9d6b;--bad:#d64557}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1124;--card:#171b36;--text:#eef0ff;--muted:#9aa4cf;--line:#2a3058;--brand:#7c8bff}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:18px 16px 60px}
+h1{font-size:24px;margin:8px 0 4px}.sub{color:var(--muted);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}
+input,textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit;margin:6px 0}
+button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:11px 18px;cursor:pointer;background:var(--brand);color:#fff}
+button.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+button.ok{background:var(--ok)}button.bad{background:var(--bad)}button:disabled{opacity:.5}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}.tabs button{background:var(--card);color:var(--text);border:1px solid var(--line)}.tabs button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+.head b{font-size:18px}.chip{display:inline-block;padding:3px 10px;border-radius:99px;background:var(--bg);border:1px solid var(--line);font-size:13px;color:var(--muted)}
+.ans{margin:10px 0 0;padding:0;list-style:none}.ans li{padding:10px 12px;border-radius:12px;margin-top:6px;background:var(--bg);border:1px solid var(--line)}
+.ans li.ok{border-color:var(--ok)}.ans li.no{border-color:var(--bad)}
+.ans small{display:block;color:var(--muted)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+a{color:var(--brand)}.empty{color:var(--muted);text-align:center;padding:30px 0}.err{color:var(--bad)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📝 Квестті тексеру</h1>
+  <p class="sub">Мұғалімдерге арналған бет. Оқушының жауабын қараңыз да, «Өтті» немесе «Өтпеді» басыңыз. Ұпай тек «Өтті» болғанда қосылады.</p>
+
+  <div class="card" id="login">
+    <b>Кіру</b>
+    <input id="email" type="email" autocomplete="username" placeholder="Электрондық пошта">
+    <input id="password" type="password" autocomplete="current-password" placeholder="Құпиясөз">
+    <div class="actions"><button id="login-btn">Кіру</button></div>
+    <p class="err" id="login-err" hidden></p>
+  </div>
+
+  <div id="main" hidden>
+    <div class="card head"><div><b id="who">—</b><div class="sub" id="scope" style="margin:2px 0 0"></div></div><button class="ghost" id="logout">Шығу</button></div>
+    <div class="tabs" id="tabs">
+      <button data-s="pending" class="on">⏳ Тексеруді күтуде</button>
+      <button data-s="passed">✅ Өтті</button>
+      <button data-s="failed">❌ Өтпеді</button>
+    </div>
+    <div id="list"></div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id);};
+  var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c];});};
+  var sb=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY);
+  var status='pending';
+  function fmt(d){return d?new Date(d).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';}
+  function safeUrl(u){return /^https?:\/\//i.test(u||'')?u:'';}
+
+  async function enter(){
+    var me=await sb.rpc('kv_reviewer_me');
+    if(me.error||!me.data||!me.data.ok){
+      await sb.auth.signOut();
+      $('main').hidden=true;$('login').hidden=false;
+      $('login-err').hidden=false;$('login-err').textContent='Бұл аккаунтқа тексеру рұқсаты берілмеген. Әкімшіге хабарласыңыз.';
+      return;
+    }
+    $('login').hidden=true;$('main').hidden=false;
+    $('who').textContent='👤 '+me.data.name;
+    var cl=me.data.classes||[];
+    $('scope').textContent=me.data.admin||!cl.length?'Барлық сыныптар':'Сыныптар: '+cl.join(', ');
+    load();
+  }
+  async function load(){
+    var box=$('list');box.innerHTML='<p class="empty">Жүктелуде...</p>';
+    var r=await sb.rpc('kv_review_queue',{p_review:status});
+    if(r.error){box.innerHTML='<p class="empty err">Жүктеу қатесі.</p>';return;}
+    var rows=r.data||[];
+    if(!rows.length){box.innerHTML='<p class="empty">'+(status==='pending'?'🎉 Тексеретін жұмыс жоқ.':'Әзірге жоқ.')+'</p>';return;}
+    box.innerHTML='';
+    rows.forEach(function(x){
+      var c=document.createElement('div');c.className='card';
+      var v=safeUrl(x.video_url);
+      c.innerHTML='<div class="head"><b>'+esc(x.student)+' · '+esc(x.class)+'</b><span class="chip">'+fmt(x.submitted_at)+'</span></div>'
+        +'<div class="sub" style="margin:4px 0">📖 '+esc(x.book||x.quest)+' · авто нәтиже: <b>'+x.score+' / '+x.total+'</b></div>'
+        +'<ul class="ans">'+(x.answers||[]).map(function(a,i){
+            return '<li class="'+(a.ok?'ok':'no')+'"><b>'+(i+1)+'. '+esc(a.question)+'</b><small>Оқушы жауабы: '+esc(a.chosen||'— жауап жоқ —')+(a.ok?' ✅':' ❌')+'</small>'+(a.ok?'':'<small>Дұрыс жауап: '+esc(a.correct)+'</small>')+'</li>';}).join('')+'</ul>'
+        +(v?'<div class="vid"><button class="ghost play">▶ Видео есепті көру</button> <a href="'+esc(v)+'" target="_blank" rel="noopener">жаңа терезеде ↗</a></div>':'<p class="sub">Видео есеп жоқ.</p>');
+      var pb=c.querySelector('.play');
+      if(pb){pb.onclick=function(){
+        var m=/drive\.google\.com\/file\/d\/([\w-]+)/.exec(v);
+        if(!m){window.open(v,'_blank','noopener');return;}
+        var f=document.createElement('iframe');f.src='https://drive.google.com/file/d/'+m[1]+'/preview';f.allow='autoplay;fullscreen';f.allowFullscreen=true;f.title='Видео есеп';
+        f.style.cssText='width:100%;aspect-ratio:16/9;border:0;border-radius:12px;margin-top:10px;background:#000';
+        pb.parentNode.appendChild(f);pb.remove();};}
+      if(status==='pending'){
+        c.innerHTML+='<textarea rows="2" placeholder="Түсініктеме (міндетті емес)"></textarea><div class="actions"><button class="ok">✅ Өтті</button><button class="bad">❌ Өтпеді</button></div>';
+        var ta=c.querySelector('textarea');
+        var decide=async function(pass,btn){
+          if(!pass&&!confirm('«Өтпеді» деп белгілейміз бе? Ұпай берілмейді.'))return;
+          c.querySelectorAll('button').forEach(function(b){b.disabled=true;});
+          var d=await sb.rpc('kv_review_decide',{p_attempt_id:x.attempt_id,p_pass:pass,p_comment:ta.value});
+          if(d.error||!d.data||!d.data.ok){alert('Қате: жұмыс бұрын тексерілген немесе рұқсат жоқ.');load();return;}
+          c.remove();if(!$('list').children.length)load();
+        };
+        c.querySelector('.ok').onclick=function(){decide(true);};
+        c.querySelector('.bad').onclick=function(){decide(false);};
+      } else if(x.comment){c.innerHTML+='<p class="sub">Түсініктеме: '+esc(x.comment)+'</p>';}
+      box.appendChild(c);
+    });
+  }
+  $('tabs').addEventListener('click',function(e){var b=e.target.closest('button[data-s]');if(!b)return;status=b.dataset.s;document.querySelectorAll('#tabs button').forEach(function(x){x.classList.toggle('on',x===b);});load();});
+  $('login-btn').onclick=async function(){
+    $('login-err').hidden=true;
+    var r=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
+    if(r.error){$('login-err').hidden=false;$('login-err').textContent='Пошта немесе құпиясөз қате.';return;}
+    enter();
+  };
+  $('password').addEventListener('keydown',function(e){if(e.key==='Enter')$('login-btn').click();});
+  $('logout').onclick=async function(){await sb.auth.signOut();location.reload();};
+  sb.auth.getSession().then(function(s){if(s&&s.data&&s.data.session)enter();});
+})();
+</script>
+</body>
+</html>

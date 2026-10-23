@@ -86,8 +86,8 @@
     <div class="kv-library-tools">
       <div class="kv-search"><span>⌕</span><input id="kv-book-search" type="search" placeholder="Кітапты атауы немесе авторы бойынша іздеу..."></div>
       <button class="kv-filter active" data-book-filter="all">Барлығы</button>
-      <button class="kv-filter" data-book-filter="unread">Оқылмаған</button>
-      <button class="kv-filter" data-book-filter="read">Прочитано</button>
+      <button class="kv-filter" data-book-filter="week">Осы айда</button>
+      <button class="kv-filter" data-book-filter="read">Оқылған</button>
     </div>
 
     <div class="kv-grade-tabs" id="kv-grade-tabs">
@@ -98,9 +98,9 @@
       <button class="kv-grade-tab" data-grade="10">10 сынып</button>
     </div>
     <div class="kv-reading-flow-guide">
-      <div class="flow-node"><span>📖</span><b>Оқы</b><small>Кітапты аш</small></div>
+      <div class="flow-node"><span>📖</span><b>Оқы</b><small>Кітап әрқашан ашық</small></div>
       <div class="flow-line"></div>
-      <div class="flow-node"><span>✅</span><b>«Мен оқыдым»</b><small>Квест ашылады</small></div>
+      <div class="flow-node"><span>🎲</span><b>Ай квесті</b><small>Айына 4 кітап</small></div>
       <div class="flow-line"></div>
       <div class="flow-node"><span>🧩</span><b>Квест</b><small>Біліміңді тексер</small></div>
       <div class="flow-line"></div>
@@ -108,6 +108,11 @@
     </div>
     <div class="kv-grid" id="kv-books"><p class="kv-empty">Жүктелуде...</p></div>
     <div id="kv-reading-progress" class="kv-reading-progress"></div>
+    <div id="kv-bonus" class="kv-bonus" hidden>
+      <div class="kv-section-head"><div><span class="kv-badge">🎁 БОНУС</span><h3 style="margin:10px 0 0">Бонус кітап</h3></div></div>
+      <p class="lead">Қосымша кітап — мерзімі жоқ, апталық шектеуге кірмейді. Оқып, бонус квестін өтіп көр!</p>
+      <div class="kv-grid" id="kv-bonus-books"></div>
+    </div>
   </div>
 </section>
 
@@ -115,7 +120,8 @@
 <section id="kv-quests" class="kv-section alt">
   <div class="container">
     <div class="kv-section-head"><div><span class="kv-badge">🎮 ОЙЫН ФОРМАТЫ</span><h2 style="margin:10px 0 0">Квесттер</h2></div></div>
-    <p class="lead">Кітапты аш → оқып болған соң «✅ Мен оқыдым» батырмасын бас → сол кітаптың квестін орында. Кітап тек квест аяқталғаннан кейін оқылған болып саналады.</p>
+    <p class="lead">Барлық кітап әрқашан ашық — оқи беріңіз. Әр сыныпқа <b>айына 4 кітап</b> беріледі — мұғалім белгілеген тәртіппен (алдымен өз сыныбыңның кітаптары). Дедлайн — айдың соңы. 5 сұраққа жауап бер, жауаптар <b>мұғалімге тексеруге</b> түседі. Ұпай мұғалім «Өтті» белгілегеннен кейін ғана қосылады. Қаласаң, видео есеп жібере аласың. Квест кезінде басқа қойындыға өтуге болмайды.</p>
+    <div id="kv-week-info" class="kv-week-info"></div>
     <div id="kv-quest-list" class="kv-grid"><p class="kv-empty">Жүктелуде...</p></div>
   </div>
 </section>
@@ -205,6 +211,20 @@
       <div class="kv-soon kv-creative-card reveal" data-task="video"><b>🎬</b><h3>Бейне-шолу</h3><p>Оқыған кітабың туралы қысқа бейне түсіріп жүктеу. Басқалардың бейнесін көру.</p><small class="kv-creative-hint">Тек бейне · ең көбі 100 МБ</small><span class="status">Жақында қосылады</span></div>
       <div class="kv-soon kv-creative-card reveal" data-task="illustration"><b>🎨</b><h3>Иллюстрация</h3><p>Кітаптағы сүйікті сәтіңді салып, суретке түсіріп жүктеу.</p><small class="kv-creative-hint">Тек сурет (фото) · ең көбі 15 МБ</small><span class="status">Жақында қосылады</span></div>
       <div class="kv-soon kv-creative-card reveal" data-task="continuation"><b>✍️</b><h3>Өз жалғасың</h3><p>Кітаптың жаңа аяқталуын немесе жалғасын өзің жаз.</p><small class="kv-creative-hint">Тек мәтін · ең көбі 4000 таңба</small><span class="status">Жақында қосылады</span></div>
+    </div>
+  </div>
+</section>
+<section id="kv-retell" class="kv-section alt">
+  <div class="container">
+    <div class="kv-section-head"><div><span class="kv-badge">📝 МАЗМҰНДАМА</span><h2 style="margin:10px 0 0">Мазмұндама</h2></div></div>
+    <p class="lead">Оқыған кітабың туралы бәрін өз сөзіңмен жаз: кейіпкерлер кім, не болды, ең маңызды сәт және қорытынды. 🔒 Мазмұндаманы тек сен және мұғалім көреді.</p>
+    <div id="kv-rt-guest" class="kv-login-required"><span>🔐</span><div><b>Мазмұндама жазу үшін кіріңіз</b><small>Профиль арқылы жазбаларың сақталады.</small></div><button class="btn btn-primary" onclick="document.getElementById('kv-login-btn')?.click()">Кіру →</button></div>
+    <div id="kv-rt-box" class="kv-rt-box" hidden>
+      <select id="kv-rt-book" class="kv-rt-select"></select>
+      <textarea id="kv-rt-text" class="kv-rt-text" rows="10" maxlength="8000" placeholder="Кітап туралы бәрін жаз: сюжет, кейіпкерлер, негізгі ой, өз пікірің..."></textarea>
+      <div class="kv-rt-foot"><span id="kv-rt-count">0 / 8000</span><button class="btn btn-primary" id="kv-rt-save" type="button">Сақтау</button></div>
+      <h4 class="kv-rt-title">Менің мазмұндамаларым</h4>
+      <div id="kv-rt-list"></div>
     </div>
   </div>
 </section>
