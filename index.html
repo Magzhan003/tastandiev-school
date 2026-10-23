@@ -338,12 +338,23 @@
 
       </div>
       <div class="admin-tab-panel" data-admin-panel="progress"><span class="section-label">ОҚУШЫЛАР</span><h2>Оқушылар прогресі: кітаптар, квесттер, тесттер</h2>
+        <div class="admin-form" id="a-cb-form">
+          <h3>📅 Айдың кітаптары — сынып бойынша</h3>
+          <p class="admin-hint">Қай айда қай сынып қандай кітаптарды тапсыратынын өзіңіз таңдайсыз. Сыныптың барлық оқушысына бірдей квесттер шығады (кездейсоқтық жоқ). Таңдалмаған сыныпқа квест шықпайды.</p>
+          <select id="a-cb-month"></select>
+          <select id="a-cb-class"></select>
+          <div id="a-cb-slots"></div>
+          <label class="admin-check"><input type="checkbox" id="a-cb-grade"> Осы параллельдегі барлық сыныпқа қолдану (мысалы 6А таңдасаңыз — 6Б, 6В да)</label>
+          <div class="admin-actions"><button class="btn btn-primary" id="a-cb-save" type="button">Сақтау</button></div>
+          <h4>Осы айдағы жағдай</h4>
+          <div class="admin-list" id="a-cb-summary"></div>
+        </div>
         <div class="admin-form" id="a-pg-settings">
           <h3>⚙️ Апталық квест баптаулары</h3>
-          <label class="admin-hint">Айына неше кітап/квест (бір оқушыға)</label><input id="a-pg-perweek" type="number" min="1" max="20" value="4">
+          <label class="admin-hint">Бір сыныпқа айына неше кітап таңдалады (әдетте 4)</label><input id="a-pg-perweek" type="number" min="1" max="20" value="4">
           <label class="admin-hint">Бір квеске уақыт (минут)</label><input id="a-pg-limit" type="number" min="3" max="120" value="20">
           <div class="admin-actions"><button class="btn btn-primary" id="a-pg-save-settings" type="button">Сақтау</button></div>
-          <p class="admin-hint">Әр оқушыға айына осынша кітап беріледі: алдымен өз сыныбының кітаптары (кітаптар тізіміндегі ↑↓ тәртібімен), олар біткенде — жақын сыныптардікі. Дедлайн — айдың соңы.</p>
+          <p class="admin-hint">Дедлайн — айдың соңы. Кітаптарды жоғарыдағы «Айдың кітаптары» блогында сынып бойынша өзіңіз таңдайсыз.</p>
         </div>
         <div class="admin-form">
           <h3>👥 Оқушылар тізімі</h3>

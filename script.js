@@ -1318,7 +1318,7 @@ async function refreshAdminLists(){
  async function loadStudentProgress(){
    const box=document.getElementById('a-pg-list');if(!box)return;
    box.innerHTML='<p class="admin-empty">Жүктелуде...</p>';
-   loadPgSettings();loadReviewers();
+   loadPgSettings();loadReviewers();loadClassBooks();
    const {data,error}=await sb.rpc('kv_admin_students_overview');
    if(error){box.innerHTML='<p class="admin-empty">Қате: KITAPVERSE-V5-QUESTS.sql Supabase-те орындалғанын тексеріңіз.</p>';return;}
    pgRows=data||[];
@@ -1374,6 +1374,60 @@ async function refreshAdminLists(){
    else if(act==='reroll'){await call('kv_admin_reroll_week',{p_student_id:pgOpenId},'Апта қайта таңдалды.');}
  });
 
+
+ /* ---------- Айдың кітаптары: сынып бойынша таңдау ---------- */
+ let cbData=null, cbMax=4;
+ const MONTHS_KK=['Қаңтар','Ақпан','Наурыз','Сәуір','Мамыр','Маусым','Шілде','Тамыз','Қыркүйек','Қазан','Қараша','Желтоқсан'];
+ function cbMonthOptions(){
+   const sel=document.getElementById('a-cb-month');if(!sel||sel.options.length)return;
+   const d=new Date();
+   for(let i=0;i<4;i++){const x=new Date(d.getFullYear(),d.getMonth()+i,1);const v=`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-01`;sel.add(new Option(`${MONTHS_KK[x.getMonth()]} ${x.getFullYear()}${i===0?' (осы ай)':''}`,v));}
+ }
+ async function loadClassBooks(){
+   cbMonthOptions();
+   const month=document.getElementById('a-cb-month').value;if(!month)return;
+   const st=await sb.from('kv_quest_settings').select('per_week').eq('id',1).maybeSingle();cbMax=(st.data&&st.data.per_week)||4;
+   const {data,error}=await sb.rpc('kv_admin_month_books',{p_period:month});
+   if(error||!data){document.getElementById('a-cb-summary').innerHTML='<p class="admin-empty">Қате: KITAPVERSE-V7-CLASS-BOOKS.sql Supabase-те орындалғанын тексеріңіз.</p>';return;}
+   cbData=data;
+   const cs=document.getElementById('a-cb-class'),cur=cs.value;
+   cs.innerHTML=data.classes.map(c=>`<option value="${escapeHtml(c.class)}">${escapeHtml(c.class)} · ${c.students} оқушы${c.book_ids.length?' ✅':' ⚠️'}</option>`).join('');
+   if(data.classes.some(c=>c.class===cur))cs.value=cur;
+   cbFillSlots();cbSummary();
+ }
+ function cbFillSlots(){
+   const box=document.getElementById('a-cb-slots'),cls=document.getElementById('a-cb-class').value;if(!cbData||!box)return;
+   const row=cbData.classes.find(c=>c.class===cls),chosen=row?row.book_ids:[];
+   const grade=parseInt(cls,10);
+   const byGrade={};cbData.books.forEach(b=>{(byGrade[b.grade||0]??=[]).push(b);});
+   const grades=Object.keys(byGrade).map(Number).sort((a,b)=>(a===grade?-1:b===grade?1:a-b));
+   const opts='<option value="">— таңдалмаған —</option>'+grades.map(g=>`<optgroup label="${g?g+' сынып':'Сыныпсыз'}">${byGrade[g].map(b=>`<option value="${b.id}">${escapeHtml(b.title)}${b.has_quest?'':' ⚠️ квест жоқ'}</option>`).join('')}</optgroup>`).join('');
+   box.innerHTML='';
+   for(let i=0;i<cbMax;i++){const s=document.createElement('select');s.className='cb-slot';s.innerHTML=opts;s.value=chosen[i]?String(chosen[i]):'';const l=document.createElement('label');l.className='admin-hint';l.textContent=`${i+1}-кітап`;box.append(l,s);}
+ }
+ function cbSummary(){
+   const box=document.getElementById('a-cb-summary');if(!cbData)return;
+   const title=id=>{const b=cbData.books.find(x=>x.id===id);return b?b.title+(b.has_quest?'':' ⚠️'):'?';};
+   box.innerHTML='';
+   cbData.classes.forEach(c=>{
+     const row=document.createElement('div');row.className='admin-list-item';row.style.cursor='pointer';
+     row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(c.class)} · ${c.students} оқушы</strong><small>${c.book_ids.length?c.book_ids.map(title).map(escapeHtml).join(' · '):'⚠️ кітап әлі таңдалмаған — оқушыларға квест шықпайды'}</small></div>`;
+     row.onclick=()=>{document.getElementById('a-cb-class').value=c.class;cbFillSlots();document.getElementById('a-cb-form').scrollIntoView({behavior:'smooth'});};
+     box.appendChild(row);
+   });
+ }
+ document.getElementById('a-cb-month')?.addEventListener('change',loadClassBooks);
+ document.getElementById('a-cb-class')?.addEventListener('change',cbFillSlots);
+ document.getElementById('a-cb-save')?.addEventListener('click',async()=>{
+   const cls=document.getElementById('a-cb-class').value,month=document.getElementById('a-cb-month').value;
+   if(!cls){toast('Сыныпты таңдаңыз.','error');return;}
+   const ids=[...document.querySelectorAll('#a-cb-slots .cb-slot')].map(s=>s.value).filter(Boolean).map(Number);
+   if(new Set(ids).size!==ids.length){toast('Бір кітап екі рет таңдалған.','error');return;}
+   const grade=document.getElementById('a-cb-grade').checked;
+   const {data,error}=await sb.rpc('kv_admin_set_class_books',{p_class:cls,p_period:month,p_book_ids:ids,p_apply_grade:grade});
+   if(error||!data||!data.ok){toast('Сақтау кезінде қате шықты.','error');return;}
+   toast(`Сақталды: ${data.classes.join(', ')}`);await loadClassBooks();
+ });
  /* ---------- Тексеруші мұғалімдер + толық нөлдеу ---------- */
  async function loadReviewers(){
    const box=document.getElementById('a-rv-list');if(!box)return;

@@ -189,9 +189,9 @@ function normalizeClassList(s){
      renderBonus();renderBooks();return;
    }
    weeklyQ=data.weekly||[];bonusQ=data.bonus||[];questPeriod=data.period;
-   if(info)info.innerHTML=`<div class="kv-week-chip">📅 <b>${fmtDate(questPeriod.start)} – ${fmtDate(questPeriod.end)}</b> кезеңі</div><div class="kv-week-chip">🧩 Орындалды: <b>${questPeriod.done} / ${questPeriod.per_week}</b></div><div class="kv-week-chip">⏱ Бір квеске: <b>${questPeriod.time_limit_min} мин</b></div>`;
+   if(info)info.innerHTML=`<div class="kv-week-chip">📅 <b>${fmtDate(questPeriod.start)} – ${fmtDate(questPeriod.end)}</b> кезеңі</div><div class="kv-week-chip">🧩 Орындалды: <b>${questPeriod.done} / ${weeklyQ.length}</b></div><div class="kv-week-chip">⏱ Бір квеске: <b>${questPeriod.time_limit_min} мин</b></div>`;
    questListBox.innerHTML='';
-   if(!weeklyQ.length)questListBox.innerHTML='<p class="kv-empty">🎉 Қазір барлық кітаптардың квесттері өтілген немесе жаңа кітап қосылуын күтіңіз. Жаңа квесттер келесі айда ашылады.</p>';
+   if(!weeklyQ.length)questListBox.innerHTML='<p class="kv-empty">📚 Осы айға сыныбыңның кітаптарын мұғалім әлі белгілемеді. Белгіленген кезде квесттер осында шығады.</p>';
    weeklyQ.forEach(q=>questListBox.appendChild(questCard(q,'week')));
    renderBonus();renderBooks();
  }
