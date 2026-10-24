@@ -1510,7 +1510,7 @@ async function refreshAdminLists(){
  });
  async function resetAll(full){
    const {data,error}=await sb.rpc('kv_admin_reset_all',{p_full:full});
-   if(error||!data||!data.ok){toast('Нөлдеу кезінде қате шықты.','error');return;}
+   if(error||!data||!data.ok){console.error('reset',error);toast('Нөлдеу кезінде қате шықты: '+((error&&(error.message||error.details))||'белгісіз қате'),'error');return;}
    toast(`Нөлденді: ${data.attempts} квест нәтижесі, ${data.books} оқылған кітап.`);
    document.getElementById('a-pg-detail').hidden=true;loadStudentProgress();refreshAdminLists();
  }
