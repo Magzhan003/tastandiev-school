@@ -113,7 +113,7 @@
       <p class="admin-hint">Бұл жасырын бөлім. Кәдімгі келушілер оны көрмейді.</p>
     </div>
     <div id="admin-content" hidden>
-      <div class="admin-tabs" role="tablist"><button class="admin-tab active" data-admin-tab="site">🌐 Сайт</button><button class="admin-tab" data-admin-tab="kitap">📚 KITAPVERSE</button><button class="admin-tab" data-admin-tab="progress">👥 Оқушылар</button></div>
+      <div class="admin-tabs" role="tablist"><button class="admin-tab active" data-admin-tab="site">🌐 Сайт</button><button class="admin-tab" data-admin-tab="kitap">📚 KITAPVERSE</button><button class="admin-tab" data-admin-tab="progress">👥 Оқушылар</button><button class="admin-tab" data-admin-tab="announce">📢 Хабарландыру</button></div>
       <div class="admin-tab-panel active" data-admin-panel="site"><span class="section-label">САЙТТЫ БАСҚАРУ</span><h2>Жаңалықтар, жетістіктер, құжаттар және тесттер</h2>
 
       <div class="admin-form" id="a-news-form">
@@ -378,6 +378,20 @@
           <div class="admin-actions"><button class="btn btn-light" id="a-reset-quests" type="button" style="color:#c0392b">🗑 Квесттерді нөлдеу</button><button class="btn btn-light" id="a-reset-full" type="button" style="color:#c0392b">☢️ Толық нөлдеу</button></div>
         </div>
       </div><!-- /kitap admin -->
+      <div class="admin-tab-panel" data-admin-panel="announce"><span class="section-label">ХАБАРЛАНДЫРУ</span><h2>Барлығына қалқымалы хабарландыру</h2>
+        <div class="admin-form" id="a-an-form">
+          <h3>📢 Жаңа хабарландыру</h3>
+          <p class="admin-hint">Хабарландыру сайтқа кірген кезде қалқымалы терезе болып шығады. Әр адам оны бір рет көреді («Түсіндім» басқанша).</p>
+          <input id="a-an-title" placeholder="Тақырыбы">
+          <input id="a-an-icon" placeholder="Белгі (эмодзи), мысалы 📢" maxlength="4">
+          <select id="a-an-aud"><option value="students">Оқушыларға — KITAPVERSE-ке аккаунтпен кіргенде</option><option value="all">Барлығына — сайт пен KITAPVERSE-ті ашқанда</option></select>
+          <label class="admin-hint">Неше күн көрсетіледі (0 = мерзімсіз)</label><input id="a-an-days" type="number" min="0" max="365" value="10">
+          <textarea id="a-an-body" rows="8" placeholder="Хабарландыру мәтіні"></textarea>
+          <div class="admin-actions"><button class="btn btn-primary" id="a-an-add" type="button">Жариялау</button><button class="btn btn-light" id="a-an-preview" type="button">Алдын ала қарау</button></div>
+        </div>
+        <div class="admin-section-title">Хабарландырулар</div>
+        <div class="admin-list" id="a-an-list"><p class="admin-empty">Бұл қойындыны ашқанда жүктеледі...</p></div>
+      </div><!-- /announce admin -->
       <div class="admin-actions"><button class="btn btn-light" id="a-logout">Шығу</button></div>
       <p class="admin-hint">Өзгерістер бірден барлық келушілерге көрінеді (ортақ бұлттық сақтау арқылы).</p>
     </div>
@@ -386,6 +400,7 @@
 <div class="toast-container" id="toast-container" aria-live="polite"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script src="kv-announce.js"></script>
 <script src="script.js"></script>
 <script src="kv-admin-preview.js"></script>
 </body></html>

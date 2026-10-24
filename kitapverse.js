@@ -79,11 +79,12 @@ function normalizeClassList(s){
  async function loadStudentProfile(){
    if(!sb?.auth)return;
    const {data:{session}}=await sb.auth.getSession();
-   if(!session){currentStudent=null;currentProgress=new Set();renderStudentBar();return;}
+   if(!session){currentStudent=null;currentProgress=new Set();renderStudentBar();window.KVAnnounce&&KVAnnounce.show(sb,null);return;}
    let {data,error}=await sb.from('student_profiles').select('*').eq('auth_user_id',session.user.id).eq('active',true).maybeSingle();
    if(!data){const claim=await sb.rpc('claim_my_student_profile');if(!claim.error){data=Array.isArray(claim.data)?claim.data[0]:claim.data;error=null;}}
    if(error||!data){currentStudent=null;currentProgress=new Set();renderStudentBar();toast('Бұл аккаунт үшін оқушы профилі табылмады. Әкімшілікке хабарласыңыз.','error');return;}
    currentStudent=data;
+   window.KVAnnounce&&KVAnnounce.show(sb,data);
    try{Promise.resolve(sb.rpc('kv_touch_login')).then(()=>loadClassStats()).catch(()=>{});}catch(e){}
    const {data:prog}=await sb.from('book_progress').select('book_id,marked_read_at').eq('student_id',data.id);
    currentProgress=new Set((prog||[]).map(x=>String(x.book_id)));

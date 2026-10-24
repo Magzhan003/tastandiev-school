@@ -1341,6 +1341,45 @@ async function refreshAdminLists(){
  document.getElementById('a-pg-class')?.addEventListener('change',renderPgList);
  document.getElementById('a-pg-search')?.addEventListener('input',renderPgList);
  document.querySelector('[data-admin-tab="progress"]')?.addEventListener('click',loadStudentProgress);
+
+ /* ---- Хабарландырулар (V10) ---- */
+ window.KVAnnounce&&KVAnnounce.show(sb,null);
+ async function loadAnnouncements(){
+   const box=document.getElementById('a-an-list');if(!box)return;
+   box.innerHTML='<p class="admin-empty">Жүктелуде...</p>';
+   const {data,error}=await sb.from('kv_announcements').select('*').order('created_at',{ascending:false});
+   if(error){box.innerHTML='<p class="admin-empty">Жүктеу қатесі. V10 SQL іске қосылғанын тексеріңіз.</p>';return;}
+   if(!data.length){box.innerHTML='<p class="admin-empty">Әзірге хабарландыру жоқ.</p>';return;}
+   const now=Date.now();box.innerHTML='';
+   data.forEach(a=>{
+     const exp=a.expires_at?new Date(a.expires_at):null, live=a.active&&(!exp||exp.getTime()>now);
+     const row=document.createElement('div');row.className='admin-list-item';
+     row.innerHTML=`<div class="ali-info"><strong>${escapeHtml(a.icon||'📢')} ${escapeHtml(a.title)}</strong><small>${live?'🟢 Көрсетіліп тұр':(a.active?'⚪ Мерзімі бітті':'⏸ Тоқтатылған')} · ${a.audience==='students'?'Оқушыларға':'Барлығына'} · ${exp?'дейін '+exp.toLocaleDateString('ru-RU'):'мерзімсіз'}</small></div><div class="ali-actions"><button class="icon-btn" type="button" title="${a.active?'Тоқтату':'Қайта қосу'}">${a.active?'⏸':'▶'}</button><button class="icon-btn danger" type="button" title="Өшіру">🗑</button></div>`;
+     const [tg,del]=row.querySelectorAll('button');
+     tg.onclick=async()=>{const {error}=await sb.from('kv_announcements').update({active:!a.active}).eq('id',a.id);if(error){toast('Сақтау қатесі.','error');return;}loadAnnouncements();};
+     del.onclick=async()=>{if(!confirm('Хабарландыруды өшіреміз бе?'))return;const {error}=await sb.from('kv_announcements').delete().eq('id',a.id);if(error){toast('Өшіру қатесі.','error');return;}loadAnnouncements();};
+     box.appendChild(row);
+   });
+ }
+ function readAnnForm(){
+   const title=document.getElementById('a-an-title').value.trim(),body=document.getElementById('a-an-body').value.trim();
+   const icon=document.getElementById('a-an-icon').value.trim()||'📢',audience=document.getElementById('a-an-aud').value;
+   const days=Math.max(0,Number(document.getElementById('a-an-days').value)||0);
+   return {title,body,icon,audience,expires_at:days?new Date(Date.now()+days*86400000).toISOString():null};
+ }
+ document.getElementById('a-an-add')?.addEventListener('click',async()=>{
+   const v=readAnnForm();if(!v.title||!v.body){toast('Тақырып пен мәтінді толтырыңыз.','error');return;}
+   const {error}=await sb.from('kv_announcements').insert(v);
+   if(error){toast('Жариялау қатесі.','error');return;}
+   ['a-an-title','a-an-icon','a-an-body'].forEach(id=>{document.getElementById(id).value='';});
+   toast('Хабарландыру жарияланды!');loadAnnouncements();
+ });
+ document.getElementById('a-an-preview')?.addEventListener('click',()=>{
+   const v=readAnnForm();if(!v.title||!v.body){toast('Тақырып пен мәтінді толтырыңыз.','error');return;}
+   const fake={from:()=>({select:()=>({in:()=>({order:async()=>({data:[{id:'preview-'+Date.now(),title:v.title,body:v.body,icon:v.icon,audience:'all',created_at:new Date().toISOString()}]})})})})};
+   window.KVAnnounce&&KVAnnounce.show(fake,null);
+ });
+ document.querySelector('[data-admin-tab="announce"]')?.addEventListener('click',loadAnnouncements);
  async function openPgDetail(id){
    pgOpenId=id;const box=document.getElementById('a-pg-detail');box.hidden=false;box.innerHTML='<p class="admin-empty">Жүктелуде...</p>';
    const {data,error}=await sb.rpc('kv_admin_student_detail',{p_student_id:id});
