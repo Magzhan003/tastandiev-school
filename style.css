@@ -1397,3 +1397,21 @@ body.kv-page .kv-book-quest.week b{font-size:inherit;display:inline;color:#fff}
 .kv-vid-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4f7bff,#9a5cff);transition:width .2s}
 .kv-vid-status{font-size:13px;min-height:18px}.kv-vid-status.error{color:#ff9aa8}
 .kv-vid-link{margin:10px 0;text-align:left;color:#dfe3ff}.kv-vid-link summary{cursor:pointer;font-size:13px}.kv-vid-link input{margin-top:8px}
+
+/* ===== V9: жарқыраған рейтинг жолақтары ===== */
+body.kv-page .kv-bar-track{overflow:visible}
+body.kv-page .kv-bar-fill{position:relative;overflow:hidden;--glow:rgba(140,100,255,.75);
+  background:linear-gradient(90deg,#3e7bff,#8d5cff,#d65cff,#8d5cff,#3e7bff);background-size:200% 100%;
+  animation:kvBarFlow 4s linear infinite,kvBarGlow 2.2s ease-in-out infinite;animation-delay:var(--d,0s)}
+body.kv-page .kv-bar-fill::after{content:"";position:absolute;top:0;bottom:0;left:0;width:45%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.65),transparent);transform:translateX(-120%);
+  animation:kvBarShine 2.6s ease-in-out infinite;animation-delay:var(--d,0s)}
+body.kv-page .kv-bar-fill.r1{--glow:rgba(255,196,40,.9);background:linear-gradient(90deg,#ff9d00,#ffd84d,#fff1a8,#ffd84d,#ff9d00);background-size:200% 100%}
+body.kv-page .kv-bar-fill.r2{--glow:rgba(190,210,255,.85);background:linear-gradient(90deg,#7f93c9,#dfe8ff,#ffffff,#dfe8ff,#7f93c9);background-size:200% 100%}
+body.kv-page .kv-bar-fill.r3{--glow:rgba(255,140,70,.85);background:linear-gradient(90deg,#b8551f,#ff9a5c,#ffd0a8,#ff9a5c,#b8551f);background-size:200% 100%}
+body.kv-page .kv-bar-fill[data-pct="0"]{animation:none;box-shadow:none}
+body.kv-page .kv-bar-fill[data-pct="0"]::after{display:none}
+@keyframes kvBarFlow{to{background-position:-200% 0}}
+@keyframes kvBarGlow{0%,100%{box-shadow:0 0 8px var(--glow),0 0 2px var(--glow)}50%{box-shadow:0 0 22px var(--glow),0 0 6px var(--glow)}}
+@keyframes kvBarShine{0%{transform:translateX(-120%)}60%,100%{transform:translateX(320%)}}
+@media (prefers-reduced-motion:reduce){body.kv-page .kv-bar-fill,body.kv-page .kv-bar-fill::after{animation:none}body.kv-page .kv-bar-fill{box-shadow:0 0 14px var(--glow)}}

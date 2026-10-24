@@ -1,95 +1,235 @@
 <!doctype html>
 <html lang="kk">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>Мұғалім — квестті тексеру</title>
+<title>Мұғалім кабинеті — KITAPVERSE</title>
+<link rel="stylesheet" href="style.css">
 <style>
-:root{--bg:#f3f5fb;--card:#fff;--text:#1a2033;--muted:#6b7590;--line:#e1e6f2;--brand:#4a5df0;--ok:#1f9d6b;--bad:#d64557}
-@media (prefers-color-scheme:dark){:root{--bg:#0e1124;--card:#171b36;--text:#eef0ff;--muted:#9aa4cf;--line:#2a3058;--brand:#7c8bff}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.wrap{max-width:860px;margin:0 auto;padding:18px 16px 60px}
-h1{font-size:24px;margin:8px 0 4px}.sub{color:var(--muted);margin:0 0 18px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}
-input,textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit;margin:6px 0}
-button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:11px 18px;cursor:pointer;background:var(--brand);color:#fff}
-button.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
-button.ok{background:var(--ok)}button.bad{background:var(--bad)}button:disabled{opacity:.5}
-.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}.tabs button{background:var(--card);color:var(--text);border:1px solid var(--line)}.tabs button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
-.head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
-.head b{font-size:18px}.chip{display:inline-block;padding:3px 10px;border-radius:99px;background:var(--bg);border:1px solid var(--line);font-size:13px;color:var(--muted)}
-.ans{margin:10px 0 0;padding:0;list-style:none}.ans li{padding:10px 12px;border-radius:12px;margin-top:6px;background:var(--bg);border:1px solid var(--line)}
-.ans li.ok{border-color:var(--ok)}.ans li.no{border-color:var(--bad)}
-.ans small{display:block;color:var(--muted)}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-a{color:var(--brand)}.empty{color:var(--muted);text-align:center;padding:30px 0}.err{color:var(--bad)}
+.tc-wrap{padding:34px 0 70px}
+.tc-title{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.tc-title h1{margin:10px 0 0;font-size:clamp(1.8rem,5vw,2.6rem);color:#fff}
+.tc-title p{margin:6px 0 0;color:#aeb8df}
+.tc-card{background:rgba(20,24,72,.62);border:1px solid rgba(171,184,255,.18);border-radius:20px;padding:20px;backdrop-filter:blur(10px)}
+.tc-login{max-width:480px}
+.tc-login h3{margin:0 0 6px;color:#fff}.tc-login p{margin:0 0 12px;color:#aeb8df;font-size:14px}
+.tc-login input{display:block;width:100%;box-sizing:border-box;margin:9px 0;padding:13px 14px;border-radius:12px;border:1px solid rgba(171,184,255,.25);background:rgba(7,10,36,.7);color:#fff;font:inherit}
+.tc-login input:focus{outline:2px solid #78dcff;outline-offset:1px}
+.tc-err{color:#ff8a9a;margin:10px 0 0;font-size:14px}
+.tc-me{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.tc-me b{font-size:18px;color:#fff}.tc-me span{color:#aeb8df;font-size:14px;display:block}
+.tc-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+.tc-tab{font:inherit;font-weight:800;border-radius:999px;padding:11px 18px;border:1px solid rgba(171,184,255,.22);background:rgba(20,24,72,.55);color:#c7ccef;cursor:pointer}
+.tc-tab.on{background:linear-gradient(135deg,#3978ff,#8a55ff);color:#fff;border-color:transparent;box-shadow:0 0 22px rgba(110,100,255,.45)}
+.tc-tab .n{display:inline-block;min-width:22px;padding:1px 7px;margin-left:6px;border-radius:99px;background:#ff9f6b;color:#1a1033;font-size:12px}
+.tc-classes{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.tc-cls{font:inherit;font-weight:800;padding:9px 16px;border-radius:12px;border:1px solid rgba(171,184,255,.22);background:transparent;color:#c7ccef;cursor:pointer}
+.tc-cls.on{background:#78dcff;color:#0a1030;border-color:#78dcff}
+.tc-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.tc-stat{background:rgba(20,24,72,.55);border:1px solid rgba(171,184,255,.16);border-radius:16px;padding:16px}
+.tc-stat b{display:block;font-size:26px;color:#fff}.tc-stat span{color:#aeb8df;font-size:13px}
+.tc-books{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 18px}
+.tc-book{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:rgba(120,220,255,.08);border:1px solid rgba(120,220,255,.25);color:#dff6ff;font-size:14px}
+.tc-book i{font-style:normal;font-weight:800;color:#78dcff}
+.tc-legend{display:flex;gap:14px;flex-wrap:wrap;color:#aeb8df;font-size:13px;margin:0 0 10px}
+.tc-table-box{overflow-x:auto;border-radius:16px;border:1px solid rgba(171,184,255,.16)}
+table.tc-table{width:100%;border-collapse:collapse;min-width:760px}
+.tc-table th{text-align:left;font-size:12px;letter-spacing:.06em;color:#8e99c2;font-weight:800;padding:12px 14px;background:rgba(10,14,48,.7);white-space:nowrap}
+.tc-table td{padding:12px 14px;border-top:1px solid rgba(171,184,255,.10);color:#eaf0ff;font-size:14px;vertical-align:middle}
+.tc-table tr.row{cursor:pointer}.tc-table tr.row:hover td{background:rgba(120,140,255,.08)}
+.tc-name{font-weight:800;color:#fff}.tc-sub{display:block;color:#8e99c2;font-size:12px;font-weight:400;margin-top:2px}
+.tc-st{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 8px;border-radius:9px;font-weight:800;font-size:13px;margin-right:4px}
+.st-done{background:rgba(52,211,153,.16);color:#6ff0b6;border:1px solid rgba(52,211,153,.45)}
+.st-pending{background:rgba(255,190,80,.14);color:#ffd27a;border:1px solid rgba(255,190,80,.45)}
+.st-failed{background:rgba(255,100,120,.14);color:#ff9aa8;border:1px solid rgba(255,100,120,.45)}
+.st-open{background:rgba(171,184,255,.08);color:#aeb8df;border:1px dashed rgba(171,184,255,.35)}
+.st-read{background:rgba(120,220,255,.12);color:#9fe8ff;border:1px solid rgba(120,220,255,.4)}
+.tc-num{font-weight:800;text-align:center}
+.tc-empty{color:#aeb8df;text-align:center;padding:30px 0}
+.tc-panel{position:fixed;inset:0;z-index:200;background:rgba(3,5,20,.72);display:flex;justify-content:flex-end}
+.tc-panel>div{width:min(560px,100%);height:100%;overflow-y:auto;background:#0d1238;border-left:1px solid rgba(171,184,255,.2);padding:22px;box-sizing:border-box}
+.tc-panel h2{margin:0;color:#fff;font-size:22px}
+.tc-panel h3{margin:22px 0 8px;color:#78dcff;font-size:15px;letter-spacing:.04em}
+.tc-li{padding:10px 12px;border-radius:12px;background:rgba(20,24,72,.6);border:1px solid rgba(171,184,255,.14);margin-bottom:8px;color:#eaf0ff;font-size:14px}
+.tc-li small{display:block;color:#8e99c2;margin-top:3px}
+.tc-close{float:right}
+/* review */
+.rv{margin-bottom:14px}
+.rv-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+.rv-head b{color:#fff;font-size:17px}
+.chip{display:inline-block;padding:3px 10px;border-radius:99px;border:1px solid rgba(171,184,255,.25);font-size:13px;color:#aeb8df}
+.rv-sub{color:#aeb8df;margin:6px 0}
+.ans{margin:10px 0 0;padding:0;list-style:none}
+.ans li{padding:10px 12px;border-radius:12px;margin-top:6px;background:rgba(7,10,36,.5);border:1px solid rgba(171,184,255,.14);color:#eaf0ff}
+.ans li.ok{border-color:rgba(52,211,153,.6)}.ans li.no{border-color:rgba(255,100,120,.6)}
+.ans small{display:block;color:#aeb8df}
+.rv textarea{width:100%;box-sizing:border-box;margin-top:10px;padding:12px;border-radius:12px;border:1px solid rgba(171,184,255,.25);background:rgba(7,10,36,.7);color:#fff;font:inherit}
+.rv-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.btn-ok{background:#1f9d6b!important;color:#fff!important;border:0}.btn-bad{background:#d64557!important;color:#fff!important;border:0}
+.rv a{color:#78dcff}
+@media(max-width:720px){.tc-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 [hidden]{display:none!important}
 </style>
 </head>
-<body>
-<div class="wrap">
-  <h1>📝 Квестті тексеру</h1>
-  <p class="sub">Мұғалімдерге арналған бет. Оқушының жауабын қараңыз да, «Өтті» немесе «Өтпеді» басыңыз. Ұпай тек «Өтті» болғанда қосылады.</p>
-
-  <div class="card" id="login">
-    <b>Кіру</b>
-    <input id="email" type="text" autocomplete="username" placeholder="Логин (ИИН) немесе пошта">
-    <input id="password" type="password" autocomplete="current-password" placeholder="Құпиясөз">
-    <div class="actions"><button id="login-btn">Кіру</button></div>
-    <p class="err" id="login-err" hidden></p>
+<body class="kv-page">
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="index.html" aria-label="Басты бет">
+      <span class="brand-mark">11</span><span><strong>№11 Тайыр Тастандиев</strong><small>атындағы орта мектеп</small></span>
+    </a>
+    <button class="menu-toggle" aria-label="Мәзірді ашу" aria-expanded="false">☰</button>
+    <nav class="nav" aria-label="Негізгі мәзір">
+      <a href="index.html">Басты бет</a><a href="index.html#news">Жаңалықтар</a><a href="index.html#achievements">Жетістіктер</a><a href="index.html#documents">Құжаттар</a><a href="index.html#tests">Тесттер</a><a href="kitapverse.html">KITAPVERSE</a><a href="teacher.html" class="kv-nav-active">Мұғалім</a><a href="index.html#contacts">Байланыс</a>
+    </nav>
   </div>
+</header>
 
-  <div id="main" hidden>
-    <div class="card head"><div><b id="who">—</b><div class="sub" id="scope" style="margin:2px 0 0"></div></div><button class="ghost" id="logout">Шығу</button></div>
-    <div class="tabs" id="tabs">
-      <button data-s="pending" class="on">⏳ Тексеруді күтуде</button>
-      <button data-s="passed">✅ Өтті</button>
-      <button data-s="failed">❌ Өтпеді</button>
+<main>
+<section class="kv-section tc-wrap">
+  <div class="container">
+    <div class="tc-title"><div><span class="kv-badge">👩‍🏫 МҰҒАЛІМ</span><h1>Мұғалім кабинеті</h1><p>Сыныптарыңыз, оқушыларыңыз, кім не оқып жатыр және кім не тапсырды.</p></div></div>
+
+    <div class="tc-card tc-login" id="login">
+      <h3>🔐 Кіру</h3>
+      <p>Мұғалім логині (ИИН) және құпиясөз.</p>
+      <input id="email" type="text" autocomplete="username" placeholder="Логин (ИИН)">
+      <input id="password" type="password" autocomplete="current-password" placeholder="Құпиясөз">
+      <button class="btn btn-primary" id="login-btn" type="button">Кіру →</button>
+      <p class="tc-err" id="login-err" hidden></p>
     </div>
-    <div id="list"></div>
+
+    <div id="main" hidden>
+      <div class="tc-card tc-me"><div><b id="who">—</b><span id="scope"></span></div><button class="btn btn-light" id="logout" type="button">Шығу</button></div>
+      <div class="tc-tabs" role="tablist">
+        <button class="tc-tab on" data-view="classes" type="button">📚 Сыныптарым</button>
+        <button class="tc-tab" data-view="review" type="button">📝 Тексеру<span class="n" id="pending-n" hidden>0</span></button>
+      </div>
+
+      <div id="view-classes">
+        <div class="tc-classes" id="class-list"></div>
+        <div id="class-body"><p class="tc-empty">Жүктелуде...</p></div>
+      </div>
+
+      <div id="view-review" hidden>
+        <div class="tc-tabs" id="rv-tabs">
+          <button class="tc-tab on" data-s="pending" type="button">⏳ Тексеруді күтуде</button>
+          <button class="tc-tab" data-s="passed" type="button">✅ Өтті</button>
+          <button class="tc-tab" data-s="failed" type="button">❌ Өтпеді</button>
+        </div>
+        <div id="rv-list"></div>
+      </div>
+    </div>
   </div>
-</div>
+</section>
+</main>
+<footer><div class="container footer-wrap"><div><strong>№11 Тайыр Тастандиев атындағы орта мектеп</strong><small>KITAPVERSE — мұғалім кабинеті</small></div><span>© 2026 Барлық құқықтар қорғалған</span></div></footer>
+
+<div class="tc-panel" id="panel" hidden><div id="panel-body"></div></div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
 (function(){
   var $=function(id){return document.getElementById(id);};
   var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c];});};
+  var tg=document.querySelector('.menu-toggle'),nav=document.querySelector('.nav');
+  if(tg&&nav)tg.addEventListener('click',function(){var o=nav.classList.toggle('open');tg.setAttribute('aria-expanded',o);});
   var sb=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY);
-  var status='pending';
-  function fmt(d){return d?new Date(d).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';}
+  var dash=null,curClass=null,rvStatus='pending';
+  function fmt(d){return d?new Date(d).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';}
+  function fmtDay(d){return d?new Date(d).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}):'—';}
   function safeUrl(u){return /^https?:\/\//i.test(u||'')?u:'';}
+  var ST={done:['✓','st-done','Өтті'],pending:['⏳','st-pending','Тексеруде'],failed:['✕','st-failed','Өтпеді'],violation:['✕','st-failed','Ереже бұзылды'],zeroed:['✕','st-failed','Нөлденді'],open:['·','st-open','Әлі тапсырмаған'],noquest:['—','st-open','Квест жоқ'],started:['…','st-pending','Басталды']};
+  function st(s){return ST[s]||[s,'st-open',s];}
 
-  async function enter(){
+  async function enter(explicit){
     var me=await sb.rpc('kv_reviewer_me');
     if(me.error||!me.data||!me.data.ok){
+      if(!explicit)return; /* оқушы сессиясы болса — оны шығармаймыз */
       await sb.auth.signOut();
       $('main').hidden=true;$('login').hidden=false;
-      $('login-err').hidden=false;$('login-err').textContent='Бұл аккаунтқа тексеру рұқсаты берілмеген. Әкімшіге хабарласыңыз.';
+      $('login-err').hidden=false;$('login-err').textContent='Бұл аккаунтқа мұғалім рұқсаты берілмеген. Әкімшіге хабарласыңыз.';
       return;
     }
     $('login').hidden=true;$('main').hidden=false;
     $('who').textContent='👤 '+me.data.name;
     var cl=me.data.classes||[];
-    $('scope').textContent=me.data.admin||!cl.length?'Барлық сыныптар':'Сыныптар: '+cl.join(', ');
-    load();
+    $('scope').textContent=me.data.admin||!cl.length?'Барлық сыныптар':'Сыныптарым: '+cl.join(', ');
+    loadDash();
   }
-  async function load(){
-    var box=$('list');box.innerHTML='<p class="empty">Жүктелуде...</p>';
-    var r=await sb.rpc('kv_review_queue',{p_review:status});
-    if(r.error){box.innerHTML='<p class="empty err">Жүктеу қатесі.</p>';return;}
+
+  async function loadDash(){
+    var r=await sb.rpc('kv_teacher_dashboard');
+    if(r.error||!r.data||!r.data.ok){$('class-body').innerHTML='<p class="tc-empty">Жүктеу қатесі. Әкімші V9 SQL-ды іске қосқанын тексеріңіз.</p>';return;}
+    dash=r.data;
+    var n=dash.pending_total||0;$('pending-n').hidden=!n;$('pending-n').textContent=n;
+    var cls=dash.classes||[];
+    if(!cls.length){$('class-list').innerHTML='';$('class-body').innerHTML='<p class="tc-empty">Сыныптар табылмады.</p>';return;}
+    if(!curClass||!cls.some(function(c){return c.class===curClass;}))curClass=cls[0].class;
+    $('class-list').innerHTML=cls.map(function(c){return '<button type="button" class="tc-cls'+(c.class===curClass?' on':'')+'" data-c="'+esc(c.class)+'">'+esc(c.class)+' <small style="opacity:.7">('+c.students.length+')</small></button>';}).join('');
+    renderClass();
+  }
+
+  function renderClass(){
+    var c=(dash.classes||[]).find(function(x){return x.class===curClass;});
+    if(!c){$('class-body').innerHTML='';return;}
+    var s=c.students,books=c.books||[];
+    var passed=0,pending=0,active=0,read=0;
+    s.forEach(function(x){passed+=x.passed;pending+=x.pending;read+=x.books_read;if(x.passed||x.pending||x.books_read)active++;});
+    var html='<div class="tc-stats">'
+      +'<div class="tc-stat"><b>'+s.length+'</b><span>оқушы</span></div>'
+      +'<div class="tc-stat"><b>'+active+'</b><span>белсенді оқушы</span></div>'
+      +'<div class="tc-stat"><b>'+passed+'</b><span>өткен квест</span></div>'
+      +'<div class="tc-stat"><b>'+pending+'</b><span>тексеруді күтуде</span></div></div>';
+    html+='<b style="color:#fff">📖 Осы айдың кітаптары</b> <span class="tc-sub" style="display:inline">('+fmtDay(dash.period.start)+' – '+fmtDay(dash.period.end)+')</span>';
+    html+=books.length?'<div class="tc-books">'+books.map(function(b,i){return '<span class="tc-book"><i>'+(i+1)+'</i>'+esc(b.title)+'</span>';}).join('')+'</div>'
+                      :'<p class="tc-sub" style="margin:6px 0 18px">Бұл айға кітап таңдалмаған (әкімші кабинетінен таңдалады).</p>';
+    html+='<div class="tc-legend"><span><span class="tc-st st-done">✓</span>өтті</span><span><span class="tc-st st-pending">⏳</span>тексеруде</span><span><span class="tc-st st-failed">✕</span>өтпеді</span><span><span class="tc-st st-read">📖</span>оқыдым деп белгіледі</span><span><span class="tc-st st-open">·</span>әлі жоқ</span></div>';
+    if(!s.length){html+='<p class="tc-empty">Бұл сыныпта тіркелген оқушы жоқ.</p>';$('class-body').innerHTML=html;return;}
+    html+='<div class="tc-table-box"><table class="tc-table"><thead><tr><th>Оқушы</th>'
+      +books.map(function(b,i){return '<th title="'+esc(b.title)+'">'+(i+1)+'-кітап</th>';}).join('')
+      +'<th>Оқыған</th><th>Өтті</th><th>Тексеруде</th><th>Өтпеді</th><th>Ұпай</th><th>Соңғы кіру</th></tr></thead><tbody>';
+    s.forEach(function(x){
+      html+='<tr class="row" data-id="'+x.id+'"><td><span class="tc-name">'+esc(x.name)+'</span>'+(x.last_read?'<span class="tc-sub">Соңғы оқығаны: '+esc(x.last_read)+'</span>':'')+'</td>';
+      (x.month||[]).forEach(function(m,i){
+        var t=st(m.state);var cell=m.state==='open'&&m.read?['📖','st-read','Оқыды, квест тапсырмаған']:t;
+        html+='<td><span class="tc-st '+cell[1]+'" title="'+esc((books[i]||{}).title||'')+': '+cell[2]+'">'+cell[0]+'</span></td>';
+      });
+      html+='<td class="tc-num">'+x.books_read+'</td><td class="tc-num" style="color:#6ff0b6">'+x.passed+'</td><td class="tc-num" style="color:#ffd27a">'+x.pending+'</td><td class="tc-num" style="color:#ff9aa8">'+x.failed+'</td><td class="tc-num">'+x.points+'</td><td>'+fmtDay(x.last_seen)+'</td></tr>';
+    });
+    html+='</tbody></table></div><p class="tc-sub" style="margin-top:8px">Оқушының атын бассаңыз — толық картасы ашылады.</p>';
+    $('class-body').innerHTML=html;
+  }
+
+  async function openStudent(id){
+    $('panel').hidden=false;$('panel-body').innerHTML='<p class="tc-empty">Жүктелуде...</p>';
+    var r=await sb.rpc('kv_teacher_student',{p_student_id:id});
+    if(r.error||!r.data){$('panel-body').innerHTML='<button class="btn btn-light tc-close" type="button" data-close>✕</button><p class="tc-empty">Жүктеу қатесі.</p>';return;}
+    var d=r.data,h='<button class="btn btn-light tc-close" type="button" data-close aria-label="Жабу">✕</button>';
+    h+='<h2>'+esc(d.student.full_name)+'</h2><span class="tc-sub">'+esc(d.student.class_name)+' · соңғы кіру: '+fmt(d.student.last_seen)+'</span>';
+    h+='<h3>📚 ОҚЫҒАН КІТАПТАРЫ ('+d.books.length+')</h3>'+(d.books.length?d.books.map(function(b){return '<div class="tc-li">'+esc(b.title)+(b.bonus?' ⭐':'')+'<small>'+fmt(b.read_at)+'</small></div>';}).join(''):'<p class="tc-sub">Әлі жоқ.</p>');
+    h+='<h3>🧩 КВЕСТТЕР ('+d.quests.length+')</h3>'+(d.quests.length?d.quests.map(function(q){var t=st(q.status);var v=safeUrl(q.video_url);
+      return '<div class="tc-li"><span class="tc-st '+t[1]+'">'+t[0]+'</span> <b>'+esc(q.book||q.quest)+'</b><small>'+t[2]+(q.total?' · '+q.score+'/'+q.total:'')+' · '+fmt(q.at)+'</small>'+(q.comment?'<small>Түсініктеме: '+esc(q.comment)+'</small>':'')+(v?'<small><a href="'+esc(v)+'" target="_blank" rel="noopener" style="color:#78dcff">▶ Видео есеп</a></small>':'')+'</div>';}).join(''):'<p class="tc-sub">Әлі жоқ.</p>');
+    h+='<h3>✍️ ҚЫСҚАША МАЗМҰНДАР ('+d.retellings.length+')</h3>'+(d.retellings.length?d.retellings.map(function(x){return '<div class="tc-li"><b>'+esc(x.book)+'</b><small>'+fmt(x.at)+'</small><div style="margin-top:6px;white-space:pre-wrap">'+esc(x.body)+'</div></div>';}).join(''):'<p class="tc-sub">Әлі жоқ.</p>');
+    $('panel-body').innerHTML=h;
+  }
+
+  async function loadReview(){
+    var box=$('rv-list');box.innerHTML='<p class="tc-empty">Жүктелуде...</p>';
+    var r=await sb.rpc('kv_review_queue',{p_review:rvStatus});
+    if(r.error){box.innerHTML='<p class="tc-empty">Жүктеу қатесі.</p>';return;}
     var rows=r.data||[];
-    if(!rows.length){box.innerHTML='<p class="empty">'+(status==='pending'?'🎉 Тексеретін жұмыс жоқ.':'Әзірге жоқ.')+'</p>';return;}
+    if(!rows.length){box.innerHTML='<p class="tc-empty">'+(rvStatus==='pending'?'🎉 Тексеретін жұмыс жоқ.':'Әзірге жоқ.')+'</p>';return;}
     box.innerHTML='';
     rows.forEach(function(x){
-      var c=document.createElement('div');c.className='card';
+      var c=document.createElement('div');c.className='tc-card rv';
       var v=safeUrl(x.video_url);
-      c.innerHTML='<div class="head"><b>'+esc(x.student)+' · '+esc(x.class)+'</b><span class="chip">'+fmt(x.submitted_at)+'</span></div>'
-        +'<div class="sub" style="margin:4px 0">📖 '+esc(x.book||x.quest)+' · авто нәтиже: <b>'+x.score+' / '+x.total+'</b></div>'
+      c.innerHTML='<div class="rv-head"><b>'+esc(x.student)+' · '+esc(x.class)+'</b><span class="chip">'+fmt(x.submitted_at)+'</span></div>'
+        +'<div class="rv-sub">📖 '+esc(x.book||x.quest)+' · авто нәтиже: <b>'+x.score+' / '+x.total+'</b></div>'
         +'<ul class="ans">'+(x.answers||[]).map(function(a,i){
             return '<li class="'+(a.ok?'ok':'no')+'"><b>'+(i+1)+'. '+esc(a.question)+'</b><small>Оқушы жауабы: '+esc(a.chosen||'— жауап жоқ —')+(a.ok?' ✅':' ❌')+'</small>'+(a.ok?'':'<small>Дұрыс жауап: '+esc(a.correct)+'</small>')+'</li>';}).join('')+'</ul>'
-        +(v?'<div class="vid"><button class="ghost play">▶ Видео есепті көру</button> <a href="'+esc(v)+'" target="_blank" rel="noopener">жаңа терезеде ↗</a></div>':'<p class="sub">Видео есеп жоқ.</p>');
+        +(v?'<div style="margin-top:10px"><button class="btn btn-light play" type="button">▶ Видео есепті көру</button> <a href="'+esc(v)+'" target="_blank" rel="noopener">жаңа терезеде ↗</a></div>':'<p class="rv-sub">Видео есеп жоқ.</p>');
       var pb=c.querySelector('.play');
       if(pb){pb.onclick=function(){
         var m=/drive\.google\.com\/file\/d\/([\w-]+)/.exec(v);
@@ -97,33 +237,44 @@ a{color:var(--brand)}.empty{color:var(--muted);text-align:center;padding:30px 0}
         var f=document.createElement('iframe');f.src='https://drive.google.com/file/d/'+m[1]+'/preview';f.allow='autoplay;fullscreen';f.allowFullscreen=true;f.title='Видео есеп';
         f.style.cssText='width:100%;aspect-ratio:16/9;border:0;border-radius:12px;margin-top:10px;background:#000';
         pb.parentNode.appendChild(f);pb.remove();};}
-      if(status==='pending'){
-        c.innerHTML+='<textarea rows="2" placeholder="Түсініктеме (міндетті емес)"></textarea><div class="actions"><button class="ok">✅ Өтті</button><button class="bad">❌ Өтпеді</button></div>';
+      if(rvStatus==='pending'){
+        c.insertAdjacentHTML('beforeend','<textarea rows="2" placeholder="Түсініктеме (міндетті емес)"></textarea><div class="rv-actions"><button class="btn btn-ok" type="button">✅ Өтті</button><button class="btn btn-bad" type="button">❌ Өтпеді</button></div>');
         var ta=c.querySelector('textarea');
-        var decide=async function(pass,btn){
+        var decide=async function(pass){
           if(!pass&&!confirm('«Өтпеді» деп белгілейміз бе? Ұпай берілмейді.'))return;
           c.querySelectorAll('button').forEach(function(b){b.disabled=true;});
           var d=await sb.rpc('kv_review_decide',{p_attempt_id:x.attempt_id,p_pass:pass,p_comment:ta.value});
-          if(d.error||!d.data||!d.data.ok){alert('Қате: жұмыс бұрын тексерілген немесе рұқсат жоқ.');load();return;}
-          c.remove();if(!$('list').children.length)load();
+          if(d.error||!d.data||!d.data.ok){alert('Қате: жұмыс бұрын тексерілген немесе рұқсат жоқ.');loadReview();return;}
+          c.remove();loadDash();if(!$('rv-list').children.length)loadReview();
         };
-        c.querySelector('.ok').onclick=function(){decide(true);};
-        c.querySelector('.bad').onclick=function(){decide(false);};
-      } else if(x.comment){c.innerHTML+='<p class="sub">Түсініктеме: '+esc(x.comment)+'</p>';}
+        c.querySelector('.btn-ok').onclick=function(){decide(true);};
+        c.querySelector('.btn-bad').onclick=function(){decide(false);};
+      } else if(x.comment){c.insertAdjacentHTML('beforeend','<p class="rv-sub">Түсініктеме: '+esc(x.comment)+'</p>');}
       box.appendChild(c);
     });
   }
-  $('tabs').addEventListener('click',function(e){var b=e.target.closest('button[data-s]');if(!b)return;status=b.dataset.s;document.querySelectorAll('#tabs button').forEach(function(x){x.classList.toggle('on',x===b);});load();});
+
+  document.querySelectorAll('.tc-tabs [data-view]').forEach(function(b){b.addEventListener('click',function(){
+    document.querySelectorAll('.tc-tabs [data-view]').forEach(function(x){x.classList.toggle('on',x===b);});
+    $('view-classes').hidden=b.dataset.view!=='classes';$('view-review').hidden=b.dataset.view!=='review';
+    if(b.dataset.view==='review')loadReview();else loadDash();
+  });});
+  $('rv-tabs').addEventListener('click',function(e){var b=e.target.closest('[data-s]');if(!b)return;rvStatus=b.dataset.s;$('rv-tabs').querySelectorAll('[data-s]').forEach(function(x){x.classList.toggle('on',x===b);});loadReview();});
+  $('class-list').addEventListener('click',function(e){var b=e.target.closest('[data-c]');if(!b)return;curClass=b.dataset.c;$('class-list').querySelectorAll('[data-c]').forEach(function(x){x.classList.toggle('on',x===b);});renderClass();});
+  $('class-body').addEventListener('click',function(e){var tr=e.target.closest('tr.row');if(tr)openStudent(Number(tr.dataset.id));});
+  $('panel').addEventListener('click',function(e){if(e.target===$('panel')||e.target.closest('[data-close]'))$('panel').hidden=true;});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')$('panel').hidden=true;});
+
   $('login-btn').onclick=async function(){
     $('login-err').hidden=true;
     var lg=$('email').value.trim().replace(/\s/g,'');if(/^\d{12}$/.test(lg))lg=lg+'@teachers.kitapverse.local';
     var r=await sb.auth.signInWithPassword({email:lg,password:$('password').value});
     if(r.error){$('login-err').hidden=false;$('login-err').textContent='Логин немесе құпиясөз қате.';return;}
-    enter();
+    enter(true);
   };
   $('password').addEventListener('keydown',function(e){if(e.key==='Enter')$('login-btn').click();});
   $('logout').onclick=async function(){await sb.auth.signOut();location.reload();};
-  sb.auth.getSession().then(function(s){if(s&&s.data&&s.data.session)enter();});
+  sb.auth.getSession().then(function(s){if(s&&s.data&&s.data.session)enter(false);});
 })();
 </script>
 </body>
