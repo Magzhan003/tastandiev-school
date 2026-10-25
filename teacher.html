@@ -70,6 +70,49 @@ table.tc-table{width:100%;border-collapse:collapse;min-width:760px}
 .rv a{color:#78dcff}
 @media(max-width:720px){.tc-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 [hidden]{display:none!important}
+
+/* V13: жаңа кабинет */
+.tc-crumb{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 16px}
+.tc-back{font:inherit;font-weight:800;border-radius:999px;padding:9px 16px;border:1px solid rgba(171,184,255,.3);background:rgba(20,24,72,.55);color:#dff6ff;cursor:pointer}
+.tc-back:hover{border-color:#78dcff}
+.tc-h2{margin:0;color:#fff;font-size:clamp(1.3rem,3.6vw,1.8rem)}
+.tc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.tc-cc{text-align:left;font:inherit;cursor:pointer;color:#fff;background:linear-gradient(145deg,rgba(40,48,130,.7),rgba(20,24,72,.7));border:1px solid rgba(171,184,255,.2);border-radius:20px;padding:18px;transition:.18s;position:relative}
+.tc-cc:hover{transform:translateY(-3px);border-color:#78dcff;box-shadow:0 10px 30px rgba(90,100,255,.3)}
+.tc-cc b{display:block;font-size:34px;line-height:1.1}
+.tc-cc span{display:block;color:#aeb8df;font-size:14px;margin-top:4px}
+.tc-cc .pend{position:absolute;top:14px;right:14px;background:#ff9f6b;color:#1a1033;font-weight:800;font-size:13px;padding:3px 10px;border-radius:99px}
+.tc-cc .bar{height:6px;border-radius:9px;background:rgba(171,184,255,.15);margin-top:12px;overflow:hidden}
+.tc-cc .bar i{display:block;height:100%;background:linear-gradient(90deg,#3978ff,#6ff0b6)}
+.tc-srow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:16px;margin-bottom:8px;background:rgba(20,24,72,.6);border:1px solid rgba(171,184,255,.14)}
+.tc-srow.has{border-color:rgba(255,190,80,.55)}
+.tc-srow .nm{flex:1 1 200px;min-width:0;cursor:pointer}
+.tc-srow .nm b{color:#fff;display:block}.tc-srow .nm:hover b{color:#78dcff}
+.tc-srow .chips{display:flex;gap:4px;flex-wrap:wrap}
+.tc-srow .pts{font-weight:800;color:#fff;min-width:64px;text-align:right}
+.btn-check{font:inherit;font-weight:800;cursor:pointer;border:0;border-radius:12px;padding:9px 14px;background:#ff9f6b;color:#1a1033;box-shadow:0 0 18px rgba(255,159,107,.4)}
+.btn-check:hover{filter:brightness(1.08)}
+.tc-qcard{padding:16px;margin-bottom:12px}
+.tc-qcard.pend{border-color:rgba(255,190,80,.6)}
+.tc-sec{margin:22px 0 8px;color:#78dcff;font-size:14px;letter-spacing:.05em;font-weight:800}
+.tc-bk{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:12px;background:rgba(20,24,72,.5);border:1px solid rgba(171,184,255,.12);margin-bottom:6px;color:#eaf0ff;font-size:14px}
+.tc-bk .t{flex:1}
+.tc-qcard textarea{width:100%;box-sizing:border-box;margin-top:12px;padding:12px;border-radius:12px;border:1px solid rgba(171,184,255,.25);background:rgba(7,10,36,.7);color:#fff;font:inherit}
+.tc-qcard a{color:#78dcff}
+#all-check .chip{display:inline-block;margin-left:6px;background:#ff9f6b;color:#1a1033;border-color:transparent;font-weight:800;padding:1px 9px}
+.av{flex:0 0 44px;height:44px;border-radius:14px;display:grid;place-items:center;font-weight:800;color:#fff;background:linear-gradient(135deg,#3978ff,#8a55ff);box-shadow:0 6px 18px rgba(90,100,255,.35)}
+.tc-srow.has .av{background:linear-gradient(135deg,#ff9f6b,#ff6f91)}
+.tc-search{width:100%;box-sizing:border-box;margin:0 0 12px;padding:13px 16px;border-radius:14px;border:1px solid rgba(171,184,255,.25);background:rgba(7,10,36,.7);color:#fff;font:inherit}
+.tc-search:focus{outline:2px solid #78dcff}
+.tc-cc{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
+.ring{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#6ff0b6 var(--p),rgba(171,184,255,.15) 0)}
+.ring i{width:50px;height:50px;border-radius:50%;background:#12184a;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:14px}
+.tc-cc .meta b{font-size:28px}
+.tc-cc .meta span{margin-top:2px}
+.tc-cc .meta .ok{color:#6ff0b6}
+.tc-srow{padding:14px 16px;border-radius:18px;transition:.15s}
+.tc-srow:hover{border-color:#78dcff;transform:translateX(2px)}
+details.tc-det summary{cursor:pointer;color:#9fe8ff;margin-top:8px}
 </style>
 </head>
 <body class="kv-page">
@@ -88,7 +131,7 @@ table.tc-table{width:100%;border-collapse:collapse;min-width:760px}
 <main>
 <section class="kv-section tc-wrap">
   <div class="container">
-    <div class="tc-title"><div><span class="kv-badge">👩‍🏫 МҰҒАЛІМ</span><h1>Мұғалім кабинеті</h1><p>Сыныптарыңыз, оқушыларыңыз, кім не оқып жатыр және кім не тапсырды.</p></div></div>
+    <div class="tc-title"><div><span class="kv-badge">👩‍🏫 МҰҒАЛІМ</span><h1>Мұғалім кабинеті</h1><p id="sub">Логин мен құпиясөз арқылы кіріңіз.</p></div></div>
 
     <div class="tc-card tc-login" id="login">
       <h3>🔐 Кіру</h3>
@@ -100,23 +143,29 @@ table.tc-table{width:100%;border-collapse:collapse;min-width:760px}
     </div>
 
     <div id="main" hidden>
-      <div class="tc-card tc-me"><div><b id="who">—</b><span id="scope"></span></div><button class="btn btn-light" id="logout" type="button">Шығу</button></div>
-      <div class="tc-tabs" role="tablist">
-        <button class="tc-tab on" data-view="classes" type="button">📚 Сыныптарым</button>
-        <button class="tc-tab" data-view="review" type="button">📝 Тексеру<span class="n" id="pending-n" hidden>0</span></button>
+      <div class="tc-card tc-me"><div><b id="who">—</b><span id="scope"></span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-light" id="all-check" type="button" hidden>📝 Барлық тексерулер <span class="chip" id="pending-n">0</span></button><button class="btn btn-light" id="logout" type="button">Шығу</button></div></div>
+
+      <!-- 1: сыныптар -->
+      <div id="v-classes"><h2 class="tc-h2" style="margin-bottom:6px">📚 Менің сыныптарым</h2><p class="tc-sub" style="margin:0 0 14px">Сыныпты басыңыз — оқушылар тізімі ашылады.</p><div class="tc-grid" id="class-grid"><p class="tc-empty">Жүктелуде...</p></div></div>
+
+      <!-- 2: сынып ішінде оқушылар -->
+      <div id="v-class" hidden>
+        <div class="tc-crumb"><button class="tc-back" id="back-classes" type="button">← Сыныптар</button><h2 class="tc-h2" id="cls-title"></h2></div>
+        <div id="cls-books"></div>
+        <div class="tc-legend"><span><span class="tc-st st-done">✓</span>өтті</span><span><span class="tc-st st-pending">⏳</span>тексеруде</span><span><span class="tc-st st-failed">✕</span>өтпеді</span><span><span class="tc-st st-read">📖</span>оқыды</span><span><span class="tc-st st-open">·</span>әлі жоқ</span></div>
+        <div id="cls-students"></div>
       </div>
 
-      <div id="view-classes">
-        <div class="tc-classes" id="class-list"></div>
-        <div id="class-body"><p class="tc-empty">Жүктелуде...</p></div>
+      <!-- 3: оқушының толық есебі -->
+      <div id="v-student" hidden>
+        <div class="tc-crumb"><button class="tc-back" id="back-class" type="button">← Сынып</button><h2 class="tc-h2" id="st-title"></h2></div>
+        <div id="st-body"></div>
       </div>
 
-      <div id="view-review" hidden>
-        <div class="tc-tabs" id="rv-tabs">
-          <button class="tc-tab on" data-s="pending" type="button">⏳ Тексеруді күтуде</button>
-          <button class="tc-tab" data-s="passed" type="button">✅ Өтті</button>
-          <button class="tc-tab" data-s="failed" type="button">❌ Өтпеді</button>
-        </div>
+      <!-- 4: барлық тексерулер -->
+      <div id="v-review" hidden>
+        <div class="tc-crumb"><button class="tc-back" id="back-from-review" type="button">← Сыныптар</button><h2 class="tc-h2">📝 Тексеруді күтетін жұмыстар</h2></div>
         <div id="rv-list"></div>
       </div>
     </div>
@@ -124,8 +173,6 @@ table.tc-table{width:100%;border-collapse:collapse;min-width:760px}
 </section>
 </main>
 <footer><div class="container footer-wrap"><div><strong>№11 Тайыр Тастандиев атындағы орта мектеп</strong><small>KITAPVERSE — мұғалім кабинеті</small></div><span>© 2026 Барлық құқықтар қорғалған</span></div></footer>
-
-<div class="tc-panel" id="panel" hidden><div id="panel-body"></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
@@ -136,17 +183,19 @@ table.tc-table{width:100%;border-collapse:collapse;min-width:760px}
   var tg=document.querySelector('.menu-toggle'),nav=document.querySelector('.nav');
   if(tg&&nav)tg.addEventListener('click',function(){var o=nav.classList.toggle('open');tg.setAttribute('aria-expanded',o);});
   var sb=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY);
-  var dash=null,curClass=null,rvStatus='pending';
+  var dash=null,curClass=null,curStudent=null,prevView='v-class';
   function fmt(d){return d?new Date(d).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';}
   function fmtDay(d){return d?new Date(d).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}):'—';}
   function safeUrl(u){return /^https?:\/\//i.test(u||'')?u:'';}
   var ST={done:['✓','st-done','Өтті'],pending:['⏳','st-pending','Тексеруде'],failed:['✕','st-failed','Өтпеді'],violation:['✕','st-failed','Ереже бұзылды'],zeroed:['✕','st-failed','Нөлденді'],open:['·','st-open','Әлі тапсырмаған'],noquest:['—','st-open','Квест жоқ'],started:['…','st-pending','Басталды']};
   function st(s){return ST[s]||[s,'st-open',s];}
+  var VIEWS=['v-classes','v-class','v-student','v-review'];
+  function show(v){VIEWS.forEach(function(x){$(x).hidden=x!==v;});window.scrollTo({top:0,behavior:'smooth'});}
 
   async function enter(explicit){
     var me=await sb.rpc('kv_reviewer_me');
     if(me.error||!me.data||!me.data.ok){
-      if(!explicit)return; /* оқушы сессиясы болса — оны шығармаймыз */
+      if(!explicit)return;
       await sb.auth.signOut();
       $('main').hidden=true;$('login').hidden=false;
       $('login-err').hidden=false;$('login-err').textContent='Бұл аккаунтқа мұғалім рұқсаты берілмеген. Әкімшіге хабарласыңыз.';
@@ -156,114 +205,118 @@ table.tc-table{width:100%;border-collapse:collapse;min-width:760px}
     $('who').textContent='👤 '+me.data.name;
     var cl=me.data.classes||[];
     $('scope').textContent=me.data.admin||!cl.length?'Барлық сыныптар':'Сыныптарым: '+cl.join(', ');
-    loadDash();
+    $('sub').textContent='Сынып → оқушы → толық есеп. Тексеруді күтетін жұмыстар «Тексеру» түймесімен белгіленеді.';
+    await loadDash();show('v-classes');
   }
 
   async function loadDash(){
     var r=await sb.rpc('kv_teacher_dashboard');
-    if(r.error||!r.data||!r.data.ok){$('class-body').innerHTML='<p class="tc-empty">Жүктеу қатесі. Әкімші V9 SQL-ды іске қосқанын тексеріңіз.</p>';return;}
+    if(r.error||!r.data||!r.data.ok){$('class-grid').innerHTML='<p class="tc-empty">Жүктеу қатесі. Әкімші V9 және V13 SQL-ды іске қосқанын тексеріңіз.</p>';return;}
     dash=r.data;
-    var n=dash.pending_total||0;$('pending-n').hidden=!n;$('pending-n').textContent=n;
+    var n=dash.pending_total||0;$('all-check').hidden=!n;$('pending-n').textContent=n;
     var cls=dash.classes||[];
-    if(!cls.length){$('class-list').innerHTML='';$('class-body').innerHTML='<p class="tc-empty">Сыныптар табылмады.</p>';return;}
-    if(!curClass||!cls.some(function(c){return c.class===curClass;}))curClass=cls[0].class;
-    $('class-list').innerHTML=cls.map(function(c){return '<button type="button" class="tc-cls'+(c.class===curClass?' on':'')+'" data-c="'+esc(c.class)+'">'+esc(c.class)+' <small style="opacity:.7">('+c.students.length+')</small></button>';}).join('');
-    renderClass();
+    if(!cls.length){$('class-grid').innerHTML='<p class="tc-empty">Сыныптар табылмады.</p>';return;}
+    $('class-grid').innerHTML=cls.map(function(c){
+      var s=c.students,p=0,act=0;s.forEach(function(x){p+=x.pending;if(x.passed||x.pending||x.books_read)act++;});
+      var pc=s.length?Math.round(act*100/s.length):0;
+      var ps=0;s.forEach(function(x){ps+=x.passed;});
+      return '<button type="button" class="tc-cc" data-c="'+esc(c.class)+'">'+(p?'<em class="pend" style="font-style:normal">⏳ '+p+'</em>':'')+'<div class="ring" style="--p:'+pc+'%"><i>'+pc+'%</i></div><div class="meta"><b>'+esc(c.class)+'</b><span>'+s.length+' оқушы</span><span class="ok">✓ '+ps+' өткен квест</span></div></button>';
+    }).join('');
+    if(curClass&&!$('v-class').hidden)renderClass();
   }
 
   function renderClass(){
     var c=(dash.classes||[]).find(function(x){return x.class===curClass;});
-    if(!c){$('class-body').innerHTML='';return;}
-    var s=c.students,books=c.books||[];
-    var passed=0,pending=0,active=0,read=0;
-    s.forEach(function(x){passed+=x.passed;pending+=x.pending;read+=x.books_read;if(x.passed||x.pending||x.books_read)active++;});
-    var html='<div class="tc-stats">'
-      +'<div class="tc-stat"><b>'+s.length+'</b><span>оқушы</span></div>'
-      +'<div class="tc-stat"><b>'+active+'</b><span>белсенді оқушы</span></div>'
-      +'<div class="tc-stat"><b>'+passed+'</b><span>өткен квест</span></div>'
-      +'<div class="tc-stat"><b>'+pending+'</b><span>тексеруді күтуде</span></div></div>';
-    html+='<b style="color:#fff">📖 Осы айдың кітаптары</b> <span class="tc-sub" style="display:inline">('+fmtDay(dash.period.start)+' – '+fmtDay(dash.period.end)+')</span>';
-    html+=books.length?'<div class="tc-books">'+books.map(function(b,i){return '<span class="tc-book"><i>'+(i+1)+'</i>'+esc(b.title)+'</span>';}).join('')+'</div>'
-                      :'<p class="tc-sub" style="margin:6px 0 18px">Бұл айға кітап таңдалмаған (әкімші кабинетінен таңдалады).</p>';
-    html+='<div class="tc-legend"><span><span class="tc-st st-done">✓</span>өтті</span><span><span class="tc-st st-pending">⏳</span>тексеруде</span><span><span class="tc-st st-failed">✕</span>өтпеді</span><span><span class="tc-st st-read">📖</span>оқыдым деп белгіледі</span><span><span class="tc-st st-open">·</span>әлі жоқ</span></div>';
-    if(!s.length){html+='<p class="tc-empty">Бұл сыныпта тіркелген оқушы жоқ.</p>';$('class-body').innerHTML=html;return;}
-    html+='<div class="tc-table-box"><table class="tc-table"><thead><tr><th>Оқушы</th>'
-      +books.map(function(b,i){return '<th title="'+esc(b.title)+'">'+(i+1)+'-кітап</th>';}).join('')
-      +'<th>Оқыған</th><th>Өтті</th><th>Тексеруде</th><th>Өтпеді</th><th>Ұпай</th><th>Соңғы кіру</th></tr></thead><tbody>';
-    s.forEach(function(x){
-      html+='<tr class="row" data-id="'+x.id+'"><td><span class="tc-name">'+esc(x.name)+'</span>'+(x.last_read?'<span class="tc-sub">Соңғы оқығаны: '+esc(x.last_read)+'</span>':'')+'</td>';
-      (x.month||[]).forEach(function(m,i){
-        var t=st(m.state);var cell=m.state==='open'&&m.read?['📖','st-read','Оқыды, квест тапсырмаған']:t;
-        html+='<td><span class="tc-st '+cell[1]+'" title="'+esc((books[i]||{}).title||'')+': '+cell[2]+'">'+cell[0]+'</span></td>';
-      });
-      html+='<td class="tc-num">'+x.books_read+'</td><td class="tc-num" style="color:#6ff0b6">'+x.passed+'</td><td class="tc-num" style="color:#ffd27a">'+x.pending+'</td><td class="tc-num" style="color:#ff9aa8">'+x.failed+'</td><td class="tc-num">'+x.points+'</td><td>'+fmtDay(x.last_seen)+'</td></tr>';
-    });
-    html+='</tbody></table></div><p class="tc-sub" style="margin-top:8px">Оқушының атын бассаңыз — толық картасы ашылады.</p>';
-    $('class-body').innerHTML=html;
+    if(!c)return;
+    $('cls-title').textContent=c.class+' сыныбы';
+    var books=c.books||[];
+    $('cls-books').innerHTML='<p class="tc-sub" style="margin:0 0 8px"><b style="color:#fff">📖 Осы айдың кітаптары</b> ('+fmtDay(dash.period.start)+' – '+fmtDay(dash.period.end)+')</p>'
+      +(books.length?'<div class="tc-books">'+books.map(function(b,i){return '<span class="tc-book"><i>'+(i+1)+'</i>'+esc(b.title)+'</span>';}).join('')+'</div>':'<p class="tc-sub">Бұл айға кітап таңдалмаған.</p>');
+    var s=c.students;
+    if(!s.length){$('cls-students').innerHTML='<p class="tc-empty">Бұл сыныпта оқушы жоқ.</p>';return;}
+    $('cls-students').innerHTML='<input class="tc-search" id="srch" type="search" placeholder="🔎 Оқушыны іздеу...">'+s.map(function(x){
+      var chips=(x.month||[]).map(function(m,i){var t=st(m.state);var cell=m.state==='open'&&m.read?['📖','st-read','Оқыды, квест тапсырмаған']:t;return '<span class="tc-st '+cell[1]+'" title="'+esc((books[i]||{}).title||'')+': '+cell[2]+'">'+cell[0]+'</span>';}).join('');
+      return '<div class="tc-srow'+(x.pending?' has':'')+'" data-id="'+x.id+'" data-n="'+esc(x.name.toLowerCase())+'"><div class="av">'+esc(x.name.split(' ').slice(0,2).map(function(w){return w.charAt(0);}).join('').toUpperCase())+'</div><div class="nm" data-open="'+x.id+'"><b>'+esc(x.name)+'</b><span class="tc-sub">Оқыған: '+x.books_read+' · өтті: '+x.passed+(x.last_read?' · соңғы: '+esc(x.last_read):'')+'</span></div>'
+        +'<div class="chips">'+chips+'</div><div class="pts">'+x.points+' ұпай</div>'
+        +(x.pending?'<button type="button" class="btn-check" data-open="'+x.id+'">📝 Тексеру ('+x.pending+')</button>':'<button type="button" class="tc-back" data-open="'+x.id+'">Есеп →</button>')+'</div>';
+    }).join('');
   }
 
   async function openStudent(id){
-    $('panel').hidden=false;$('panel-body').innerHTML='<p class="tc-empty">Жүктелуде...</p>';
+    curStudent=id;show('v-student');
+    $('st-title').textContent='…';$('st-body').innerHTML='<p class="tc-empty">Жүктелуде...</p>';
     var r=await sb.rpc('kv_teacher_student',{p_student_id:id});
-    if(r.error||!r.data){$('panel-body').innerHTML='<button class="btn btn-light tc-close" type="button" data-close>✕</button><p class="tc-empty">Жүктеу қатесі.</p>';return;}
-    var d=r.data,h='<button class="btn btn-light tc-close" type="button" data-close aria-label="Жабу">✕</button>';
-    h+='<h2>'+esc(d.student.full_name)+'</h2><span class="tc-sub">'+esc(d.student.class_name)+' · соңғы кіру: '+fmt(d.student.last_seen)+'</span>';
-    h+='<h3>📚 ОҚЫҒАН КІТАПТАРЫ ('+d.books.length+')</h3>'+(d.books.length?d.books.map(function(b){return '<div class="tc-li">'+esc(b.title)+(b.bonus?' ⭐':'')+'<small>'+fmt(b.read_at)+'</small></div>';}).join(''):'<p class="tc-sub">Әлі жоқ.</p>');
-    h+='<h3>🧩 КВЕСТТЕР ('+d.quests.length+')</h3>'+(d.quests.length?d.quests.map(function(q){var t=st(q.status);var v=safeUrl(q.video_url);
-      return '<div class="tc-li"><span class="tc-st '+t[1]+'">'+t[0]+'</span> <b>'+esc(q.book||q.quest)+'</b><small>'+t[2]+(q.total?' · '+q.score+'/'+q.total:'')+' · '+fmt(q.at)+'</small>'+(q.comment?'<small>Түсініктеме: '+esc(q.comment)+'</small>':'')+(v?'<small><a href="'+esc(v)+'" target="_blank" rel="noopener" style="color:#78dcff">▶ Видео есеп</a></small>':'')+'</div>';}).join(''):'<p class="tc-sub">Әлі жоқ.</p>');
-    h+='<h3>✍️ ҚЫСҚАША МАЗМҰНДАР ('+d.retellings.length+')</h3>'+(d.retellings.length?d.retellings.map(function(x){return '<div class="tc-li"><b>'+esc(x.book)+'</b><small>'+fmt(x.at)+'</small><div style="margin-top:6px;white-space:pre-wrap">'+esc(x.body)+'</div></div>';}).join(''):'<p class="tc-sub">Әлі жоқ.</p>');
-    $('panel-body').innerHTML=h;
+    if(r.error||!r.data){$('st-body').innerHTML='<p class="tc-empty">Жүктеу қатесі. V13 SQL іске қосылғанын тексеріңіз.</p>';return;}
+    var d=r.data,h='';
+    $('st-title').textContent=d.student.full_name+' · '+d.student.class_name;
+    var q=d.quests||[];
+    var np=q.filter(function(x){return x.status==='pending';}).length,nd=q.filter(function(x){return x.status==='done';}).length,nf=q.filter(function(x){return x.status==='failed';}).length;
+    h+='<div class="tc-stats"><div class="tc-stat"><b>'+d.books.length+'</b><span>оқыған кітап</span></div><div class="tc-stat"><b style="color:#6ff0b6">'+nd+'</b><span>өткен квест</span></div><div class="tc-stat"><b style="color:#ffd27a">'+np+'</b><span>тексеруді күтуде</span></div><div class="tc-stat"><b style="color:#ff9aa8">'+nf+'</b><span>өтпеген</span></div></div>';
+    h+='<p class="tc-sub">Соңғы кіру: '+fmt(d.student.last_seen)+'</p>';
+    h+='<div class="tc-sec">🧩 КВЕСТТЕР МЕН ЖҰМЫСТАР</div><div id="qlist"></div>';
+    h+='<div class="tc-sec">📚 ОҚЫҒАН КІТАПТАРЫ ('+d.books.length+')</div>'+(d.books.length?d.books.map(function(b){return '<div class="tc-bk"><span class="t">'+esc(b.title)+(b.bonus?' ⭐':'')+'</span><small class="tc-sub">'+fmt(b.read_at)+'</small></div>';}).join(''):'<p class="tc-sub">Әлі жоқ.</p>');
+    h+='<div class="tc-sec">✍️ ҚЫСҚАША МАЗМҰНДАР ('+d.retellings.length+')</div>'+(d.retellings.length?d.retellings.map(function(x){return '<div class="tc-li"><b>'+esc(x.book)+'</b><small>'+fmt(x.at)+'</small><div style="margin-top:6px;white-space:pre-wrap">'+esc(x.body)+'</div></div>';}).join(''):'<p class="tc-sub">Әлі жоқ.</p>');
+    $('st-body').innerHTML=h;
+    var ql=$('qlist');
+    if(!q.length){ql.innerHTML='<p class="tc-sub">Квест әлі тапсырылмаған.</p>';return;}
+    q.forEach(function(x){ql.appendChild(questCard(x,function(){openStudent(id);loadDash();}));});
   }
 
-  async function loadReview(){
+  function questCard(x,after){
+    var t=st(x.status),v=safeUrl(x.video_url),c=document.createElement('div');
+    c.className='tc-card tc-qcard'+(x.status==='pending'?' pend':'');
+    var ans=(x.answers||[]);
+    c.innerHTML='<div class="rv-head"><b><span class="tc-st '+t[1]+'">'+t[0]+'</span> '+esc(x.book||x.quest)+'</b><span class="chip">'+t[2]+(x.total?' · '+x.score+'/'+x.total:'')+' · '+fmt(x.at)+'</span></div>'
+      +(ans.length?'<details class="tc-det"'+(x.status==='pending'?' open':'')+'><summary>Жауаптарын көру ('+ans.length+')</summary><ul class="ans">'+ans.map(function(a,i){
+          return '<li class="'+(a.ok?'ok':'no')+'"><b>'+(i+1)+'. '+esc(a.question)+'</b><small>Оқушы жауабы: '+esc(a.chosen||'— жауап жоқ —')+(a.ok?' ✅':' ❌')+'</small>'+(a.ok?'':'<small>Дұрыс жауап: '+esc(a.correct)+'</small>')+'</li>';}).join('')+'</ul></details>':'')
+      +(v?'<div style="margin-top:10px"><button class="btn btn-light play" type="button">▶ Видео есепті көру</button> <a href="'+esc(v)+'" target="_blank" rel="noopener">жаңа терезеде ↗</a></div>':(x.status==='pending'||x.status==='done'?'<p class="rv-sub">Видео есеп жоқ.</p>':''))
+      +(x.comment?'<p class="rv-sub">Түсініктеме: '+esc(x.comment)+'</p>':'');
+    var pb=c.querySelector('.play');
+    if(pb){pb.onclick=function(){
+      var m=/drive\.google\.com\/file\/d\/([\w-]+)/.exec(v);
+      if(!m){window.open(v,'_blank','noopener');return;}
+      var f=document.createElement('iframe');f.src='https://drive.google.com/file/d/'+m[1]+'/preview';f.allow='autoplay;fullscreen';f.allowFullscreen=true;f.title='Видео есеп';
+      f.style.cssText='width:100%;aspect-ratio:16/9;border:0;border-radius:12px;margin-top:10px;background:#000';
+      pb.parentNode.appendChild(f);pb.remove();};}
+    if(x.status==='pending'&&x.attempt_id){
+      c.insertAdjacentHTML('beforeend','<textarea rows="2" placeholder="Түсініктеме (міндетті емес)"></textarea><div class="rv-actions"><button class="btn btn-ok" type="button">✅ Өтті</button><button class="btn btn-bad" type="button">❌ Өтпеді</button></div>');
+      var ta=c.querySelector('textarea');
+      var decide=async function(pass){
+        if(!pass&&!confirm('«Өтпеді» деп белгілейміз бе? Ұпай берілмейді.'))return;
+        c.querySelectorAll('button').forEach(function(b){b.disabled=true;});
+        var d=await sb.rpc('kv_review_decide',{p_attempt_id:x.attempt_id,p_pass:pass,p_comment:ta.value});
+        if(d.error||!d.data||!d.data.ok){alert('Қате: жұмыс бұрын тексерілген немесе рұқсат жоқ.');}
+        after();
+      };
+      c.querySelector('.btn-ok').onclick=function(){decide(true);};
+      c.querySelector('.btn-bad').onclick=function(){decide(false);};
+    }
+    return c;
+  }
+
+  async function loadAllReview(){
+    show('v-review');
     var box=$('rv-list');box.innerHTML='<p class="tc-empty">Жүктелуде...</p>';
-    var r=await sb.rpc('kv_review_queue',{p_review:rvStatus});
+    var r=await sb.rpc('kv_review_queue',{p_review:'pending'});
     if(r.error){box.innerHTML='<p class="tc-empty">Жүктеу қатесі.</p>';return;}
     var rows=r.data||[];
-    if(!rows.length){box.innerHTML='<p class="tc-empty">'+(rvStatus==='pending'?'🎉 Тексеретін жұмыс жоқ.':'Әзірге жоқ.')+'</p>';return;}
+    if(!rows.length){box.innerHTML='<p class="tc-empty">🎉 Тексеретін жұмыс жоқ.</p>';return;}
     box.innerHTML='';
     rows.forEach(function(x){
-      var c=document.createElement('div');c.className='tc-card rv';
-      var v=safeUrl(x.video_url);
-      c.innerHTML='<div class="rv-head"><b>'+esc(x.student)+' · '+esc(x.class)+'</b><span class="chip">'+fmt(x.submitted_at)+'</span></div>'
-        +'<div class="rv-sub">📖 '+esc(x.book||x.quest)+' · авто нәтиже: <b>'+x.score+' / '+x.total+'</b></div>'
-        +'<ul class="ans">'+(x.answers||[]).map(function(a,i){
-            return '<li class="'+(a.ok?'ok':'no')+'"><b>'+(i+1)+'. '+esc(a.question)+'</b><small>Оқушы жауабы: '+esc(a.chosen||'— жауап жоқ —')+(a.ok?' ✅':' ❌')+'</small>'+(a.ok?'':'<small>Дұрыс жауап: '+esc(a.correct)+'</small>')+'</li>';}).join('')+'</ul>'
-        +(v?'<div style="margin-top:10px"><button class="btn btn-light play" type="button">▶ Видео есепті көру</button> <a href="'+esc(v)+'" target="_blank" rel="noopener">жаңа терезеде ↗</a></div>':'<p class="rv-sub">Видео есеп жоқ.</p>');
-      var pb=c.querySelector('.play');
-      if(pb){pb.onclick=function(){
-        var m=/drive\.google\.com\/file\/d\/([\w-]+)/.exec(v);
-        if(!m){window.open(v,'_blank','noopener');return;}
-        var f=document.createElement('iframe');f.src='https://drive.google.com/file/d/'+m[1]+'/preview';f.allow='autoplay;fullscreen';f.allowFullscreen=true;f.title='Видео есеп';
-        f.style.cssText='width:100%;aspect-ratio:16/9;border:0;border-radius:12px;margin-top:10px;background:#000';
-        pb.parentNode.appendChild(f);pb.remove();};}
-      if(rvStatus==='pending'){
-        c.insertAdjacentHTML('beforeend','<textarea rows="2" placeholder="Түсініктеме (міндетті емес)"></textarea><div class="rv-actions"><button class="btn btn-ok" type="button">✅ Өтті</button><button class="btn btn-bad" type="button">❌ Өтпеді</button></div>');
-        var ta=c.querySelector('textarea');
-        var decide=async function(pass){
-          if(!pass&&!confirm('«Өтпеді» деп белгілейміз бе? Ұпай берілмейді.'))return;
-          c.querySelectorAll('button').forEach(function(b){b.disabled=true;});
-          var d=await sb.rpc('kv_review_decide',{p_attempt_id:x.attempt_id,p_pass:pass,p_comment:ta.value});
-          if(d.error||!d.data||!d.data.ok){alert('Қате: жұмыс бұрын тексерілген немесе рұқсат жоқ.');loadReview();return;}
-          c.remove();loadDash();if(!$('rv-list').children.length)loadReview();
-        };
-        c.querySelector('.btn-ok').onclick=function(){decide(true);};
-        c.querySelector('.btn-bad').onclick=function(){decide(false);};
-      } else if(x.comment){c.insertAdjacentHTML('beforeend','<p class="rv-sub">Түсініктеме: '+esc(x.comment)+'</p>');}
-      box.appendChild(c);
+      var item={attempt_id:x.attempt_id,book:x.book,quest:x.quest,status:'pending',score:x.score,total:x.total,video_url:x.video_url,at:x.submitted_at,answers:x.answers};
+      var c=questCard(item,function(){loadDash().then(loadAllReview);});
+      var h=document.createElement('p');h.className='tc-sub';h.style.margin='14px 0 4px';h.innerHTML='<b style="color:#fff">'+esc(x.student)+' · '+esc(x.class)+'</b>';
+      box.appendChild(h);box.appendChild(c);
     });
   }
 
-  document.querySelectorAll('.tc-tabs [data-view]').forEach(function(b){b.addEventListener('click',function(){
-    document.querySelectorAll('.tc-tabs [data-view]').forEach(function(x){x.classList.toggle('on',x===b);});
-    $('view-classes').hidden=b.dataset.view!=='classes';$('view-review').hidden=b.dataset.view!=='review';
-    if(b.dataset.view==='review')loadReview();else loadDash();
-  });});
-  $('rv-tabs').addEventListener('click',function(e){var b=e.target.closest('[data-s]');if(!b)return;rvStatus=b.dataset.s;$('rv-tabs').querySelectorAll('[data-s]').forEach(function(x){x.classList.toggle('on',x===b);});loadReview();});
-  $('class-list').addEventListener('click',function(e){var b=e.target.closest('[data-c]');if(!b)return;curClass=b.dataset.c;$('class-list').querySelectorAll('[data-c]').forEach(function(x){x.classList.toggle('on',x===b);});renderClass();});
-  $('class-body').addEventListener('click',function(e){var tr=e.target.closest('tr.row');if(tr)openStudent(Number(tr.dataset.id));});
-  $('panel').addEventListener('click',function(e){if(e.target===$('panel')||e.target.closest('[data-close]'))$('panel').hidden=true;});
-  document.addEventListener('keydown',function(e){if(e.key==='Escape')$('panel').hidden=true;});
+  $('class-grid').addEventListener('click',function(e){var b=e.target.closest('[data-c]');if(!b)return;curClass=b.dataset.c;renderClass();show('v-class');});
+  $('cls-students').addEventListener('click',function(e){var b=e.target.closest('[data-open]');if(!b)return;prevView='v-class';openStudent(Number(b.dataset.open));});
+  $('cls-students').addEventListener('input',function(e){if(e.target.id!=='srch')return;var q=e.target.value.trim().toLowerCase();$('cls-students').querySelectorAll('.tc-srow').forEach(function(r){r.hidden=q&&r.dataset.n.indexOf(q)<0;});});
+  $('back-classes').onclick=function(){show('v-classes');};
+  $('back-class').onclick=async function(){await loadDash();renderClass();show('v-class');};
+  $('back-from-review').onclick=function(){show('v-classes');};
+  $('all-check').onclick=loadAllReview;
 
   $('login-btn').onclick=async function(){
     $('login-err').hidden=true;

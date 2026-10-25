@@ -1415,3 +1415,46 @@ body.kv-page .kv-bar-fill[data-pct="0"]::after{display:none}
 @keyframes kvBarGlow{0%,100%{box-shadow:0 0 8px var(--glow),0 0 2px var(--glow)}50%{box-shadow:0 0 22px var(--glow),0 0 6px var(--glow)}}
 @keyframes kvBarShine{0%{transform:translateX(-120%)}60%,100%{transform:translateX(320%)}}
 @media (prefers-reduced-motion:reduce){body.kv-page .kv-bar-fill,body.kv-page .kv-bar-fill::after{animation:none}body.kv-page .kv-bar-fill{box-shadow:0 0 14px var(--glow)}}
+
+/* ===== V13: шапка бір қатарда + әдемі басты бет ===== */
+.container{width:min(1240px,calc(100% - 48px))}
+.site-header .brand{flex-shrink:0}
+.site-header .brand strong,.site-header .brand small{white-space:nowrap}
+.site-header .brand strong{font-size:15px}
+.nav{gap:clamp(12px,1.5vw,24px);flex-wrap:nowrap;align-items:center}
+.nav a{white-space:nowrap;font-size:14px;padding:6px 0;position:relative}
+.nav a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;border-radius:2px;background:#165dff;transform:scaleX(0);transition:transform .2s}
+.nav a:hover::after,.nav a.kv-nav-active::after{transform:scaleX(1)}
+@media(min-width:1181px) and (max-width:1320px){.nav a{font-size:13px}.site-header .brand strong{font-size:14px}}
+@media(max-width:1180px){
+  .nav{display:none;position:absolute;top:76px;left:0;right:0;background:#fff;padding:12px 24px 16px;flex-direction:column;align-items:flex-start;gap:4px;border-bottom:1px solid #e5eaf1;box-shadow:0 18px 30px #1a2a5014}
+  .nav.open{display:flex}.nav a{padding:10px 0;width:100%}.nav a::after{display:none}
+  .menu-toggle{display:block}
+}
+@media(min-width:851px){
+  .hero{padding:96px 0 120px;min-height:620px;display:flex;align-items:center}
+  .hero>.container{width:min(1240px,calc(100% - 48px))}
+  .hero-grid{width:100%}
+  .hero h1{font-size:clamp(40px,4.4vw,64px);line-height:1.08;letter-spacing:-2px;margin:18px 0 20px}
+  .hero-copy{max-width:min(620px,52vw)}
+  .hero-copy>p{max-width:min(560px,50vw);line-height:1.7}
+  .hero-visual{width:min(54%,860px);right:max(0px,calc((100vw - 1240px)/2 - 60px))}
+  .hero-visual img{object-position:50% 50%}
+  .quick{margin-top:-48px}
+  .quick-card{padding:22px}
+}
+.hero h1 br{display:block}
+.eyebrow{display:inline-block;padding:7px 14px;border-radius:999px;background:#e6efff;letter-spacing:.14em!important}
+.quick-card:hover{transform:translateY(-4px);box-shadow:0 18px 38px #203a6422}
+.site-header .nav-wrap{gap:28px}
+@media(min-width:851px){
+  .hero h1{font-size:clamp(38px,3.7vw,56px);line-height:1.1}
+  .hero-copy{max-width:min(700px,56vw)}
+  .hero-visual{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 22%,#000 88%,transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 22%,#000 88%,transparent 100%)}
+}
+@media(min-width:851px){
+  .hero h1{font-size:clamp(34px,2.8vw,52px)}
+  .hero-copy{max-width:min(600px,52vw)}
+  .hero-copy>p{max-width:min(520px,46vw);font-size:17px}
+  .hero-visual{width:min(52%,820px)}
+}
