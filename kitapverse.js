@@ -404,6 +404,12 @@ function normalizeClassList(s){
    try{res=await sb.rpc('kv_class_rating');}catch(e){res={error:e};}
    if(res.error||!Array.isArray(res.data)||!res.data.length){return loadRatingLegacy();}
    const rows=res.data.map(x=>({cls:x.class_name,total:Number(x.total)||0,xp:Number(x.xp)||0,avg:Number(x.avg_xp)||0,pct:Number(x.participation_pct)||0,participants:Number(x.participants)||0}));
+   /* Battle жеңісінің +50 XP бонусы жалпы рейтингке кірмейді — ол жеке «Battle рейтингінде». */
+   try{
+     const br=await sb.rpc('kv_battle_rating');
+     const wins={};((br.data&&br.data.overall)||[]).forEach(o=>{wins[normalizeClassName(o.class_name)]=Number(o.wins)||0;});
+     rows.forEach(r=>{const w=wins[normalizeClassName(r.cls)]||0;if(w>0){r.xp=Math.max(0,r.xp-50*w);r.avg=r.total>0?r.xp/r.total:0;}});
+   }catch(e){}
    rows.sort((a,b)=>b.avg-a.avg||b.pct-a.pct||b.xp-a.xp||a.cls.localeCompare(b.cls));
    const max=Math.max(...rows.map(r=>r.avg),0);
    const medals=['🥇','🥈','🥉'];
@@ -493,7 +499,7 @@ function normalizeClassList(s){
    const w=classes[0];
    const b0=best[0];
    const bestHtml=best.length?`<div class="kv-battle-best"><b>🥇 Үздік оқушы</b>${best.map((a,i)=>`<div class="kv-tie-row"><span>${i===0?'🥇':i===1?'🥈':'🥉'} ${escapeHtml(a.student_name)} · ${escapeHtml(a.class_name)}</span><b>${a.total} сұрақтың ${a.score}-на дұрыс</b><span>⏱ ${formatDuration(a.duration_seconds)}</span></div>`).join('')}<small>Ең көп дұрыс жауап жинағандар арасында ең аз уақыт жұмсаған оқушы жеңеді.</small></div>`:'';
-   box.innerHTML=`<div class="kv-battle-final"><div class="kv-battle-final-title">🏆 BATTLE АЯҚТАЛДЫ!</div><h3>Жеңімпаз сынып: ${escapeHtml(w.class_name)}</h3><div class="kv-battle-final-score">${w.total_score} ұпай · ${fmtPlace(1)}</div><p>${w.total_students} оқушының ${w.participants}-ы қатысты · нәтиже ${w.percent}% (${w.total_score} / ${w.max_score})</p>${b0?`<p>👑 Үздік оқушы: <b>${escapeHtml(b0.student_name)}</b> — ${b0.total} сұрақтың ${b0.score}-на жауап берді, уақыты ${formatDuration(b0.duration_seconds)}.</p>`:''}<p>🎁 Жеңімпаз сыныптың жалпы рейтингіне <b>+50 XP</b>, үздік оқушының жеке рейтингіне <b>+10 XP</b> қосылды.</p>${bestHtml}</div><div class="kv-grid kv-battle-class-results">${classes.map(r=>`<div class="kv-battle-card ${r.place===1?'winner':''}"><h3>${r.place===1?'👑 ':''}${r.place}. ${escapeHtml(r.class_name)}</h3>${r.book_title?`<p class="kv-battle-book">📖 ${escapeHtml(r.book_title)}</p>`:''}<div class="avg">${r.percent}%</div><small>${r.total_score} ұпай · ${r.total_students} оқушының ${r.participants}-ы қатысты · ${fmtPlace(r.place)}</small></div>`).join('')}</div><p class="kv-battle-note">Орын пайыз бойынша анықталады: сыныптың жиған балы ÷ (сыныптағы барлық оқушы × сұрақ саны). Сондықтан кіші және үлкен сыныптар тең жағдайда.</p>`;
+   box.innerHTML=`<div class="kv-battle-final"><div class="kv-battle-final-title">🏆 BATTLE АЯҚТАЛДЫ!</div><h3>Жеңімпаз сынып: ${escapeHtml(w.class_name)}</h3><div class="kv-battle-final-score">${w.total_score} ұпай · ${fmtPlace(1)}</div><p>${w.total_students} оқушының ${w.participants}-ы қатысты · нәтиже ${w.percent}% (${w.total_score} / ${w.max_score})</p>${b0?`<p>👑 Үздік оқушы: <b>${escapeHtml(b0.student_name)}</b> — ${b0.total} сұрақтың ${b0.score}-на жауап берді, уақыты ${formatDuration(b0.duration_seconds)}.</p>`:''}<p>🎁 Жеңімпаз сынып <b>Battle рейтингінде +50 балл</b> алады (жалпы рейтингке кірмейді), үздік оқушының жеке рейтингіне <b>+10 XP</b> қосылды.</p>${bestHtml}</div><div class="kv-grid kv-battle-class-results">${classes.map(r=>`<div class="kv-battle-card ${r.place===1?'winner':''}"><h3>${r.place===1?'👑 ':''}${r.place}. ${escapeHtml(r.class_name)}</h3>${r.book_title?`<p class="kv-battle-book">📖 ${escapeHtml(r.book_title)}</p>`:''}<div class="avg">${r.percent}%</div><small>${r.total_score} ұпай · ${r.total_students} оқушының ${r.participants}-ы қатысты · ${fmtPlace(r.place)}</small></div>`).join('')}</div><p class="kv-battle-note">Орын пайыз бойынша анықталады: сыныптың жиған балы ÷ (сыныптағы барлық оқушы × сұрақ саны). Сондықтан кіші және үлкен сыныптар тең жағдайда.</p>`;
  }
  async function renderBattleResultsLegacy(box,battle){
    const {data,error}=await sb.from('battle_attempts').select('*').eq('battle_id',battle.id).eq('completed',true).order('score',{ascending:false}).order('duration_seconds',{ascending:true});

@@ -10,7 +10,7 @@
    +'.kvb-track{position:relative;height:30px;border-radius:999px;background:#ffffff12;overflow:hidden}'
    +'.kvb-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#ff9f6b,#ffcf6b);width:0;transition:width .9s ease}'
    +'.kvb-pct{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-weight:800;font-size:14px;color:#1a1033;text-shadow:0 0 6px #ffffff80}'
-   +'.kvb-pct.z{color:#cfd6f7;text-shadow:none;left:22px}.kvb-meta{font-size:12.5px;color:#cfd6f7;text-align:right;line-height:1.35}'
+   +'.kvb-pct.z{color:#cfd6f7;text-shadow:none;left:40px}.kvb-meta{font-size:12.5px;color:#cfd6f7;text-align:right;line-height:1.35}'
    +'.kvb-head{display:grid;grid-template-columns:48px 80px 1fr 150px;gap:14px;font-size:12px;color:#8e98c9;text-transform:uppercase;letter-spacing:.5px;padding-bottom:6px;border-bottom:1px solid #ffffff22}'
    +'.kvb-det{margin-top:18px;border:1px solid #ffffff1f;border-radius:14px;padding:4px 14px;background:#ffffff08}'
    +'.kvb-det summary{cursor:pointer;font-weight:700;padding:12px 0}.kvb-det .kvb-row{grid-template-columns:44px 70px 1fr 170px}'
@@ -21,12 +21,13 @@
     var ov=(data&&data.overall)||[],bt=(data&&data.battles)||[];
     if(!ov.length){box.innerHTML='<p class="kv-empty">Battle аяқталған соң нәтижелер осында шығады.</p>';return;}
     var max=Math.max.apply(null,ov.map(function(x){return Number(x.points)||0;}).concat([1]));
-    var html='<div class="kvb-head"><span></span><span>Сынып</span><span>Балл (жеңіс × 50)</span><span>Батл · орташа %</span></div>';
+    var html='<div class="kvb-head"><span></span><span>Сынып</span><span>Балл (жеңіс × 50)</span><span>Батл · жеңіс</span></div>';
     ov.forEach(function(x,i){
+      var place=ov.filter(function(y){return (Number(y.points)||0)>(Number(x.points)||0);}).length; /* тең балл — тең орын */
       var w=Math.max(4,Math.round((Number(x.points)||0)/max*100));
-      html+='<div class="kvb-row"><div class="kvb-rank">'+medal(i)+'</div><div class="kvb-cls">'+esc(x.class_name)+'</div>'
+      html+='<div class="kvb-row"><div class="kvb-rank">'+((Number(x.points)||0)?medal(place):'')+'</div><div class="kvb-cls">'+esc(x.class_name)+'</div>'
         +'<div class="kvb-track"><div class="kvb-fill" data-w="'+w+'"></div><span class="kvb-pct'+((Number(x.points)||0)?'':' z')+'">'+esc(x.points)+' балл</span></div>'
-        +'<div class="kvb-meta">'+esc(x.battles)+' батл · 🏆 '+esc(x.wins)+' жеңіс<br>орташа '+esc(x.avg_pct)+'%</div></div>';
+        +'<div class="kvb-meta">'+esc(x.battles)+' батл · 🏆 '+esc(x.wins)+' жеңіс</div></div>';
     });
     var det='';
     bt.forEach(function(b){
@@ -47,7 +48,7 @@
     var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
     var sec=document.createElement('section');sec.id='kv-battle-rating';sec.className='kv-section';
     sec.innerHTML='<div class="container"><div class="kv-board"><div class="kv-board-title"><span class="section-label">BATTLE</span><h2>Battle рейтингі</h2></div>'
-      +'<p class="kvb-note">Әр Battle-дің жеңімпаз сыныбы <b>+50 балл</b> алады (оқушы санына бөлінбейді — оқушысы аз сынып та, көп сынып та бірдей). Жеңімпаз — сыныптың жиған дұрыс жауабы ÷ (сыныптағы барлық оқушы × сұрақ саны) пайызы жоғары сынып. Рейтингте орын: балл, тең болса — орташа пайыз.</p>'
+      +'<p class="kvb-note">Әр Battle-дің жеңімпаз сыныбы <b>+50 балл</b> алады (оқушы санына бөлінбейді — оқушысы аз сынып та, көп сынып та бірдей). Жеңімпаз — сыныптың жиған дұрыс жауабы ÷ (сыныптағы барлық оқушы × сұрақ саны) пайызы жоғары сынып. Бірдей балл алған сыныптар тең орында тұрады.</p>'
       +'<div id="kvb-body"><p class="kv-empty">Жүктелуде...</p></div></div></div>';
     anchor.parentNode.insertBefore(sec,anchor.nextSibling);
     var body=sec.querySelector('#kvb-body');
